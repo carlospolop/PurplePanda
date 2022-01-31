@@ -1,0 +1,135 @@
+
+queries:
+  - name: Secrets with values
+    query: |
+      MATCH(secret:K8sSecret)
+      WHERE secret.values <> []
+      RETURN secret.name, secret.values_cleartext
+  
+  - name: Environment variables that aren't a secret
+    query: |
+      MATCH(env_variable:K8sEnvVar)-[env_value:USE_ENV_VAR]-(c:K8sContainer)
+      WHERE not env_value.value =~ '^secret:'
+      RETURN env_variable.name,collect(distinct env_value.value)
+    
+  - name: Exposed services, pods and sas
+    query: |
+      MATCH(service:K8sService) 
+      WHERE EXISTS ((service)-[:HAS_IP]->(:PublicIP)) OR
+        EXISTS ((service)-[:HAS_DOMAIN]->(:PublicDomain{is_external:True})) OR
+        EXISTS ((:K8sIngress)-[:TO_SERVICE]->(service))
+      
+      OPTIONAL MATCH(service)-[:HAS_IP]-(ip:PublicIP)
+      OPTIONAL MATCH(service)-[r2:HAS_DOMAIN]->(domain:PublicDomain) WHERE domain.is_external = True
+      OPTIONAL MATCH(ingress:K8sIngress)-[r3:TO_SERVICE]->(service)
+      OPTIONAL MATCH (service)<-[:HAS_SERVICE]-(pod:K8sPod)-[r:RUN_IN]-(service_account:K8sServiceAccount)
+      RETURN service.name,collect(distinct ip.name),collect(distinct domain.name),collect(distinct ingress.name),collect(distinct pod.name),collect(distinct service_account.name)
+  
+  - name: Exposed services, pods with privileged sas
+    query: |
+      MATCH(service:K8sService) 
+      WHERE EXISTS ((service)-[:HAS_IP]->(:PublicIP)) OR
+        EXISTS ((service)-[:HAS_DOMAIN]->(:PublicDomain{is_external:True})) OR
+        EXISTS ((:K8sIngress)-[:TO_SERVICE]->(service))
+      
+      OPTIONAL MATCH(service)-[:HAS_IP]-(ip:PublicIP)
+      OPTIONAL MATCH(service)-[r2:HAS_DOMAIN]->(domain:PublicDomain) WHERE domain.is_external = True
+      OPTIONAL MATCH(ingress:K8sIngress)-[r3:TO_SERVICE]->(service)
+      MATCH (service)<-[:HAS_SERVICE]-(pod:K8sPod)-[r:RUN_IN]-(service_account:K8sServiceAccount)-[:PRIVESC]->(rsc)
+      RETURN service.name,collect(distinct ip.name),collect(distinct domain.name),collect(distinct ingress.name),collect(distinct pod.name),collect(distinct service_account.name)
+
+  - name: Privileged or root pods
+    query: |
+      MATCH(pod:K8sPod)
+      WHERE pod.sc_runAsUser = 0 OR 
+      pod.sc_runAsNonRoot <> True AND pod.sc_runAsUser = "" OR
+      pod.sc_runAsGroup < 50 OR
+      any(grp in pod.sc_supplemental_groups WHERE grp < 50) OR
+      pod.host_network OR
+      pod.host_pid OR
+      pod.host_ipc OR
+      any(path IN pod.host_path WHERE any( regex IN ["/", "/proc.*", "/sys.*", "/dev.*", "/var/run.*", ".*docker.sock", ".*crio.sock", ".*/kubelet.*", ".*/pki.*", "/home/admin.*", "/etc.*", ".*/kubernetes.*", ".*/manifests.*", "/root.*"] WHERE regex =~ replace(path,"\\", "\\\\")))
+      RETURN pod.name, pod.sc_runAsUser, pod.sc_runAsNonRoot, pod.sc_runAsGroup, pod.sc_supplemental_groups, pod.host_network, pod.host_pid, pod.host_ipc, pod.host_path
+  
+  - name: Privileged or root containers
+    query: |
+      MATCH(container:K8sContainer)
+      WHERE container.sc_privileged = True OR
+      size(container.sc_capabilities_add) > 0 OR
+      container.sc_runAsUser = 0 OR 
+      container.sc_runAsNonRoot <> True AND container.sc_runAsUser = "" OR
+      container.sc_runAsGroup < 50 OR
+      container.sc_allowPrivilegeEscalation = True
+      RETURN container.name, container.sc_privileged, container.sc_capabilities_add, container.sc_runAsUser, container.sc_runAsNonRoot, container.sc_runAsGroup, container.sc_allowPrivilegeEscalation
+
+  - name: Direct ppals that can escape from a node
+    query: |
+      MATCH (ppal:K8sPrincipal {potential_escape_to_node:True})
+      RETURN ppal.name
+
+  - name: Indirect ppals that can escape from a node (depth 2)
+    query: |
+      MATCH (ppal_escape:K8sPrincipal {potential_escape_to_node:True})<-[:PRIVESC*..2]-(ppal:K8sPrincipal)
+      RETURN ppal.name, collect(distinct ppal_escape.name)
+
+  - name: Ppals that can privesc in k8s
+    query: |
+      MATCH (ppal:K8sPrincipal)-[:PRIVESC]->(resource:K8s)
+      RETURN ppal.name,collect(distinct resource.name)
+
+  - name: Ppals that can privesc to different ns
+    query: |
+      MATCH (ns_victim:K8sNamespace)<-[:PART_OF]-(ppal_victim:K8sPrincipal)<-[r:PRIVESC]-(ppal_attack:K8sServiceAccount)-[:PART_OF]->(ns_attack:K8sNamespace)
+      WHERE NOT EXISTS( (ppal_attack)-[:PART_OF]->(ns_victim) )
+      RETURN ppal_attack.name,ns_attack.name,collect(distinct ns_victim.name)
+
+  - name: Direct SAs with AWS permissions
+    query: |
+      MATCH (service_account:K8sServiceAccount) WHERE service_account.iam_amazonaws_role_arn <> ""
+      RETURN service_account.name,service_account.iam_amazonaws_role_arn
+  
+  - name: Indirect SAs with AWS permissions (depth 2)
+    query: |
+      MATCH (ppal:K8sPrincipal)-[:PRIVESC*..2]->(service_account_with_aws:K8sServiceAccount) WHERE service_account_with_aws.iam_amazonaws_role_arn <> ""
+      RETURN ppal.name,collect(distinct service_account_with_aws.name),collect(distinct service_account_with_aws.iam_amazonaws_role_arn)
+  
+  - name: Pods with Aws permissions
+    query: |
+      MATCH (pod:K8sPod) WHERE pod.iam_amazonaws_com_role <> ""
+      RETURN pod.name,pod.iam_amazonaws_com_role
+  
+  - name: Direct SAs with GCP permissions
+    query: |
+      MATCH (ppal:K8sPrincipal)-[r:PRIVESC]->(gcpsa:GcpServiceAccount)
+      RETURN ppal.name,collect(distinct gcpsa.email)
+  
+  - name: Indirect SAs with GCP permissions (depth 2)
+    query: |
+      MATCH (gcpsa:GcpServiceAccount)<-[r:PRIVESC]-(ppal_with_gcp:K8sPrincipal)<-[:PRIVESC*..2]-(ppal:K8sPrincipal)
+      RETURN ppal.name,ppal_with_gcp.name,collect(distinct gcpsa.email)
+  
+  - name: Default sas with privesc
+    query: |
+      MATCH (serviceAccount:K8sPrincipal)-[r:PRIVESC]->(victim)
+      WHERE serviceAccount.name =~ ".*:default"
+      RETURN serviceAccount.name,collect(distinct victim.name),collect(distinct victim.email)
+  
+  - name: Privesc of authenticated ppals
+    query: |
+      MATCH (ppal:K8sPrincipal{name: "system:authenticated"})-[r:PRIVESC]->(victim)
+      RETURN ppal.name,collect(distinct victim.name),collect(distinct victim.email)
+  
+  - name: Privesc of unauthenticated ppals
+    query: |
+      MATCH (ppal:K8sPrincipal{name: "system:unauthenticated"})-[r:PRIVESC]->(victim)
+      RETURN ppal.name,collect(distinct victim.name),collect(distinct victim.email)
+  
+  - name: Authenticated ppals permissions
+    query: |
+      MATCH (g:K8sGroup{name:"system:authenticated"})-[perms:HAS_PERMS]->(victim)
+      RETURN victim.name, perms.verbs
+  
+  - name: Unauthenticated ppals permissions
+    query: |
+      MATCH (g:K8sGroup{name:"system:unauthenticated"})-[perms:HAS_PERMS]->(victim)
+      RETURN victim.name, perms.verbs

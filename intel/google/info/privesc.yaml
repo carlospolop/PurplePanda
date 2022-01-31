@@ -1,0 +1,225 @@
+# If a permission affect one of these assets, relate it also with the assets related to them with the indicated relation
+## IT'S VERY IMPORTAN TO GO FRO MORE GENERIC TO LESS GENERIC
+scope:
+  - initial_class_name: GcpOrganization
+    relation: PART_OF
+  
+  - initial_class_name: GcpFolder
+    relation: PART_OF
+  
+  - initial_class_name: GcpProject
+    relation: PART_OF
+
+# Indicate the permissions to escalate privileges
+# Supported:
+# - title: Title of the privesc technique (required)
+# - summary: Summary of what you can achive with the permissions (required)
+# - relation: Must be PRIVESC or NO_RELATION or NO_RELATION (required)
+# - permissions: Array with the required permissions (required)
+# - second_order_permissions: The permissions taht must have the principals discovered after checking the first permissionss
+# - only_to_classes: Array with the names of the classes this privesc can affect to
+# - extra_privesc_to: if related to a last step resource (not org folder or proj) decide if you can privesc to all the SAs of the project (ALL_PROJECT_SAS), just to the running one (RUNNING_SA) or NONE (you can only priesc to allowed classes) (required)
+# Note that the relation is going to be created to the assets where the principal has the first permission (in the "permissions" array) with.
+# If that is an Organization, Folder, or Project, all their children will be used taken ad the ones in only_to_classes will be related
+
+
+privesc:
+  # From more significative to less significative
+  - title: "SA impersonation via 'resourcemanager.organizations.setIamPolicy'"
+    relation: PRIVESC
+    permissions: ["resourcemanager.organizations.setIamPolicy"]
+    only_to_classes: [GcpServiceAccount, GcpOrganization, GcpFolder, GcpProject]
+    extra_privesc_to: NONE
+    summary: "Bind a role to you giving you extra permissions to impersonate any Service Account (or access anything)in the Organization. More information: https://book.hacktricks.xyz/cloud-security/gcp-security/gcp-interesting-permissions/gcp-privesc-to-other-principals"
+
+  - title: "SA impersonation via 'resourcemanager.folders.setIamPolicy'"
+    relation: PRIVESC
+    permissions: ["resourcemanager.folders.setIamPolicy"]
+    only_to_classes: [GcpServiceAccount, GcpOrganization, GcpFolder, GcpProject]
+    extra_privesc_to: NONE
+    summary: "Bind a role to you giving you extra permissions to impersonate any Service Account (or access anything) in the Folder. More information: https://book.hacktricks.xyz/cloud-security/gcp-security/gcp-interesting-permissions/gcp-privesc-to-other-principals"
+
+  - title: "SA impersonation via 'resourcemanager.projects.setIamPolicy'"
+    relation: PRIVESC
+    permissions: ["resourcemanager.projects.setIamPolicy"]
+    only_to_classes: [GcpServiceAccount, GcpOrganization, GcpFolder, GcpProject]
+    extra_privesc_to: NONE
+    summary: "Bind a role to you giving you extra permissions to impersonate any Service Account (or access anything) in the Project. More information: https://book.hacktricks.xyz/cloud-security/gcp-security/gcp-interesting-permissions/gcp-privesc-to-other-principals"
+
+  - title: "SA impersonation via 'iam.serviceAccounts.setIamPolicy'"
+    relation: PRIVESC
+    permissions: ["iam.serviceAccounts.setIamPolicy"]
+    only_to_classes: [GcpServiceAccount, GcpOrganization, GcpFolder, GcpProject]
+    extra_privesc_to: NONE
+    summary: "Bind a role to you giving you extra permissions to impersonate the Service Account. More information: https://book.hacktricks.xyz/cloud-security/gcp-security/gcp-interesting-permissions/gcp-privesc-to-other-principals"
+
+  - title: "SA impersonation via 'iam.roles.update'"
+    relation: PRIVESC
+    permissions: ["iam.roles.update"]
+    only_to_classes: [GcpServiceAccount, GcpOrganization, GcpFolder, GcpProject]
+    extra_privesc_to: NONE
+    summary: "You can create a update a role assigned to you and giving you extra permissions. More information: https://book.hacktricks.xyz/cloud-security/gcp-security/gcp-interesting-permissions/gcp-privesc-to-other-principals"
+  
+  - title: "SA impersonation via 'iam.serviceAccountKeys.create'"
+    relation: PRIVESC
+    permissions: ["iam.serviceAccountKeys.create"]
+    only_to_classes: [GcpServiceAccount, GcpOrganization, GcpFolder, GcpProject]
+    extra_privesc_to: NONE
+    summary: "You can create a user-managed key for the Service Account to impersonate it. More information: https://book.hacktricks.xyz/cloud-security/gcp-security/gcp-interesting-permissions/gcp-privesc-to-other-principals"
+  
+  - title: "SA impersonation via 'iam.serviceAccounts.getAccessToken'"
+    relation: PRIVESC
+    permissions: ["iam.serviceAccounts.getAccessToken"]
+    only_to_classes: [GcpServiceAccount, GcpOrganization, GcpFolder, GcpProject]
+    extra_privesc_to: NONE
+    summary: "You can create a token to impersonate the Service Account. More information: https://book.hacktricks.xyz/cloud-security/gcp-security/gcp-interesting-permissions/gcp-privesc-to-other-principals"
+  
+  - title: "SA impersonation via 'iam.serviceAccounts.signBlob'"
+    relation: PRIVESC
+    permissions: ["iam.serviceAccounts.signBlob"]
+    only_to_classes: [GcpServiceAccount, GcpOrganization, GcpFolder, GcpProject]
+    extra_privesc_to: NONE
+    summary: "You can make google to sign a JWT (as the service account) to impersonate the service account. More information: https://book.hacktricks.xyz/cloud-security/gcp-security/gcp-interesting-permissions/gcp-privesc-to-other-principals"
+  
+  - title: "SA impersonation via 'iam.serviceAccounts.signJwt'"
+    relation: PRIVESC
+    permissions: ["iam.serviceAccounts.signJwt"]
+    only_to_classes: [GcpServiceAccount, GcpOrganization, GcpFolder, GcpProject]
+    extra_privesc_to: NONE
+    summary: "You can make google to sign a JWT (as the service account) to impersonate the service account. More information: https://book.hacktricks.xyz/cloud-security/gcp-security/gcp-interesting-permissions/gcp-privesc-to-other-principals"
+
+  - title: "SA impersonation via 'iam.serviceAccounts.implicitDelegation'"
+    relation: PRIVESC
+    permissions: [iam.serviceAccounts.implicitDelegation]
+    second_order_permissions: [iam.serviceAccounts.getAccessToken]
+    only_to_classes: [GcpServiceAccount, GcpOrganization, GcpFolder, GcpProject]
+    extra_privesc_to: NONE
+    summary: "You can abuse an intermediary service account to generate a token of the Service Account. More information: https://book.hacktricks.xyz/cloud-security/gcp-security/gcp-interesting-permissions/gcp-privesc-to-other-principals"
+
+  - title: "SA impersonation via 'iam.serviceAccounts.actAs'"
+    relation: PRIVESC
+    permissions: ["iam.serviceAccounts.actAs"]
+    only_to_classes: [GcpServiceAccount, GcpOrganization, GcpFolder, GcpProject]
+    extra_privesc_to: NONE
+    summary: "You can act as the Service Account but you will need permissions to create/update a resource to attach the Sservice Account and then steal the token from there. More information: https://book.hacktricks.xyz/cloud-security/gcp-security/gcp-interesting-permissions/gcp-privesc-to-other-principals"
+
+  - title: "Arbitrary SA attach to deployment via 'deploymentmanager.deployments.create'"
+    relation: PRIVESC
+    permissions: [deploymentmanager.deployments.create]
+    only_to_classes: [GcpServiceAccount, GcpOrganization, GcpFolder, GcpProject]
+    extra_privesc_to: ALL_PROJECT_SAS
+    summary: "You can create a deployment and attach any SA in the project to it, execute a compute instance with that SA and steal the token from that instance. More information: https://book.hacktricks.xyz/cloud-security/gcp-security/gcp-interesting-permissions/gcp-privesc-to-other-principals"
+
+  - title: "Arbitrary SA attach to deployment via 'deploymentmanager.deployments.update'"
+    relation: PRIVESC
+    permissions: [deploymentmanager.deployments.update]
+    only_to_classes: [GcpServiceAccount, GcpOrganization, GcpFolder, GcpProject]
+    extra_privesc_to: ALL_PROJECT_SAS
+    summary: "You can modify a deployment and attach any SA in the project to it, execute a compute instance with that SA and steal the token from that instance. More information: https://book.hacktricks.xyz/cloud-security/gcp-security/gcp-interesting-permissions/gcp-privesc-to-other-principals"
+  
+  - title: "Arbitrary SA attach to deployment via 'deploymentmanager.deployments.setIamPolicy'"
+    relation: PRIVESC
+    permissions: [deploymentmanager.deployments.setIamPolicy]
+    only_to_classes: [GcpServiceAccount, GcpOrganization, GcpFolder, GcpProject]
+    extra_privesc_to: ALL_PROJECT_SAS
+    summary: "You can give yourself permission to create a deployment and attach any SA in the project to it, execute a compute instance with that SA and steal the token from that instance. More information: https://book.hacktricks.xyz/cloud-security/gcp-security/gcp-interesting-permissions/gcp-privesc-to-other-principals"
+
+  # cloudbuild
+  - title: "Arbitrary SA attach to build via 'cloudbuild.builds.create"
+    relation: PRIVESC
+    permissions: [cloudbuild.builds.create]
+    only_to_classes: [GcpServiceAccount, GcpOrganization, GcpFolder, GcpProject]
+    extra_privesc_to: ALL_PROJECT_SAS
+    summary: "You can create a build and attach any SA in the project to it, execute a compute instance with that SA and steal the token from that instance. More information: https://book.hacktricks.xyz/cloud-security/gcp-security/gcp-interesting-permissions/gcp-privesc-to-other-principals"
+
+
+
+  # storage
+  - title: "API Key read via 'storage.hmacKeys.create'"
+    relation: NO_RELATION
+    permissions: [storage.hmacKeys.create]
+    only_to_classes: [GcpStorage, GcpOrganization, GcpFolder, GcpProject]
+    extra_privesc_to: NONE
+    summary: "You can escalate Cloud Storage permissions by creating an HMAC key for a higher-privileged Service Account. More information: https://book.hacktricks.xyz/cloud-security/gcp-security/gcp-interesting-permissions/gcp-privesc-to-resources"
+
+  # secretmanager
+  - title: "Read secrets via 'secretmanager.secrets.get'"
+    relation: NO_RELATION
+    permissions: [secretmanager.secrets.get]
+    only_to_classes: [GcpSecret, GcpSecretVersion, GcpOrganization, GcpFolder, GcpProject]
+    extra_privesc_to: NONE
+    summary: "You can read secrets, where interesting sensitive information might be found. More information: https://book.hacktricks.xyz/cloud-security/gcp-security/gcp-interesting-permissions/gcp-privesc-to-resources"
+  
+  - title: "Read secrets via 'secretmanager.secrets.setIamPolicy'"
+    relation: NO_RELATION
+    permissions: [secretmanager.secrets.setIamPolicy]
+    only_to_classes: [GcpSecret, GcpSecretVersion, GcpOrganization, GcpFolder, GcpProject]
+    extra_privesc_to: NONE
+    summary: "You can give you access to read secrets, where interesting sensitive information might be found. More information: https://book.hacktricks.xyz/cloud-security/gcp-security/gcp-interesting-permissions/gcp-privesc-to-resources"
+  
+  # Generic
+
+  - title: "Modify your permissions over the resource with '.*.setIamPolicy'"
+    relation: NO_RELATION
+    permissions: [.*.setIamPolicy]
+    extra_privesc_to: NONE
+    summary: "You can modify your permissions over the resource and escalate them abusing a *.setIamPolicy permission. More information: https://book.hacktricks.xyz/cloud-security/gcp-security/gcp-interesting-permissions/gcp-privesc-to-resources"
+  
+  - title: "Create resources with '.*.create'"
+    relation: NO_RELATION
+    permissions: [.*.create]
+    extra_privesc_to: NONE
+    summary: "You can create new resources. More information: https://book.hacktricks.xyz/cloud-security/gcp-security/gcp-interesting-permissions/gcp-privesc-to-resources"
+  
+  - title: "Create resources with '.*.update'"
+    relation: NO_RELATION
+    permissions: [.*.update]
+    extra_privesc_to: NONE
+    summary: "You can update resources. More information: https://book.hacktricks.xyz/cloud-security/gcp-security/gcp-interesting-permissions/gcp-privesc-to-resources"
+  
+  - title: "Create resources with '.*ServiceAccount.*'"
+    relation: NO_RELATION
+    permissions: [.*ServiceAccount.*]
+    extra_privesc_to: NONE
+    summary: "You can update resources. More information: https://book.hacktricks.xyz/cloud-security/gcp-security/gcp-interesting-permissions/gcp-privesc-to-resources"
+
+
+
+  # orgpolicy
+  - title: "Disable protections via 'orgpolicy.policy.set'"
+    relation: NO_RELATION
+    permissions: [orgpolicy.policy.set]
+    extra_privesc_to: NONE
+    summary: "This method does not necessarily grant you more IAM permissions, but it may disable some barriers that are preventing certain actions. More information: https://book.hacktricks.xyz/cloud-security/gcp-security/gcp-interesting-permissions/gcp-privesc-to-resources"
+  
+  # serviceusage
+  - title: "API Key creation via 'serviceusage.apiKeys.create'"
+    relation: NO_RELATION
+    permissions: [serviceusage.apiKeys.create]
+    extra_privesc_to: NONE
+    summary: "You can create API keys. You can 'ruin' the company but not impersonate principals. More information: https://book.hacktricks.xyz/cloud-security/gcp-security/gcp-interesting-permissions/gcp-privesc-to-resources"
+  
+  - title: "API Key read via 'serviceusage.apiKeys.list'"
+    relation: NO_RELATION
+    permissions: [serviceusage.apiKeys.list]
+    extra_privesc_to: NONE
+    summary: "You can read API keys. You can 'ruin' the company but not impersonate principals. More information: https://book.hacktricks.xyz/cloud-security/gcp-security/gcp-interesting-permissions/gcp-privesc-to-resources"
+
+  # apikeys
+  - title: "API Key creation via 'apikeys.keys.create'"
+    relation: NO_RELATION
+    permissions: [apikeys.keys.create]
+    extra_privesc_to: NONE
+    summary: "You can create API keys. You can 'ruin' the company but not impersonate principals. More information: https://book.hacktricks.xyz/cloud-security/gcp-security/gcp-interesting-permissions/gcp-privesc-to-resources"
+  
+  - title: "API Key read via 'apikeys.keys.getKeyString,apikeys.keys.list'"
+    relation: NO_RELATION
+    permissions: [apikeys.keys.getKeyString,apikeys.keys.list]
+    extra_privesc_to: NONE
+    summary: "You can read API keys. You can 'ruin' the company but not impersonate principals. More information: https://book.hacktricks.xyz/cloud-security/gcp-security/gcp-interesting-permissions/gcp-privesc-to-resources"
+
+  - title: "API Key read via 'apikeys.keys.regenerate,apikeys.keys.list'"
+    relation: NO_RELATION
+    permissions: [apikeys.keys.regenerate,apikeys.keys.list]
+    extra_privesc_to: NONE
+    summary: "You can regenerate API keys. You can 'ruin' the company but not impersonate principals. More information: https://book.hacktricks.xyz/cloud-security/gcp-security/gcp-interesting-permissions/gcp-privesc-to-resources"
