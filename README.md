@@ -1,9 +1,9 @@
-# PurplePanda
+# PurpleCat
 ![](https://github.com/carlospolop/PurplePanda/raw/master/images/logo.png)
 
 This tool fetches resources from different cloud/saas applications focusing on permissions in order to **identify privilege escalation paths and dangerous permissions** in the cloud/saas configurations. Note that PurplePanda searches both **privileges escalation paths within a platform and across platforms**.
 
-The name comes from the animal **Red Panda**. This panda eats peas, just like Purple Panda, which can ingest API keys/tokens found by these **[PEASS](https://github.com/carlospolop/PEASS-ng)**. The color was changed to purple because this tool is meant mainly for **Purple Teams** (because it can be **highly useful for both Blue and Red Teams**).
+The name comes from the animal **Red Panda**. This panda eats fish and chips, just like Purple Panda, which can ingest API keys/tokens found by these **[PEASS](https://github.com/carlospolop/PEASS-ng)**. The color was changed to purple because this tool is meant mainly for **Purple Teams** (because it can be **highly useful for both Blue and Red Teams**).
 
 ## How to use
 Each folder inside `/intel` defines one platform that can be enumerated and **contains a README.md file explaining how to use that specific module**.
