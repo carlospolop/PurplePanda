@@ -7,7 +7,7 @@
 - Use Bucket ACLs
 - Based on https://stackoverflow.com/questions/39860726/google-api-client-container-registry-api-python get images inside registry usng a docker API library
     - Check if public access is possible
-    - If not, you need to send the auth token (gcloud container images list --repository=eu.gcr.io/<name> --log-htt)
+    - If not, you need to send the auth token (gcloud container images list --repository=eu.gcr.io/name_repo --log-htt)
     - Relate this with cloudbuild builds
     - Use googleapiclient.discovery.build("containeranalysis", "v1", credentials=cred, cache_discovery=False) to get notes and vulnerabilities of the images
 - Check if current user can impersonate each discovered SA
