@@ -1,0 +1,133 @@
+queries:
+  - name: Privesc to google managed SAs
+    query: |
+      MATCH(a:Gcp)-[r:PRIVESC]->(b:GcpServiceAccount)
+      WHERE not "name" in keys(b)
+      RETURN a,r,b
+
+  - name: Organizations privesc
+    query: |
+      MATCH(org:GcpOrganization)-[r:PRIVESC]->(ppal_victim:Gcp)
+      RETURN org.name, collect(distinct r.reasons), collect(distinct ppal_victim.name), collect(distinct ppal_victim.email)
+
+  - name: SAs with privesc
+    query: |
+      MATCH(sa_attacker:Gcp)-[:PRIVESC]->(ppal_victim:Gcp)
+      RETURN sa_attacker.email, collect(distinct ppal_victim.name), collect(distinct ppal_victim.email)
+
+ - name: SAs with cross-project permissions
+    query: |
+      MATCH (origin_project:GcpProject)<-[:PART_OF]-(service_account:GcpServiceAccount)-[role:HAS_ROLE]->(resource:Gcp)
+      WHERE NOT EXISTS((service_account)-[:PART_OF]->(resource)) AND NOT EXISTS((origin_project)<-[:PART_OF]-(resource))
+      OPTIONAL MATCH (resource)-[:PART_OF]->(dest_project:GcpProject)
+      RETURN service_account.email, origin_project.name, role.roles, resource.name, dest_project.name
+ 
+  - name: Users with privesc
+    query: |
+      MATCH(user_attacker:GcpUserAccount)-[:PRIVESC]->(ppal_victim:Gcp)
+      RETURN user_attacker.email, collect(distinct ppal_victim.name), collect(distinct ppal_victim.email)
+  
+  - name: Groups with privesc
+    query: |
+      MATCH(group_attacker:GoogleGroup)-[:PRIVESC]->(ppal_victim:Gcp)
+      WITH group_attacker, collect(distinct ppal_victim.name) as ppal_victim_name, collect(distinct ppal_victim.email) as ppal_victim_email
+      MATCH(group_attacker)<-[:MEMBER_OF*..]-(user:GcpUserAccount)
+      RETURN group_attacker.email, count(user), ppal_victim_name, ppal_victim_email
+  
+  - name: Groups larger than 100 with roles
+    query: |
+      MATCH (group:GoogleGroup)<-[:MEMBER_OF*0..]-(member:GcpPrincipal)
+      WITH group, count(member) as member_count
+      WHERE member_count > 100
+      MATCH(group)-[role:HAS_ROLE]->(resource)
+      RETURN group.email, role.roles, resource.name
+
+  - name: Users with direct non traditional roles
+    query: |
+      MATCH (user:GcpUserAccount)-[role:HAS_ROLE]->(resource)
+      WHERE role.roles <> ["roles/owner"] AND role.roles <> ["roles/editor"] AND role.roles <> ["roles/viewer"]
+      RETURN user.email, role.roles, resource.name
+  
+  - name: Users with direct non traditional roles
+    query: |
+      MATCH (user:GcpUserAccount)-[role:HAS_ROLE]->(resource)
+      RETURN user.email, role.roles, resource.name
+
+  - name: Open Resources
+    query: |
+      MATCH(user:GcpUserAccount)-[role:HAS_ROLE]-(resource) WHERE user.name="allUsers" OR user.name="allAuthenticatedUsers"
+      RETURN resource.name,role.roles
+  
+  - name: Public FW rules
+    query: |
+      MATCH (firewall:GcpFirewallRule)-[fw_r:PROTECT]->(network:GcpNetwork)
+      WHERE firewall.direction = "INGRESS" AND
+      ( 
+        any(iprange in firewall.sourceRanges WHERE iprange CONTAINS "0.0.0.0" OR iprange CONTAINS "::/0")
+        OR
+        (
+            any(iprange in firewall.sourceRanges WHERE 
+                NOT any(priv_reg in ["^127\..*","^10\..*", "^172\.1[6-9]\..*", "^172\.2[0-9]\..*", "^172\.3[0-1]\..*", "^192\.168\..*"] WHERE iprange =~ priv_reg)
+            ) 
+        )
+          
+      )
+      RETURN firewall.name, firewall.sourceRanges, collect(distinct network.name)
+  
+  - name: Public compute instances
+    query: |
+      MATCH (instance:GcpComputeInstance)-[c_r:CONNECTED]-(subnetwork:GcpSubnetwork)-[pn:PART_OF]-(network:GcpNetwork) WHERE 
+      any(ip_addr IN c_r.accessConfigs_natIPs WHERE NOT any(priv_reg in ["^127\..*","^10\..*", "^172\.1[6-9]\..*", "^172\.2[0-9]\..*", "^172\.3[0-1]\..*", "^192\.168\..*"] WHERE ip_addr =~ priv_reg))
+      RETURN instance.name, collect(distinct c_r.accessConfigs_natIPs), collect(distinct subnetwork.name), collect(distinct network.name)
+
+  - name: Public composer instances
+    query: |
+      MATCH (composer:GcpComposerEnv)<-[p_o:PART_OF]-(cluster:GcpCluster) WHERE 
+      any(iprange IN composer.allowedIpRanges WHERE NOT any(priv_reg in ["^127\..*","^10\..*", "^172\.1[6-9]\..*", "^172\.2[0-9]\..*", "^172\.3[0-1]\..*", "^192\.168\..*"] WHERE iprange =~ priv_reg))
+      RETURN composer.name, composer.allowedIpRanges, collect(distinct cluster.name)
+  
+  - name: SAs with API Keys
+    query: |
+      MATCH(sa:GcpServiceAccount)-[r:HAS_KEY]->(k)
+      RETURN sa.email
+  
+  - name: Projects with permissions over other projects resources
+    query: |
+      MATCH (project:GcpProject)-[basic_roles:HAS_BASIC_ROLES]->(resource) WHERE NOT EXISTS((resource)-[:PART_OF]->(project))
+      WITH project, basic_roles, resource
+      OPTIONAL MATCH(project)<-[:PART_OF]-(service_account:GcpServiceAccount)
+      RETURN project.name,count(service_account),basic_roles.member,resource.name
+  
+  - name: non existent roles
+    query: |
+      MATCH(ppal:GcpPrincipal)-[r:HAS_ROLE]->(resource)
+      WHERE any(role_name in r.roles WHERE NOT exists( (:GcpRole{name: role_name})-[]-() ) ) 
+      RETURN ppal.email,r.roles,resource.name
+  
+  - name: Custom roles
+    query: |
+      MATCH (role:GcpRole)-[r:PART_OF]->(project:GcpProject)
+      MATCH (role)-[:CONTAINS]->(perm:GcpPermission)
+      RETURN role.name,collect(distinct perm.name)
+
+  - name: K8sSAs with GCP permissions
+    query: |
+      MATCH (ppal:K8sPrincipal)-[r:PRIVESC]->(gcpsa:GcpServiceAccount)-[:PRIVESC*0..1]->(gcpsa2:GcpServiceAccount)
+      RETURN ppal.name,collect(distinct gcpsa.email),collect(distinct gcpsa2.email)
+  
+  - name: Secrets
+    query: |
+      MATCH (secret:GcpSecret)-[:HAS_VERSION]->(secret_version:GcpSecretVersion)
+      RETURN secret.name,collect(distinct secret_version.name),collect(distinct secret_version.value)
+  
+  - name: Users and Groups not from Workspace
+    query: |
+      OPTIONAL MATCH (group:GoogleGroup) WHERE NOT EXISTS((g)-[:PART_OF]->(:GoogleWorkspace))
+      OPTIONAL MATCH (user:GcpUserAccount) WHERE NOT EXISTS((u)-[:PART_OF]->(:GoogleWorkspace))
+      RETURN group.email,user.email
+
+  - name: Principals with interesting permissions
+    query: |
+      MATCH (ppal:GcpPrincipal)
+      WHERE "interesting_permissions" in keys(ppal) AND ppal.interesting_permissions <> []
+      RETURN ppal.name, ppal.email, ppal.interesting_permissions

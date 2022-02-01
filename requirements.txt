@@ -1,0 +1,10 @@
+google-api-python-client
+pyyaml
+py2neo
+shodan
+pygithub
+kubernetes
+dnspython
+tld
+rich
+google-cloud-secret-manager==2.5.0

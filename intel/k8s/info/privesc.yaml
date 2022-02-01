@@ -1,0 +1,119 @@
+
+extra_info:
+  # If you can privesc to these resources, you can escape to the node
+  privescs_to_node_resources: ["pods", "deployments", "daemonsets", "statefulsets", "replicationcontrollers", "replicasets", "jobs", "cronjobs", "*"]
+
+
+#Each technique must indicate:
+# - title: Title of the prives technique
+# - relation: PRIVESC (no other value allowed)
+# - resources: If any of the indicated resources is found in the permission, then the privesc is created
+# - verbs: All of the verbs must be found within the same resource
+# - privesc_to: Options are - "Namespace SAs", "Running SA", "roles". This attr is optinal, it's either this or "class_name" or both.
+# - class_name: Inticate the class_name of the objs to relate the privesc to. This attr is optinal, it's either this or "privesc_to" or both.
+
+# Privescsc are indicated from more relevant to less relevant
+privesc:
+  # Wildcard
+  - title: Wildcard verb pod creation
+    relation: PRIVESC
+    resources: ["pods", "deployments", "daemonsets", "statefulsets", "replicationcontrollers", "replicasets", "jobs", "cronjobs"]
+    verbs: ["*"]
+    privesc_to: "Namespace SAs"
+  
+  - title: Wildcard verb secrets read
+    relation: PRIVESC
+    resources: ["secrets"]
+    verbs: ["*"]
+    privesc_to: "Namespace SAs"
+  
+  - title: Wildcard verb users impersonation
+    relation: PRIVESC
+    verbs: ["*"]
+    resources: ["users"]
+    class_name: K8sUser
+  
+  - title: Wildcard verb groups impersonation
+    relation: PRIVESC
+    verbs: ["*"]
+    resources: ["groups"]
+    class_name: K8sGroup
+  
+  - title: Wildcard verb service accounts impersonation
+    relation: PRIVESC
+    verbs: ["*"]
+    resources: ["serviceaccounts"]
+    class_name: K8sServiceAccount
+  
+  # Impersonation
+  - title: Users impersonation
+    relation: PRIVESC
+    verbs: ["impersonate"]
+    resources: ["users"]
+    class_name: K8sUser
+  
+  - title: Groups impersonation
+    relation: PRIVESC
+    verbs: ["impersonate"]
+    resources: ["groups"]
+    class_name: K8sGroup
+  
+  - title: SAs impersonation
+    relation: PRIVESC
+    verbs: ["impersonate"]
+    resources: ["serviceaccounts"]
+    class_name: K8sServiceAccount
+
+  - title: New pod creation via create
+    relation: PRIVESC
+    verbs: ["create"]
+    resources: ["pods", "deployments", "daemonsets", "statefulsets", "replicationcontrollers", "replicasets", "jobs", "cronjobs"]
+    privesc_to: "Namespace SAs"
+    
+  - title: New pod creation via patch
+    relation: PRIVESC
+    verbs: ["patch"]
+    resources: ["pods", "deployments", "daemonsets", "statefulsets", "replicationcontrollers", "replicasets", "jobs", "cronjobs"]
+    privesc_to: "Namespace SAs"
+
+  # Secrets
+  - title: Secret service account token steal brute-force
+    relation: PRIVESC
+    verbs: ["get"]
+    resources: ["secrets"]
+    privesc_to: "Namespace SAs"
+  
+  - title: Secret service account token steal
+    relation: PRIVESC
+    verbs: ["list"]
+    resources: ["secrets"]
+    privesc_to: "Namespace SAs"
+  
+  # Pod execution
+  - title: Exec into pod SA token steal
+    relation: PRIVESC
+    verbs: ["create"]
+    resources: ["pods/exec"]
+    privesc_to: "Running SA"
+    class_name: K8sPod
+  
+  # Pod port-forward
+  - title: Port-Forward into pod
+    relation: PRIVESC
+    verbs: ["create"]
+    resources: ["pods/portforward"]
+    privesc_to: "Running SA"
+    class_name: K8sPod
+
+  # Rolebinding
+  ## "roles" type MUST be at the end
+  ## Aparently this doesn't work :(
+  #- relation: PRIVESC
+  #  verbs: ["get", "patch"]
+  #  resources: ["rolebindings", "roles"]
+  #  privesc_to: "roles"
+
+  #- relation: PRIVESC
+  #  verbs: ["*"]
+  #  resources: ["clusterrolebindings", "roles"]
+  #  privesc_to: "roles"
