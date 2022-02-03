@@ -31,11 +31,11 @@ PurplePanda has **2 analysis modes**:
 
 ### For Blue/Purple Teams
 
-Use credentials for each platform with at least **admin read access to all the recources** of the platform. This will help you to see exactly the **privesc paths** that can be abused within your configurations in each platform and across
+Use credentials for each platform with at least **admin read access to all the resources** of the platform. This will help you to see exactly the **privesc paths** that can be abused within your configurations in each platform and across
 
 ### For Red Teams
 
-PurplePanda is also **designed to be used by Red Teams**. In general, cloud/saas platforms **won't give everyone access to read** the configuration of the platform, that's why PurplePnada supports the **use of several keys for the same platform**, in order to try to enumerate everything with all the keys you compromised and have the most accurate view of the configuration of the platform.
+PurplePanda is also **designed to be used by Red Teams**. In general, cloud/saas platforms **won't give everyone access to read** the configuration of the platform, that's why PurplePanda supports the **use of several keys for the same platform**, in order to try to enumerate everything with all the keys you compromised and have the most accurate view of the configuration of the platform.
 
 ## Supported platforms
 - **Google Cloud Platform (GCP)**: To understand how GCP security works and how to abuse roles and permissions **read https://book.hacktricks.xyz/cloud-security/gcp-security**
