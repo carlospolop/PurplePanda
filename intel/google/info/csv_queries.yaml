@@ -131,3 +131,9 @@ queries:
       MATCH (ppal:GcpPrincipal)
       WHERE "interesting_permissions" in keys(ppal) AND ppal.interesting_permissions <> []
       RETURN ppal.name, ppal.email, ppal.interesting_permissions
+
+  - name: Cluster hardcoded creds
+    query: |
+      MATCH (cluster:GcpCluster)
+      WHERE cluster.master_username <> "" OR cluster.master_password <> "" OR cluster.clientKey <> ""
+      RETURN cluster.name, cluster.master_username, cluster.master_password, cluster.clientKey

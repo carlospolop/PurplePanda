@@ -34,7 +34,7 @@ PROGRESS = Progress(
 )
 
 
-POOL = ThreadPoolExecutor(max_workers=10)
+POOL = ThreadPoolExecutor(max_workers=15)
 
 VERBOSE = False
 def set_verbose(verbose: bool):

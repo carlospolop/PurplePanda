@@ -18,6 +18,7 @@ This module allows you to discover the following **GCP and Workspace resources**
 - Service Accounts
 - Source Repos
 - Storage
+- KMS
 
 To **understand how GCP security works** and how to abuse roles and permissions **read https://book.hacktricks.xyz/cloud-security/gcp-security**
 

@@ -22,6 +22,7 @@ from intel.google.discovery.disc_pubsub import DiscPubSub
 from intel.google.discovery.disc_secrets import DiscSecrets
 from intel.google.discovery.disc_cloudbuild import DiscCloudbuild
 from intel.google.discovery.disc_sourcerepo import DiscSourceRepos
+from intel.google.discovery.disc_kms import DiscKMS
 from intel.google.discovery.analyze_results import AnalyzeResults
 
 
@@ -44,6 +45,7 @@ class PurplePandaGoogle():
                     ],
 
                     parallel_funcs = [
+                        [DiscKMS(cred=cred["cred"], **kwargs).discover],
                         [
                             DiscClusters(cred=cred["cred"], **kwargs).discover,
                             DiscComposer(cred=cred["cred"], **kwargs).discover

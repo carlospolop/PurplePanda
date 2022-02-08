@@ -22,6 +22,8 @@ class GcpProject(GcpResource):
     composer_environments = RelatedFrom("GcpComposerEnv", "PART_OF")
     clusters = RelatedFrom("GcpCluster", "PART_OF")
     bqdatasets = RelatedFrom("GcpBqDataset", "PART_OF")
+    kmskeyrings = RelatedFrom("GcpKMSKeyRing", "PART_OF")
+    kmskeys = RelatedFrom("GcpKMSKey", "PART_OF")
 
     gcp = Label(name="Gcp")
 

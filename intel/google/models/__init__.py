@@ -7,7 +7,7 @@ from .gcp_cluster import GcpCluster, GcpNodePool
 from .gcp_composer import GcpComposerEnv, GcpOperation
 from .gcp_compute import GcpComputeInstance, GcpComputeDisk, GcpFirewallRule, GcpNetwork, GcpSubnetwork
 from .gcp_folder import GcpFolder
-from .gcp_kms import GcpKMSKey
+from .gcp_kms import GcpKMSKey, GcpKMSKeyRing, GcpKMSKeyVersion
 from .gcp_organization import GcpOrganization
 from .gcp_permission import GcpPermission, GcpRole
 from .gcp_project import GcpProject
@@ -32,7 +32,7 @@ __all__ = [
     "GcpComposerEnv", "GcpOperation",
     "GcpComputeInstance", "GcpComputeDisk", "GcpFirewallRule", "GcpNetwork", "GcpSubnetwork",
     "GcpFolder",
-    "GcpKMSKey",
+    "GcpKMSKey", "GcpKMSKeyRing", "GcpKMSKeyVersion",
     "GcpOrganization",
     "GcpPermission",
     "GcpProject",

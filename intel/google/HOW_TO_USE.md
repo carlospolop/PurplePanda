@@ -330,6 +330,17 @@
     RETURN isolated, disabled, orgs, folders, projects, groups, sn, user</pre>
 </details>
 
+### Gcp - Cluster creds
+`Show all the clusters with username, password or clientkey.`
+
+<details>
+    <summary>e.g.: <i>Gcp - Cluster creds</i></summary>
+    <pre>
+    MATCH (cluster:GcpCluster)
+    WHERE cluster.master_username <> "" OR cluster.master_password <> "" OR cluster.clientKey <> ""
+    RETURN cluster</pre>
+</details>
+
 ### Gcp - Custom Roles
 `Show all the custom roles.`
 

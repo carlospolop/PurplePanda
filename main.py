@@ -35,10 +35,8 @@ def main():
     currently_available_str = ", ".join(currently_available)
 
     help_msg=f"""Enumerate different cloud platforms.\n
-    Use -a to get a quick analysis of the indicated credentials (to improve the input to enumerate the platforms).\n
-    Use -e to enumerate the platforms.\n
+    Platforms available: {currently_available_str}.\n
     You need to indicate '-e' or '-a' at least.\n
-    Platforms available: {currently_available_str}\n
     Google: The tool will try to get info about all the supported resources and find privesc paths within kubernetes and with other clouds/SaaS\n
     Gihub: By default, all the organizations and users the tokens belongs to will be analized. If you just want to analyze specified organizations in the tokens, check the '--github-*' params.\n
     Kubernetes: The tool will try to get info about all the supported resources and find privesc paths within kubernetes and with other clouds/SaaS.\n

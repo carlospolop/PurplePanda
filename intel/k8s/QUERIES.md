@@ -627,6 +627,28 @@ Show all the potential privileged pods:
     RETURN i,svc,p,r1,r2,r3,r4,ip,dom</pre>
   </details>
 
+### K8s - privileged exposed pods
+`Show all the privileged pods accesible externally`
+  <details>
+  <summary>e.g.: <i>K8s - privileged exposed pods</i></summary>
+    <pre>
+    OPTIONAL MATCH(svc1:K8sService)-[:HAS_IP]-(ip:PublicIP)
+    OPTIONAL MATCH(svc2:K8sService)-[:HAS_DOMAIN]-(dom:PublicDomain) WHERE dom.is_external = True
+    OPTIONAL MATCH(i:K8sIngress)-[r1:TO_SERVICE]-(svc3:K8sService)
+    WITH *,collect(svc1)+collect(svc2)+collect(svc3) as svcs
+    UNWIND svcs as svc
+    MATCH (svc)<-[r2:HAS_SERVICE]-(p:K8sPod)
+    WHERE p.sc_runAsUser = 0 OR 
+      p.sc_runAsNonRoot <> True AND p.sc_runAsUser = "" OR
+      p.sc_runAsGroup < 50 OR
+      any(grp in p.sc_supplemental_groups WHERE grp < 50) OR
+      p.host_network OR
+      p.host_pid OR
+      p.host_ipc OR
+      any(path IN p.host_path WHERE any( regex IN ["/", "/proc.*", "/sys.*", "/dev.*", "/var/run.*", ".*docker.sock", ".*crio.sock", ".*/kubelet.*", ".*/pki.*", "/home/admin.*", "/etc.*", ".*/kubernetes.*", ".*/manifests.*", "/root.*"] WHERE regex =~ replace(path,"\\", "\\\\")))
+    RETURN i,r1,svc,r2,p</pre>
+  </details>
+
 ### K8s - privileged sas running in exposed pods
 `Show all the service accounts with privilege escalation possibilities running in a pod accesible externally`
   <details>
