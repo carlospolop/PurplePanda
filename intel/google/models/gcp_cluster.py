@@ -4,6 +4,8 @@ from intel.google.models.gcp_perm_models import GcpResource, GcpRunningSA
 from intel.google.models.gcp_project import GcpProject
 from intel.google.models.gcp_composer import GcpComposerEnv
 from intel.google.models.gcp_service_account import GcpServiceAccount
+from core.models.models import PublicIP
+from intel.google.models.gcp_kms import GcpKMSKey
 
 
 class GcpCluster(GcpResource, GcpRunningSA):
@@ -11,6 +13,50 @@ class GcpCluster(GcpResource, GcpRunningSA):
     __primarykey__ = "name"
 
     name = Property()
+    id = Property()
+    description = Property()
+    initialNodeCount = Property()
+    loggingService = Property()
+    monitoringService = Property()
+    locations = Property()
+    enableKubernetesAlpha = Property()
+    resourceLabels = Property()
+    labelFingerprint = Property()
+    selfLink = Property()
+    endpoint = Property()
+    initialClusterVersion = Property()
+    currentMasterVersion = Property()
+    currentNodeCount = Property()
+    status = Property()
+    nodeIpv4CidrSize = Property()
+    servicesIpv4Cidr = Property()
+    expireTime = Property()
+    location = Property()
+    enableTpu = Property()
+    tpuIpv4CidrBlock = Property()
+
+    master_username = Property()
+    master_password = Property()
+    clusterCaCertificate = Property()
+    clientCertificate = Property()
+    clientKey = Property()
+
+    addonsConfig = Property()
+
+    masterAuthorizedNetworksConfig = Property()
+
+    binaryAuthorization = Property()
+
+    databaseEncryption = Property()
+
+    enablePrivateNodes = Property()
+    enablePrivateEndpoint = Property()
+    masterIpv4CidrBlock = Property()
+    privateEndpoint = Property()
+    publicEndpoint = Property()
+    peeringName = Property()
+    masterGlobalAccessConfig = Property()
+
     node_machineTye = Property()
     node_diskSizeGb = Property()
     node_serialPortLoggingEnable = Property()
@@ -20,28 +66,19 @@ class GcpCluster(GcpResource, GcpRunningSA):
     node_diskType = Property()
     node_enableSecureBoot = Property()
     node_enableIntegrityMonitoring = Property()
-    locations = Property()
-    masterAuthorizedNetworksConfig = Property()
+
     maxPodsPerNode = Property()
-    enablePrivateNodes = Property()
-    enablePrivateEndpoint = Property()
-    masterIpv4CidrBlock = Property()
-    privateEndpoint = Property()
-    publicEndpoint = Property()
-    peeringName = Property()
-    databaseEncryption = Property()
+
     shieldedNodes = Property()
     releaseChannel = Property()
-    source = Property()
-    status = Property()
-    currentMasterVersion = Property()
-    currentNodeCount = Property()
 
     projects = RelatedTo(GcpProject, "PART_OF")
     subnets = RelatedTo("GcpSubnetwork", "CONNECTED")
     nodepools = RelatedFrom("GcpNodePool", "PART_OF")
     composer_environments = RelatedTo(GcpComposerEnv, "PART_OF")
     compute_instances = RelatedFrom("GcpComputeInstance", "PART_OF")
+    public_ips = RelatedTo(PublicIP, "HAS_IP")
+    kmskeys = RelatedTo(GcpKMSKey, "USES")
 
     gcp = Label(name="Gcp")
 

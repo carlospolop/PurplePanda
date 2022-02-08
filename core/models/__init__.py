@@ -1,3 +1,3 @@
-from .models import PublicIP, PublicPort
+from .models import PublicIP, PublicPort, PublicDomain
 
-__all__ = ["PublicIP", "PublicPort"]
+__all__ = ["PublicDomain", "PublicIP", "PublicPort"]

@@ -1,9 +1,13 @@
 import logging
+import json
 from typing import List
+from urllib.parse import urlparse
 from .gcp_disc_client import GcpDisc
 from intel.google.models.gcp_project import GcpProject
 from intel.google.models.gcp_cluster import GcpCluster, GcpNodePool
 from intel.google.models.gcp_compute import GcpSubnetwork
+from core.models.models import PublicIP
+from intel.google.models.gcp_kms import GcpKMSKey
 
 
 class DiscClusters(GcpDisc):
@@ -29,77 +33,146 @@ class DiscClusters(GcpDisc):
         clusters: List[str] = self.execute_http_req(http_prep, "clusters", list_kwargs={"parent": p_obj.name+"/locations/-"})
 
         for cluster in clusters:
-            cluster_nodeConfig = cluster.get("nodeConfig", {})
-            cluster_nodeConfig_metadata = cluster_nodeConfig.get("metadata", {})
-            cluster_nodeConfig_shiled = cluster_nodeConfig.get("shieldedInstanceConfig", {})
-            privateClusterConfig = cluster.get("privateClusterConfig", {})
+            self.save_cluster(cluster, p_obj)
+    
+    
+    def save_cluster(self, cluster, p_obj:GcpProject):
+        """Save the Given GCP cluster"""
 
-            cluster_obj: GcpCluster = GcpCluster(
-                name = cluster["name"],
-                id = cluster["id"],
-                node_machineTye = cluster_nodeConfig.get("machineType", ""),
-                node_diskSizeGb = cluster_nodeConfig.get("diskSizeGb", ""),
-                node_serialPortLoggingEnable = cluster_nodeConfig_metadata.get("serial-port-logging-enable", False),
-                node_disableLegacyEndpoints = cluster_nodeConfig_metadata.get("disable-legacy-endpoints", False),
-                node_VmDnsSetting = cluster_nodeConfig_metadata.get("VmDnsSetting", ""),
-                node_imageType = cluster_nodeConfig.get("imageType", ""),
-                node_diskType = cluster_nodeConfig.get("diskType", ""),
-                node_enableSecureBoot = cluster_nodeConfig_shiled.get("enableSecureBoot", ""),
-                node_enableIntegrityMonitoring = cluster_nodeConfig_shiled.get("enableIntegrityMonitoring", ""),
-                locations = cluster.get("locations", ""),
-                masterAuthorizedNetworksConfig = cluster["masterAuthorizedNetworksConfig"].get("enabled", False) if "masterAuthorizedNetworksConfig" in cluster else False,
-                maxPodsPerNode = cluster["defaultMaxPodsConstraint"].get("maxPodsPerNode", False) if "defaultMaxPodsConstraint" in cluster else "",
-                enablePrivateNodes = privateClusterConfig.get("enablePrivateNodes", False),
-                enablePrivateEndpoint = privateClusterConfig.get("enablePrivateEndpoint", False),
-                masterIpv4CidrBlock = privateClusterConfig.get("masterIpv4CidrBlock", ""),
-                privateEndpoint = privateClusterConfig.get("privateEndpoint", ""),
-                publicEndpoint = privateClusterConfig.get("publicEndpoint", ""),
-                peeringName = privateClusterConfig.get("peeringName", ""),
-                databaseEncryption = cluster["databaseEncryption"].get("state", "") if "databaseEncryption" in cluster else "",
-                shieldedNodes = cluster["shieldedNodes"].get("enabled", False) if "shieldedNodes" in cluster else "",
-                releaseChannel = cluster["releaseChannel"].get("channel", "") if "releaseChannel" in cluster else "",
-                source = cluster.get("selfLink", ""),
-                status = cluster.get("status", ""),
-                currentMasterVersion = cluster.get("currentMasterVersion", ""),
-                currentNodeCount = cluster.get("currentNodeCount", ""),
-            ).save()
-            cluster_obj.projects.update(p_obj, zone=cluster.get("location", cluster.get("zone", "")))
+        cluster_masterauth = cluster.get("masterAuth", {})
+        cluster_nodeConfig = cluster.get("nodeConfig", {})
+        cluster_privateClusterConfig = cluster.get("privateClusterConfig", {})
+        cluster_databaseEncryption = cluster["databaseEncryption"]
+
+        cluster_nodeConfig_metadata = cluster_nodeConfig.get("metadata", {})
+        cluster_nodeConfig_shiled = cluster_nodeConfig.get("shieldedInstanceConfig", {})
+
+        cluster_obj: GcpCluster = GcpCluster(
+            name = cluster["name"],
+            id = cluster["id"],
+            description = cluster.get("description", ""),
+            initialNodeCount = cluster.get("initialNodeCount", ""),
+            loggingService = cluster.get("loggingService", ""),
+            monitoringService = cluster.get("monitoringService", ""),
+            locations = cluster.get("locations", ""),
+            enableKubernetesAlpha = cluster.get("enableKubernetesAlpha", False),
+            resourceLabels = json.dumps(cluster.get("resourceLabels", {})),
+            labelFingerprint = cluster.get("labelFingerprint", ""),
+            selfLink = cluster.get("selfLink", ""),
+            endpoint = cluster.get("endpoint", ""),
+            initialClusterVersion = cluster.get("initialClusterVersion", ""),
+            currentMasterVersion = cluster.get("currentMasterVersion", ""),
+            currentNodeCount = cluster.get("currentNodeCount", ""),
+            status = cluster.get("status", ""),
+            nodeIpv4CidrSize = cluster.get("nodeIpv4CidrSize", ""),
+            servicesIpv4Cidr = cluster.get("servicesIpv4Cidr", ""),
+            expireTime = cluster.get("expireTime", ""),
+            location = cluster.get("location", ""),
+            enableTpu = cluster.get("enableTpu", False),
+            tpuIpv4CidrBlock = cluster.get("tpuIpv4CidrBlock", ""),
+
+            master_username = cluster_masterauth.get("username", ""),
+            master_password = cluster_masterauth.get("password", ""),
+            clusterCaCertificate = cluster_masterauth.get("clusterCaCertificate", ""),
+            clientCertificate = cluster_masterauth.get("clientCertificate", ""),
+            clientKey = cluster_masterauth.get("clientKey", ""),
+
+            addonsConfig = json.dumps(cluster.get("addonsConfig", {})),
+
+            masterAuthorizedNetworksConfig = cluster.get("masterAuthorizedNetworksConfig", {}).get("enabled", False),
+
+            binaryAuthorization = cluster.get("binaryAuthorization", {}).get("enabled", False),
+
+            databaseEncryption = cluster_databaseEncryption.get("state", ""),
+
+            enablePrivateNodes = cluster_privateClusterConfig.get("cluster_privateClusterConfig", False),
+            enablePrivateEndpoint = cluster_privateClusterConfig.get("enablePrivateEndpoint", False),
+            masterIpv4CidrBlock = cluster_privateClusterConfig.get("masterIpv4CidrBlock", ""),
+            privateEndpoint = cluster_privateClusterConfig.get("privateEndpoint", ""),
+            publicEndpoint = cluster_privateClusterConfig.get("publicEndpoint", ""),
+            peeringName = cluster_privateClusterConfig.get("peeringName", ""),
+            masterGlobalAccessConfig = cluster_privateClusterConfig.get("masterGlobalAccessConfig", {}).get("enabled", False),
+
+            node_machineTye = cluster_nodeConfig.get("machineType", ""),
+            node_diskSizeGb = cluster_nodeConfig.get("diskSizeGb", ""),
+            node_serialPortLoggingEnable = cluster_nodeConfig_metadata.get("serial-port-logging-enable", False),
+            node_disableLegacyEndpoints = cluster_nodeConfig_metadata.get("disable-legacy-endpoints", False),
+            node_VmDnsSetting = cluster_nodeConfig_metadata.get("VmDnsSetting", ""),
+            node_imageType = cluster_nodeConfig.get("imageType", ""),
+            node_diskType = cluster_nodeConfig.get("diskType", ""),
+            node_enableSecureBoot = cluster_nodeConfig_shiled.get("enableSecureBoot", ""),
+            node_enableIntegrityMonitoring = cluster_nodeConfig_shiled.get("enableIntegrityMonitoring", ""),
+                        
+            maxPodsPerNode = cluster["defaultMaxPodsConstraint"].get("maxPodsPerNode", False) if "defaultMaxPodsConstraint" in cluster else "",
+            
+            shieldedNodes = cluster["shieldedNodes"].get("enabled", False) if "shieldedNodes" in cluster else "",
+            releaseChannel = cluster["releaseChannel"].get("channel", "") if "releaseChannel" in cluster else "",
+        ).save()
+        cluster_obj.projects.update(p_obj, zone=cluster.get("location", cluster.get("zone", "")))
+        cluster_obj.save()
+
+        # Relate with subnetwork
+        if cluster.get("subnetwork"):
+            subnet_obj: GcpSubnetwork = GcpSubnetwork.get_by_name(name=cluster["subnetwork"]).save()
+            subnet_obj.clusters.update(cluster_obj)
+            subnet_obj.save()
+        else:
+            self.logger.warning(f"Cluster {cluster['name']} found without subnetwork")
+        
+        # Potential public IP
+        if cluster.get("endpoint"):
+            uparsed = urlparse(cluster.get("endpoint"))
+            hostname = uparsed.hostname if uparsed.hostname else cluster.get("endpoint")
+            ip_obj = PublicIP(ip=hostname).save()
+            cluster_obj.public_ips.update(ip_obj)
+        else:
+            self.logger.warning(f"Cluster {cluster['name']} found without endpoint")
+        
+        # Public IP
+        if cluster_privateClusterConfig.get("publicEndpoint"):
+            ip_obj = PublicIP(ip=cluster_privateClusterConfig.get("publicEndpoint")).save()
+            cluster_obj.public_ips.update(ip_obj)
+        
+        # Potential KMS to encrypt K8s secrets (ETCD)
+        kms_key_name = cluster_databaseEncryption.get("keyName")
+        if kms_key_name:
+            kmskey_obj: GcpKMSKey = GcpKMSKey(name=kms_key_name).save()
+            cluster_obj.kmskeys.update(kmskey_obj)
             cluster_obj.save()
 
-            # Relate with subnetwork
-            if cluster.get("subnetwork"):
-                subnet_obj: GcpSubnetwork = GcpSubnetwork.get_by_name(name=cluster["subnetwork"]).save()
-                subnet_obj.clusters.update(cluster_obj)
-                subnet_obj.save()
+        # Relate with running SA
+        sa_email = cluster_nodeConfig.get("serviceAccount", f"{p_obj.projectNumber}-compute@developer.gserviceaccount.com")
+        cluster_obj.relate_sa(sa_email, cluster_nodeConfig["oauthScopes"])
 
-            # Realate with running SA
-            sa_email = cluster_nodeConfig.get("serviceAccount", f"{p_obj.projectNumber}-compute@developer.gserviceaccount.com")
-            cluster_obj.relate_sa(sa_email, cluster_nodeConfig["oauthScopes"])
-
-            # Relate with running nodepools
-            if cluster.get("nodePools"):
-                for nodepool in cluster.get("nodePools"):
-                    nodeconfig = nodepool.get("config", {})
-                    npool_obj = GcpNodePool(
-                        name = nodepool["name"],
-                        node_machineTye = nodeconfig.get("machineType", "") if "config" in nodepool else "",
-                        node_diskSizeGb = nodeconfig.get("diskSizeGb", "") if "config" in nodepool else "",
-                        node_serialPortLoggingEnable = nodeconfig["metadata"].get("serial-port-logging-enable", False) if "metadata" in nodeconfig else "",
-                        node_disableLegacyEndpoints = nodeconfig["metadata"].get("disable-legacy-endpoints", False) if "metadata" in nodeconfig else False,
-                        node_VmDnsSetting = nodeconfig["metadata"].get("VmDnsSetting", "") if "metadata" in nodeconfig else "",
-                        node_imageType = nodeconfig.get("imageType", "") if "config" in nodepool else "",
-                        node_diskType = nodeconfig.get("diskType", "") if "config" in nodepool else "",
-                        node_enableSecureBoot = nodeconfig["shieldedInstanceConfig"].get("enableSecureBoot", False) if "shieldedInstanceConfig" in nodeconfig else False,
-                        node_enableIntegrityMonitoring = nodeconfig["shieldedInstanceConfig"].get("enableIntegrityMonitoring", False) if "shieldedInstanceConfig" in nodeconfig else False,
-                        initialNodeCount = nodepool.get("initialNodeCount", ""),
-                        autoUpgrade = nodepool["management"].get("autoUpgrade", "") if "management" in nodepool else "",
-                        autoRepair = nodepool["management"].get("autoRepair", "") if "management" in nodepool else "",
-                        maxPodsPerNode = nodepool["maxPodsConstraint"].get("maxPodsPerNode", "") if "maxPodsConstraint" in nodepool else "",
-                        podIpv4CidrSize = nodepool.get("podIpv4CidrSize", ""),
-                        locations = nodepool.get("locations", ""),
-                        source = nodepool.get("selfLink", ""),
-                        version = nodepool.get("version", ""),
-                        status = nodepool.get("status", ""),
-                    ).save()
-                    npool_obj.clusters.update(cluster_obj)
-                    npool_obj.save()
+        # Relate with running nodepools
+        if cluster.get("nodePools"):
+            for nodepool in cluster.get("nodePools"):
+                self.save_node_pool(cluster_obj, nodepool)
+    
+    def save_node_pool(self, cluster_obj: GcpCluster, nodepool: dict):
+        """Given the nodepool of a cluster, save it"""
+        
+        nodeconfig = nodepool.get("config", {})
+        npool_obj = GcpNodePool(
+            name = nodepool["name"],
+            node_machineTye = nodeconfig.get("machineType", "") if "config" in nodepool else "",
+            node_diskSizeGb = nodeconfig.get("diskSizeGb", "") if "config" in nodepool else "",
+            node_serialPortLoggingEnable = nodeconfig["metadata"].get("serial-port-logging-enable", False) if "metadata" in nodeconfig else "",
+            node_disableLegacyEndpoints = nodeconfig["metadata"].get("disable-legacy-endpoints", False) if "metadata" in nodeconfig else False,
+            node_VmDnsSetting = nodeconfig["metadata"].get("VmDnsSetting", "") if "metadata" in nodeconfig else "",
+            node_imageType = nodeconfig.get("imageType", "") if "config" in nodepool else "",
+            node_diskType = nodeconfig.get("diskType", "") if "config" in nodepool else "",
+            node_enableSecureBoot = nodeconfig["shieldedInstanceConfig"].get("enableSecureBoot", False) if "shieldedInstanceConfig" in nodeconfig else False,
+            node_enableIntegrityMonitoring = nodeconfig["shieldedInstanceConfig"].get("enableIntegrityMonitoring", False) if "shieldedInstanceConfig" in nodeconfig else False,
+            initialNodeCount = nodepool.get("initialNodeCount", ""),
+            autoUpgrade = nodepool["management"].get("autoUpgrade", "") if "management" in nodepool else "",
+            autoRepair = nodepool["management"].get("autoRepair", "") if "management" in nodepool else "",
+            maxPodsPerNode = nodepool["maxPodsConstraint"].get("maxPodsPerNode", "") if "maxPodsConstraint" in nodepool else "",
+            podIpv4CidrSize = nodepool.get("podIpv4CidrSize", ""),
+            locations = nodepool.get("locations", ""),
+            source = nodepool.get("selfLink", ""),
+            version = nodepool.get("version", ""),
+            status = nodepool.get("status", ""),
+        ).save()
+        npool_obj.clusters.update(cluster_obj)
+        npool_obj.save()

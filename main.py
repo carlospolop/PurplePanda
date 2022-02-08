@@ -57,6 +57,7 @@ def main():
     parser.add_argument('--github-no-leaks', action='store_true', default=False, required=False, help=f'Do not try to find leaks in repos')
     parser.add_argument('--github-get-redundant-info', action='store_true', default=False, required=False, help=f'If the passed credentials arent org admin, activating this may get you more info (and will also take more time)')
     parser.add_argument('--github-get-archived', action='store_true', default=False, required=False, help=f'By default not relations of archived repos are gathered')
+    parser.add_argument('--github-write-as-merge', action='store_true', default=False, required=False, help=f'By default if the user doesn\'t have perms to see the branch protection, only codeowners and admins are supposed to be able to merge in the branch (low false possitives rate). With this option you can indicate to treat anyone with write permissions as if he has merge permissions (high false possitives rate potencially).')
     
     parser.add_argument('--k8s-get-secret-values', action='store_true', default=False, required=False, help=f'Get the secret values (if you have access')
     parser.add_argument('--gcp-get-secret-values', action='store_true', default=False, required=False, help=f'Get the secret values (if you have access')
@@ -88,6 +89,7 @@ def main():
     github_no_leaks = args.github_no_leaks
     github_get_redundant_info = args.github_get_redundant_info
     github_get_archived = args.github_get_archived
+    github_write_as_merge = args.github_write_as_merge
 
     k8s_get_secret_values = args.k8s_get_secret_values
     gcp_get_secret_values = args.gcp_get_secret_values
@@ -132,7 +134,8 @@ def main():
                     "all_branches": github_all_branches,
                     "github_no_leaks": github_no_leaks,
                     "github_get_redundant_info": github_get_redundant_info,
-                    "github_get_archived": github_get_archived
+                    "github_get_archived": github_get_archived,
+                    "github_write_as_merge": github_write_as_merge
                 }
             ))
         

@@ -8,3 +8,4 @@ dnspython
 tld
 rich
 google-cloud-secret-manager==2.5.0
+validators

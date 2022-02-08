@@ -8,6 +8,7 @@ from intel.github.models.github_model import GithubBranch, GithubOrganization, G
 class AnalyzeResults(GithubDisc):
     logger = logging.getLogger(__name__)
     known_ppals_with_role = {}
+    printed_no_protections_msg = False
     
     def discover(self) -> None:
         start = time.time()
@@ -144,9 +145,21 @@ class AnalyzeResults(GithubDisc):
                         if not branch_obj.protected:
                             self._relate_to_merge(branch_obj, write_ppals, reason="Not protected")
                         
+                        # If no idea about the branch protection
+                        known_protections = branch_obj.known_protections
+                        if not known_protections and not self.printed_no_protections_msg:
+                            self.printed_no_protections_msg = True
+                            if not self.github_write_as_merge:
+                                self.logger.error("I couldn't get branch protections so False Positives and False Negatives can occur. I will try to minimize them...")
+                            else:
+                                self.logger.error("I couldn't get branch protections so False Positives and False Negatives can occur. I will treat all write as merge permission as indicated.")
+                                self._relate_to_merge(branch_obj, write_ppals, reason="User indicated to treat all writes as merge")
+                                continue
+                        
+                        
                         # - If allow_force_pushes allows everyone or at least your user
                         #TODO: We are only getting if everyone is allowed. Get if specific people/groups are allowed
-                        elif branch_obj.allow_force_pushes:
+                        elif known_protections and branch_obj.allow_force_pushes:
                             self._relate_to_merge(branch_obj, write_ppals, reason="All can force pushes")
                         
                         else:
@@ -178,13 +191,13 @@ class AnalyzeResults(GithubDisc):
                                             already_writers_codeowners.add(codeowner.__primaryvalue__)
                                             break
                             
-                            if str(branch_obj.required_approving_review_count) == "1":
+                            if str(branch_obj.required_approving_review_count) == "1" or not known_protections:
                                 # - If write equivalent and 1 review and codeowners but codeowners is missconfigured
-                                if branch_obj.require_code_owner_reviews and (repo_obj.unkown_codeowners or repo_obj.no_codeowners):
+                                if (branch_obj.require_code_owner_reviews or not known_protections) and (repo_obj.unkown_codeowners or repo_obj.no_codeowners):
                                     self._relate_to_merge(branch_obj, write_ppals, reason="Can use GitBot token to create the PR and approve it himself as codeowners are missconfigured")
                                 
                                 # - If write equivalent and 1 review and codeowners but user in code owners
-                                if branch_obj.require_code_owner_reviews:
+                                if branch_obj.require_code_owner_reviews or not known_protections:
                                     self._relate_to_merge(branch_obj, writers_codeowners, reason="Can use GitBot token to create the PR and approve it himself (as codeowner)")
                                 
                                 # - If write equivalent and 1 review and no codeowners
@@ -196,7 +209,7 @@ class AnalyzeResults(GithubDisc):
 
 
                             # If admin and not included administrators
-                            if not branch_obj.enforce_admins:
+                            if branch_obj.enforce_admins is False and known_protections:
                                 self._relate_to_merge(branch_obj, admin_ppals, reason="Admins not enforced")
 
                             # - If admin, remove branch protections, merge code, reenable branch protections

@@ -12,6 +12,8 @@ class PublicIP(CustomOGM):
 
     ports = RelatedTo("PublicPort", "HAS_PORT")
     gcp_compute_instances = RelatedFrom("GcpComputeInstance", "HAS_IP")
+    gcp_clusters = RelatedFrom("GcpCluster", "HAS_IP")
+    gcp_composerenvs = RelatedFrom("GcpComposerEnv", "HAS_IP")
     k8s_service = RelatedFrom("K8sService", "HAS_IP")
     public_domains = RelatedFrom("PublicDomain", "HAS_IP")
 
@@ -32,6 +34,7 @@ class PublicDomain(CustomOGM):
     is_external = Property()
 
     gcp_orgs = RelatedFrom("GcpOrganization", "HAS_DOMAIN")
+    gcp_composerenvs = RelatedFrom("GcpComposerEnv", "HAS_IP")
     k8s_service = RelatedFrom("K8sService", "HAS_DOMAIN")
     k8s_ingress = RelatedFrom("K8sIngress", "HAS_DOMAIN")
     public_ips = RelatedTo(PublicIP, "HAS_IP")

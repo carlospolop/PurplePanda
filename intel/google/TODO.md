@@ -16,3 +16,6 @@
 
 ## Privilege Escalation paths
 - Find SAs without .name as those are SAs not managed by the organization
+
+## Searched
+- clusters usernames, passwords, clientKeys

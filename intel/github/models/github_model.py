@@ -224,7 +224,7 @@ class GithubRepo(CustomOGM):
     @staticmethod
     def is_github_repo_url(url):
         uparsed = urlparse(url)
-        return uparsed.netloc == "github.com" or uparsed.netloc == "www.github.com"
+        return uparsed.hostname == "github.com" or uparsed.hostname == "www.github.com"
 
 
 class GithubOrganization(CustomOGM):
@@ -279,6 +279,7 @@ class GithubBranch(CustomOGM):
     protected = Property()
     full_name = Property()
 
+    known_protections = Property()
     allow_force_pushes = Property()
     allow_deletions = Property()
     enforce_admins = Property()

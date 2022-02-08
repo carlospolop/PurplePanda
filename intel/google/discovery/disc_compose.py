@@ -1,13 +1,15 @@
 import logging
 import json
-
+import validators
+from urllib.parse import urlparse
 from typing import List, Union
 from .gcp_disc_client import GcpDisc
 from intel.google.models.gcp_project import GcpProject
 from intel.google.models.gcp_composer import GcpComposerEnv, GcpOperation
 from intel.google.models.gcp_cluster import GcpCluster
+from intel.google.models.gcp_kms import GcpKMSKey
 from intel.google.info.regions import gcp_regions
-
+from core.models import PublicIP, PublicDomain
 
 class DiscComposer(GcpDisc):
     resource = 'composer'
@@ -32,7 +34,6 @@ class DiscComposer(GcpDisc):
             http_prep = self.service.projects().locations().environments()#.list(parent=f"{p_obj.name}/locations/{location}")
             environments: Union[list, str] = self.execute_http_req(http_prep, "environments", disable_warn=True, ret_err=True, list_kwargs={"parent": f"{p_obj.name}/locations/{location}"})
 
-            
             if type(environments) is str:
                 # If this error, we cannot see anythin in this project
                 if "Cloud Composer API has not been used" in environments:
@@ -47,17 +48,28 @@ class DiscComposer(GcpDisc):
                 privateEnvironmentConfig = config.get("privateEnvironmentConfig", {})
                 privateClusterConfig = privateEnvironmentConfig.get("privateClusterConfig", {})
                 webServerNetworkAccessControl = config.get("webServerNetworkAccessControl", {})
+                databaseConfig = config.get("databaseConfig", {})
+                webServerConfig = config.get("webServerConfig", {})
+                encryptionConfig = config.get("encryptionConfig", {})
 
                 composerenv_obj: GcpComposerEnv = GcpComposerEnv(
                     name = compose_env["name"],
                     state = compose_env.get("state", ""),
+                    labels = json.dumps(compose_env.get("labels", {})),
+
+                    gkeCluster = config.get("gkeCluster", ""),
                     dagGcsPrefix = config.get("dagGcsPrefix", ""),
                     nodeCount = config.get("nodeCount", ""),
-                    imageVersion = softwareConfig.get("imageVersion", ""),
-                    pypiPackages = json.dumps(softwareConfig["pypiPackages"]) if "pypiPackages" in softwareConfig else "",
-                    envVariables = json.dumps(softwareConfig["envVariables"]) if "envVariables" in softwareConfig else "",
-                    pythonVersion = softwareConfig.get("pythonVersion", ""),
                     airflowUri = config.get("airflowUri", ""),
+                    environmentSize = config.get("environmentSize", ""),
+
+                    imageVersion = softwareConfig.get("imageVersion", ""),
+                    airflowConfigOverrides = json.dumps(softwareConfig.get("airflowConfigOverrides", {})),
+                    pypiPackages = json.dumps(softwareConfig.get("pypiPackages", {})),
+                    envVariables = json.dumps(softwareConfig.get("envVariables", {})),
+                    pythonVersion = softwareConfig.get("pythonVersion", ""),
+                    schedulerCount = softwareConfig.get("schedulerCount", ""),
+
                     enablePrivateEnvironment = privateEnvironmentConfig.get("enablePrivateEnvironment", False),
                     enablePrivateEndpoint = privateClusterConfig.get("enablePrivateEndpoint", False),
                     masterIpv4CidrBlock = privateClusterConfig.get("masterIpv4CidrBlock", ""),
@@ -65,11 +77,38 @@ class DiscComposer(GcpDisc):
                     webServerIpv4CidrBlock = privateEnvironmentConfig.get("webServerIpv4CidrBlock", ""),
                     cloudSqlIpv4CidrBlock = privateEnvironmentConfig.get("cloudSqlIpv4CidrBlock", ""),
                     webServerIpv4ReservedRange = privateEnvironmentConfig.get("webServerIpv4ReservedRange", ""),
-                    allowedIpRanges = [net["value"] for net in webServerNetworkAccessControl.get("allowedIpRanges", [])]
+                    cloudComposerNetworkIpv4CidrBlock = privateEnvironmentConfig.get("cloudComposerNetworkIpv4CidrBlock", ""),
+                    cloudComposerNetworkIpv4ReservedRange = privateEnvironmentConfig.get("cloudComposerNetworkIpv4ReservedRange", ""),
+                    enablePrivatelyUsedPublicIps = privateEnvironmentConfig.get("enablePrivatelyUsedPublicIps", False),
+                    
+                    allowedIpRanges = [net["value"] for net in webServerNetworkAccessControl.get("allowedIpRanges", [])],
+
+                    databaseMachineType = databaseConfig.get("machineType", ""),
+
+                    webServerType = webServerConfig.get("machineType", ""),
                 ).save()
 
                 composerenv_obj.projects.update(p_obj, zone=location)
                 composerenv_obj.save()
+                
+                # Potential Public Exposure
+                if config.get("airflowUri"):
+                    uparsed = urlparse(config.get("airflowUri"))
+                    hostname = uparsed.hostname
+                    if validators.domain(hostname) is True:
+                        dom_obj = PublicDomain(name=hostname).save()
+                        composerenv_obj.public_domains.update(dom_obj)
+                    
+                    else:
+                        ip_obj = PublicIP(name=hostname).save()
+                        composerenv_obj.public_ips.update(ip_obj)
+                    
+                    composerenv_obj.save()
+
+                if encryptionConfig.get("kmsKeyName"):
+                    kmskey_obj: GcpKMSKey = GcpKMSKey(name=encryptionConfig.get("kmsKeyName")).save()
+                    composerenv_obj.kmskeys.update(kmskey_obj)
+                    composerenv_obj.save()
 
                 cluster_complete_name = config.get("gkeCluster", "")
                 if cluster_complete_name:
@@ -98,5 +137,5 @@ class DiscComposer(GcpDisc):
                 operationType = metadata.get("operationType", ""),
                 done = op.get("done", False),
             ).save()
-            op_obj.composer_environmetns.update(composerenv_obj)
+            op_obj.composer_environments.update(composerenv_obj)
             op_obj.save()

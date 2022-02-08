@@ -31,6 +31,7 @@ class GithubDisc(GithubDiscClient):
         self.github_no_leaks = kwargs.get("github_no_leaks", False)
         self.github_get_redundant_info = kwargs.get("github_get_redundant_info", False)
         self.github_get_archived = kwargs.get("github_get_archived", False)
+        self.github_write_as_merge = kwargs.get("github_write_as_merge", False)
 
         if not self.github_no_leaks and which("gitleaks") is None:
             self.gitleaks_installed = False
@@ -498,6 +499,7 @@ class GithubDisc(GithubDiscClient):
             protected = github_branch.protected,
             full_name = full_name,
 
+            known_protections = False,
             enforce_admins = enforce_admins,
             required_signatures = required_signatures,
             required_status_checks = required_status_checks,
@@ -510,38 +512,40 @@ class GithubDisc(GithubDiscClient):
         # Get branch protection
         if github_branch.protected:
             protections = self.call_github(github_branch.get_protection, ret_val={})
-            allow_force_pushes = protections.raw_data.get("allow_force_pushes", {}).get("enabled", False)
-            allow_deletions = protections.raw_data.get("allow_deletions", {}).get("enabled", False)
-            enforce_admins = protections.enforce_admins
-            required_signatures = protections.raw_data["required_signatures"].get("enabled", False) if protections.raw_data.get("required_signatures") else False
-            required_status_checks = protections.required_status_checks.strict if protections.required_status_checks else None
+            if protections:
+                allow_force_pushes = protections.raw_data.get("allow_force_pushes", {}).get("enabled", False)
+                allow_deletions = protections.raw_data.get("allow_deletions", {}).get("enabled", False)
+                enforce_admins = protections.enforce_admins
+                required_signatures = protections.raw_data["required_signatures"].get("enabled", False) if protections.raw_data.get("required_signatures") else False
+                required_status_checks = protections.required_status_checks.strict if protections.required_status_checks else None
 
-            prr = protections.required_pull_request_reviews
-            if prr:
-                require_code_owner_reviews = prr.require_code_owner_reviews
-                required_approving_review_count = prr.required_approving_review_count
-                dismiss_stale_reviews = prr.dismiss_stale_reviews
+                prr = protections.required_pull_request_reviews
+                if prr:
+                    require_code_owner_reviews = prr.require_code_owner_reviews
+                    required_approving_review_count = prr.required_approving_review_count
+                    dismiss_stale_reviews = prr.dismiss_stale_reviews
 
-            #TODO: We are only getting if everyone is allowed to force push. Get if specific people/groups are allowed
-            branch_obj.allow_force_pushes = allow_force_pushes
-            branch_obj.allow_deletions = allow_deletions
-            branch_obj.enforce_admins = enforce_admins
-            branch_obj.required_signatures = required_signatures
-            branch_obj.required_status_checks = required_status_checks
-            branch_obj.require_code_owner_reviews = require_code_owner_reviews
-            branch_obj.required_approving_review_count = required_approving_review_count
-            branch_obj.dismiss_stale_reviews = dismiss_stale_reviews
-            branch_obj.save()
+                #TODO: We are only getting if everyone is allowed to force push. Get if specific people/groups are allowed
+                branch_obj.allow_force_pushes = allow_force_pushes
+                branch_obj.allow_deletions = allow_deletions
+                branch_obj.enforce_admins = enforce_admins
+                branch_obj.required_signatures = required_signatures
+                branch_obj.required_status_checks = required_status_checks
+                branch_obj.require_code_owner_reviews = require_code_owner_reviews
+                branch_obj.required_approving_review_count = required_approving_review_count
+                branch_obj.dismiss_stale_reviews = dismiss_stale_reviews
+                branch_obj.known_protections = True
+                branch_obj.save()
 
-            if prr and prr.dismissal_users:
-                for user in prr.dismissal_users:
-                    user_obj : GithubUser =  self.save_user(user, investigate=False)
-                    branch_obj.users_dimiss.update(user_obj)
-            
-            if prr and prr.dismissal_teams:
-                for team in prr.dismissal_teams:
-                    team_obj : GithubTeam = self.save_team(team, investigate=False)
-                    branch_obj.teams_dimisss.update(team_obj)
+                if prr and prr.dismissal_users:
+                    for user in prr.dismissal_users:
+                        user_obj : GithubUser =  self.save_user(user, investigate=False)
+                        branch_obj.users_dimiss.update(user_obj)
+                
+                if prr and prr.dismissal_teams:
+                    for team in prr.dismissal_teams:
+                        team_obj : GithubTeam = self.save_team(team, investigate=False)
+                        branch_obj.teams_dimisss.update(team_obj)
 
             for user in self.call_github(github_branch.get_user_push_restrictions, ret_val=[]):
                 user_obj : GithubUser = self.save_user(user, investigate=False)
