@@ -2,6 +2,7 @@ from py2neo.ogm import Property, Label, RelatedFrom, RelatedTo
 
 from core.db.customogm import CustomOGM
 from intel.google.models.gcp_project import GcpProject
+from intel.google.models.gcp_storage import GcpStorage
 from core.models import PublicDomain, PublicIP
 from intel.google.models.gcp_kms import GcpKMSKey
 
@@ -51,6 +52,7 @@ class GcpComposerEnv(CustomOGM):
     public_ips = RelatedTo(PublicIP, "HAS_IP")
     public_domains = RelatedTo(PublicDomain, "HAS_DOMAIN")
     kmskeys = RelatedTo(GcpKMSKey, "USES")
+    storages = RelatedTo(GcpStorage, "HAS_CODE")
 
     gcp = Label(name="Gcp")
 

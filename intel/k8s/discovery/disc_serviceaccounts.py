@@ -15,7 +15,7 @@ class DiscServiceAccounts(K8sDisc):
         """
 
         client_cred = client.CoreV1Api(self.cred)
-        namespaces:List[K8sNamespace] = K8sNamespace.get_all()
+        namespaces:List[K8sNamespace] = K8sNamespace.get_all_by_kwargs(f'_.name =~ "{str(self.cluster_id)}-.*"')
         self._disc_loop(namespaces, self._disc_sas, __name__.split(".")[-1], **{"client_cred": client_cred})
 
     
@@ -23,7 +23,7 @@ class DiscServiceAccounts(K8sDisc):
         """Discover all the service accounts of a namespace"""
 
         client_cred = kwargs["client_cred"]
-        sas = client_cred.list_namespaced_service_account(namespace=ns_obj.name)
+        sas = self.call_k8s_api(f=client_cred.list_namespaced_service_account, namespace=ns_obj.ns_name)
         if not sas or not sas.items:
             return
         
@@ -41,8 +41,14 @@ class DiscServiceAccounts(K8sDisc):
 
             if sa.metadata.annotations and "iam.gke.io/gcp-service-account" in sa.metadata.annotations.keys():
                 gcp_sa_email = sa.metadata.annotations.get("iam.gke.io/gcp-service-account")
-                gcpsa_obj = GcpServiceAccount(email = gcp_sa_email).save()
-                sa_obj.privesc_to_gcp.update(gcpsa_obj, reasons=["Declared impersonation permissions"])
+                gcpsa_obj = GcpServiceAccount(email=gcp_sa_email).save()
+
+                reasons=["KSA->GSA: Workload identity access"]
+                title="KSA->GSA: Workload identity access"
+                summary="The KSA was given Workload identity access to the GSA. For more info read https://book.hacktricks.xyz/cloud-security/pentesting-kubernetes/kubernetes-access-to-other-clouds"
+                limitations=""
+
+                sa_obj = sa_obj.privesc_to(gcpsa_obj, reasons=reasons, title=title, summary=summary, limitations=limitations)
 
             if sa.secrets:
                 for secret in sa.secrets:

@@ -63,11 +63,11 @@ class GcpPrincipal(CustomOGM):
 
 class GcpRunningSA():
 
-    running_service_accounts = RelatedFrom("GcpServiceAccount", "RUN_IN")
+    running_gcp_service_accounts = RelatedFrom("GcpServiceAccount", "RUN_IN")
 
     def relate_sa(self, sa_email: str, scopes: List[str]):
         from intel.google.models.gcp_service_account import GcpServiceAccount
         sa_obj: GcpServiceAccount = GcpServiceAccount(email=sa_email).save()
         
-        self.running_service_accounts.update(sa_obj, scopes=scopes)
+        self.running_gcp_service_accounts.update(sa_obj, scopes=scopes)
         self.save()

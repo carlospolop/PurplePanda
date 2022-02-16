@@ -66,7 +66,7 @@ queries:
       pod.host_network OR
       pod.host_pid OR
       pod.host_ipc OR
-      any(path IN pod.host_path WHERE any( regex IN ["/", "/proc.*", "/sys.*", "/dev.*", "/var/run.*", ".*docker.sock", ".*crio.sock", ".*/kubelet.*", ".*/pki.*", "/home/admin.*", "/etc.*", ".*/kubernetes.*", ".*/manifests.*", "/root.*"] WHERE regex =~ replace(path,"\\", "\\\\")))
+      any(path IN pod.host_path WHERE any( regex IN ["/", "/proc.*", "/sys.*", "/dev.*", "/var", "/var/", "/var/log.*", "/var/run.*", ".*docker.sock", ".*crio.sock", ".*/kubelet.*", ".*/pki.*", "/home/admin.*", "/etc.*", ".*/kubernetes.*", ".*/manifests.*", "/root.*"] WHERE regex =~ replace(path,"\\", "\\\\")))
       RETURN pod.name, pod.sc_runAsUser, pod.sc_runAsNonRoot, pod.sc_runAsGroup, pod.sc_supplemental_groups, pod.host_network, pod.host_pid, pod.host_ipc, pod.host_path
   
   - name: Privileged or root containers
@@ -89,6 +89,18 @@ queries:
     query: |
       MATCH (ppal_escape:K8sPrincipal {potential_escape_to_node:True})<-[:PRIVESC*..2]-(ppal:K8sPrincipal)
       RETURN ppal.name, collect(distinct ppal_escape.name)
+  
+  - name: Pods that can escape to node
+    query: |
+      MATCH (pod:K8sPod {potential_escape_to_node:True})
+      OPTIONAL MATCH (pod)<-[:PART_OF]-(c:K8sContainer)
+      RETURN pod.name, collect(distinct container.name)
+  
+  - name: Containers that can escape to node
+    query: |
+      MATCH (container:K8sContainer {potential_escape_to_node:True})
+      OPTIONAL MATCH (container)-[:PART_OF]->(pod:K8sPod)
+      RETURN container.name, collect(distinct pod.name)
 
   - name: Ppals that can privesc in k8s
     query: |
@@ -134,20 +146,20 @@ queries:
   
   - name: Privesc of authenticated ppals
     query: |
-      MATCH (ppal:K8sPrincipal{name: "system:authenticated"})-[r:PRIVESC]->(victim)
+      MATCH (ppal:K8sPrincipal)-[r:PRIVESC]->(victim) WHERE ppal.name CONTAINS "system:authenticated"
       RETURN ppal.name,collect(distinct victim.name),collect(distinct victim.email)
   
   - name: Privesc of unauthenticated ppals
     query: |
-      MATCH (ppal:K8sPrincipal)-[r:PRIVESC]->(victim) WHERE ppal.name = "system:unauthenticated" or ppal.name = "system:anonymous"
+      MATCH (ppal:K8sPrincipal)-[r:PRIVESC]->(victim) WHERE ppal.name CONTAINS "system:unauthenticated" OR ppal.name CONTAINS "system:anonymous"
       RETURN ppal.name,collect(distinct victim.name),collect(distinct victim.email)
   
   - name: Authenticated ppals permissions
     query: |
-      MATCH (g:K8sGroup{name:"system:authenticated"})-[perms:HAS_PERMS]->(victim)
+      MATCH (g:K8sGroup)-[perms:HAS_PERMS]->(victim) WHERE g.name CONTAINS "system:authenticated"
       RETURN victim.name, perms.verbs
   
   - name: Unauthenticated ppals permissions
     query: |
-      MATCH (g:K8sGroup)-[perms:HAS_PERMS]->(victim) WHERE g.name = "system:unauthenticated" or g.name = "system:anonymous"
+      MATCH (g:K8sGroup)-[perms:HAS_PERMS]->(victim) WHERE g.name CONATINS "system:unauthenticated" OR g.name CONTAINS "system:anonymous"
       RETURN victim.name, perms.verbs

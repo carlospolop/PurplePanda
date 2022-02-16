@@ -11,8 +11,10 @@ from intel.github.discovery.analyze_results import AnalyzeResults
 
 class PurplePandaGithub():
     def discover(self, **kwargs):
-        gdc : GithubDiscClient = GithubDiscClient()
+        config = kwargs.get("config", "")
+        gdc : GithubDiscClient = GithubDiscClient(config=config)
         initial_funcs = []
+        cred = ""
         for cred in gdc.creds:
             initial_funcs.append(
                 DiscoverSaas(
@@ -23,12 +25,13 @@ class PurplePandaGithub():
                 ).do_discovery
             )
         
-        # Launch a thread per set of credentials
-        DiscoverSaas(
-            initial_funcs=initial_funcs,
-            parallel_funcs=[],
-            final_funcs=[AnalyzeResults(cred["cred"], cred["org_name"], cred["str_cred"], **kwargs).discover]
-        ).do_discovery()
+        # In Github just launch an analysis at the end of all the creds
+        if cred:
+            DiscoverSaas(
+                initial_funcs=initial_funcs,
+                parallel_funcs=[],
+                final_funcs=[AnalyzeResults(cred["cred"], cred["org_name"], cred["str_cred"], **kwargs).discover]
+            ).do_discovery()
 
 
     def analyze_creds(self):

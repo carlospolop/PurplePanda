@@ -2,7 +2,10 @@ from py2neo.ogm import Property, Label, RelatedTo, RelatedFrom
 
 from core.db.customogm import CustomOGM
 from intel.google.models.gcp_service_account import GcpServiceAccount
-from core.models.models import PublicIP, PublicDomain
+from intel.google.models.gcp_perm_models import GcpRunningSA
+from core.models.models import PublicIP, PublicDomain, CloudCluster
+
+# In K8s objects primary keys must be "name"
 
 class K8sBasicModel(CustomOGM):
     name = Property()
@@ -56,6 +59,7 @@ class K8sNamespace(K8sPodTemplate):
     __primarylabel__ = "K8sNamespace"
     __primarykey__ = "name"
 
+    ns_name = Property() # Namespace name without identifier
     iam_amazonaws_com_permitted = Property()
     iam_amazonaws_com_allowed_roles = Property()
     cluster_name = Property()
@@ -68,6 +72,7 @@ class K8sNamespace(K8sPodTemplate):
     serviceaccounts = RelatedFrom("K8sServiceAccount", "PART_OF")
     services = RelatedFrom("K8sService", "PART_OF")
     ingresses = RelatedFrom("K8sIngress", "PART_OF")
+    cloudclusters = RelatedTo(CloudCluster, "HAS_NAMESPACE")
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -95,6 +100,7 @@ class K8sNode(K8sBasicModel):
 
     pods = RelatedFrom("K8sPod", "PART_OF")
     volumes = RelatedFrom("K8sVol", "MOUNTED")
+    cloudclusters = RelatedTo(CloudCluster, "HAS_NODE")
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -112,6 +118,7 @@ class K8sContainer(K8sBasicModel):
     lifecycle_post_start = Property()
     lifecycle_pre_stop = Property()
     exist_limit_resources = Property()
+    potential_escape_to_node = Property()
     
     sc_allowPrivilegeEscalation = Property()
     sc_capabilities_drop = Property()
@@ -156,7 +163,7 @@ class K8sContainerPort(CustomOGM):
         self.k8s = True
 
 
-class K8sPod(K8sContainsContainer):
+class K8sPod(K8sContainsContainer, GcpRunningSA):
     __primarylabel__ = "K8sPod"
     __primarykey__ = "name"
 
@@ -176,6 +183,7 @@ class K8sPod(K8sContainsContainer):
     host_network = Property()
     host_pid = Property()
     host_path = Property()
+    potential_escape_to_node = Property()
 
     # Security Context
     sc_fsGroup = Property()
@@ -184,7 +192,8 @@ class K8sPod(K8sContainsContainer):
     sc_runAsNonRoot = Property()
     sc_runAsUser = Property()
     sc_seLinuxOptions = Property()
-    sc_seccompProfile = Property()
+    sc_seccompProfile_type = Property()
+    sc_seccompProfile_localhost_profile = Property()
     sc_supplemental_groups = Property()
     sc_sysctls = Property()
     sc_windowsOptions = Property()
@@ -346,9 +355,10 @@ class K8sPrincipal(CustomOGM):
     __primarykey__ = "name"
 
     name = Property()
+    interesting_permissions = Property()
 
     resources = RelatedTo("K8sResource", "HAS_PERMS")
-    privesc_to = RelatedTo("K8sPrincipal", "PRIVESC")
+    privesc = RelatedTo("K8sPrincipal", "PRIVESC")
     privesc_from = RelatedFrom("K8sPrincipal", "PRIVESC")
     potential_privesc_to = RelatedTo("K8sPrincipal", "POTENTIAL_PRIVESC")
     potential_privesc_from = RelatedFrom("K8sPrincipal", "POTENTIAL_PRIVESC")
@@ -507,6 +517,34 @@ class K8sIngress(K8sBasicModelNS):
     public_domains = RelatedTo(PublicDomain, "HAS_DOMAIN")
     services = RelatedTo(K8sService, "TO_SERVICE")
     secrets = RelatedTo("K8sSecret", "USE_SECRET")
+
+    k8s = Label(name="K8s")
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+
+class K8sMutatingWebhookConfig(K8sBasicModelNS):
+    __primarylabel__ = "K8sMutatingWebhookConfig"
+    __primarykey__ = "name"
+    
+    name = Property()
+    self_link = Property()
+    uid = Property()
+    labels = Property()
+    annotations = Property()
+
+    namespace_selector_expresions = Property()
+    namespace_selector_labels = Property()
+    #client_config = Property()
+    reinvocation_policy = Property()
+    failure_policy = Property()
+    rules_operations = Property()
+    rules_resources = Property()
+
+    public_ips = RelatedTo(PublicIP, "HAS_IP")
+    public_domains = RelatedTo(PublicDomain, "HAS_DOMAIN")
+    cloudclusters = RelatedTo(CloudCluster, "HAS_MUTATINGWEBHOOKCONFIG")
 
     k8s = Label(name="K8s")
 

@@ -107,7 +107,7 @@ Searching for **sensitive information in secrets and environment variables** is 
       p.host_network OR
       p.host_pid OR
       p.host_ipc OR
-      any(path IN p.host_path WHERE any( regex IN ["/", "/proc.*", "/sys.*", "/dev.*", "/var/run.*", ".*docker.sock", ".*crio.sock", ".*/kubelet.*", ".*/pki.*", "/home/admin.*", "/etc.*", ".*/kubernetes.*", ".*/manifests.*", "/root.*"] WHERE regex =~ replace(path,"\\", "\\\\")))
+      any(path IN p.host_path WHERE any( regex IN ["/", "/proc.*", "/sys.*", "/dev.*", "/var", "/var/", "/var/log.*", "/var/run.*", ".*docker.sock", ".*crio.sock", ".*/kubelet.*", ".*/pki.*", "/home/admin.*", "/etc.*", ".*/kubernetes.*", ".*/manifests.*", "/root.*"] WHERE regex =~ replace(path,"\\", "\\\\")))
     RETURN i,r1,svc,r2,p</pre>
   </details>
 
@@ -135,7 +135,8 @@ Searching for **sensitive information in secrets and environment variables** is 
   <details>
   <summary>e.g.: <i>K8s - privesc to sa gcp</i></summary>
     <pre>
-    MATCH (ppal:K8sPrincipal{name: "system:authenticated"})-[r:PRIVESC]->(u)
+    MATCH (ppal:K8sPrincipal)-[r:PRIVESC]->(u)
+    WHERE ppal.name CONTAINS "system:authenticated"
     RETURN ppal,r,u</pre>
   </details>
 
@@ -144,7 +145,7 @@ Searching for **sensitive information in secrets and environment variables** is 
   <details>
   <summary>e.g.: <i>K8s - privesc to sa gcp</i></summary>
     <pre>
-    MATCH (ppal:K8sPrincipal)-[r:PRIVESC]->(u) WHERE ppal.name = "system:unauthenticated" or ppal.name = "system:anonymous"
+    MATCH (ppal:K8sPrincipal)-[r:PRIVESC]->(u) WHERE ppal.name CONTAINS "system:unauthenticated" OR ppal.name CONTAINS "system:anonymous"
     RETURN ppal,r,u</pre>
   </details>
 
@@ -153,7 +154,8 @@ Searching for **sensitive information in secrets and environment variables** is 
   <details>
   <summary>e.g.: <i>K8s - authenticated permissions</i></summary>
     <pre>
-    MATCH (g:K8sGroup{name:"system:authenticated"})-[perms:HAS_PERMS]->(victim)
+    MATCH (g:K8sGroup)-[perms:HAS_PERMS]->(victim)
+    WHERE g.name CONTAINS "system:authenticated"
     RETURN g,perms,victim</pre>
   </details>
 
@@ -162,7 +164,7 @@ Searching for **sensitive information in secrets and environment variables** is 
   <details>
   <summary>e.g.: <i>K8s - authenticated permissions</i></summary>
     <pre>
-    MATCH (g:K8sGroup)-[perms:HAS_PERMS]->(victim) WHERE g.name = "system:unauthenticated" or g.name = "system:anonymous"
+    MATCH (g:K8sGroup)-[perms:HAS_PERMS]->(victim) WHERE g.name CONTAINS "system:unauthenticated" OR g.name CONTAINS "system:anonymous"
     RETURN g,perms,victim</pre>
   </details>
 </details>
@@ -269,7 +271,8 @@ Moreover, a privilege escalation can grant a principal **more privileges over ot
   <details>
   <summary>e.g.: <i>K8s - privesc in ns default</i></summary>
     <pre>
-    MATCH (ns:K8sNamespace {name:$ns})<-[:PART_OF]-(ppal1:K8sPrincipal)-[r:PRIVESC]->(ppal2:K8sPrincipal)-[:PART_OF]->(ns)
+    MATCH (ns:K8sNamespace)<-[:PART_OF]-(ppal1:K8sPrincipal)-[r:PRIVESC]->(ppal2:K8sPrincipal)-[:PART_OF]->(ns)
+    WHERE ns.name CONTAINS $ns
     RETURN ns,ppal1,r,ppal2</pre>
   </details>
 
@@ -279,19 +282,19 @@ Moreover, a privilege escalation can grant a principal **more privileges over ot
   <details>
   <summary>e.g.: <i>K8s - external privesc to ns default</i></summary>
     <pre>
-    MATCH (ns:K8sNamespace {name:$ns})<-[:PART_OF]-(ppal1:K8sPrincipal)<-[r:PRIVESC]-(ppal2:K8sServiceAccount)
-    WHERE NOT EXISTS( (ppal2)-[:PART_OF]->(ns) )
+    MATCH (ns:K8sNamespace)<-[:PART_OF]-(ppal1:K8sPrincipal)<-[r:PRIVESC]-(ppal2:K8sServiceAccount)
+    WHERE ns.name CONTAINS $ns AND NOT EXISTS( (ppal2)-[:PART_OF]->(ns) )
     RETURN ns,ppal1,r,ppal2</pre>
   </details>
 
 
 #### K8s - full external privesc to ns $ns
-`Show the privilege escalation paths from principals to principals in different namespaces`
+`Show the full privilege escalation paths from principals to principals in different namespaces`
   <details>
   <summary>e.g.: <i>K8s - external privesc to ns default</i></summary>
     <pre>
-    MATCH (ns:K8sNamespace {name:$ns})<-[:PART_OF]-(ppal1:K8sPrincipal)<-[r:PRIVESC]-(ppal2:K8sPrincipal)
-    WHERE NOT EXISTS( (ppal2)-[:PART_OF]->(ns) )
+    MATCH (ns:K8sNamespace)<-[:PART_OF]-(ppal1:K8sPrincipal)<-[r:PRIVESC]-(ppal2:K8sPrincipal)
+    WHERE ns.name CONTAINS $ns AND NOT EXISTS( (ppal2)-[:PART_OF]->(ns) )
     RETURN ns,ppal1,r,ppal2</pre>
   </details>
 
@@ -301,7 +304,8 @@ Moreover, a privilege escalation can grant a principal **more privileges over ot
   <details>
   <summary>e.g.: <i>K8s - external privesc to ns default</i></summary>
     <pre>
-    MATCH (ns:K8sNamespace {name:$ns1})<-[:PART_OF]-(ppal1:K8sPrincipal)-[r:PRIVESC]->(ppal2:K8sServiceAccount)-[:PART_OF]->(ns:K8sNamespace {name:$ns2})
+    MATCH (ns1:K8sNamespace)<-[:PART_OF]-(ppal1:K8sPrincipal)-[r:PRIVESC]->(ppal2:K8sServiceAccount)-[:PART_OF]->(ns2:K8sNamespace)
+    WHERE ns1.name CONTAINS $ns1 AND ns2.name CONTAINS $ns2
     RETURN ppal1,r,ppal2</pre>
   </details>
 
@@ -322,7 +326,7 @@ Moreover, a privilege escalation can grant a principal **more privileges over ot
   <details>
   <summary>e.g.: <i>K8s - privesc to pod aws</i></summary>
     <pre>
-    MATCH (p:K8sPod)-[:PART_OF]->(ns:K8sNamespace) WHERE p.iam_amazonaws_com_role <> ""
+    MATCH (ns:K8sNamespace)<-[:PART_OF]-(p:K8sPod) WHERE p.iam_amazonaws_com_role <> ""
     MATCH (ns)<-[:PART_OF]-(ppal1:K8sPrincipal)<-[r:PRIVESC]-(ppal2:K8sPrincipal) WHERE r.title CONTAINS "pod creation"
     RETURN p,ppal2</pre>
   </details>
@@ -341,7 +345,7 @@ Moreover, a privilege escalation can grant a principal **more privileges over ot
 #### K8s - default sas with privesc
 `Show default SAs that can escalate privileges`
   <details>
-  <summary>e.g.: <i>K8s - privesc to sa gcp</i></summary>
+  <summary>e.g.: <i>K8s - default sas with privesc</i></summary>
     <pre>
     MATCH (ppal:K8sPrincipal)-[r:PRIVESC]->(u)
     WHERE ppal.name =~ ".*:default"
@@ -358,56 +362,58 @@ Usually Red Teams will **compromise a few set of credentials** and they will be 
 <details>
 <summary><b>Show queries to search privilege escalation vectors from a specific principal</b></summary>
 
-#### K8s - node escape from $ppal with depth $depth
-`Show ways to escape to the node from a principal with a max depth`
+#### K8s - node escape from $ppal with depth 2
+`Show ways to escape to the node from a principal with a max depth of 2`
   <details>
   <summary>e.g.: <i>K8s - node escape from default:default with depth 2</i></summary>
     <pre>
-    MATCH (ppal:K8sPrincipal {name:$ppal})
-    OPTIONAL MATCH r = (ppal)-[:PRIVESC*..$depth]->(ppal2:K8sPrincipal) WHERE NOT ppal.potential_escape_to_node AND ppal2.potential_escape_to_node
+    MATCH (ppal:K8sPrincipal) WHERE ppal.name CONTAINS $ppal
+    OPTIONAL MATCH r = (ppal)-[:PRIVESC*..2]->(ppal2:K8sPrincipal) WHERE NOT ppal.potential_escape_to_node AND ppal2.potential_escape_to_node
     WITH *, relationships(r) as privescs
     RETURN ppal,privescs,ppal2</pre>
   </details>
 
 
-#### K8s - privesc in ns $ns from $ppal with depth $depth
-`Show privilege escalation paths from a principal to a namespace indicating the depth`
+#### K8s - privesc in ns $ns from $ppal with depth 2
+`Show privilege escalation paths from a principal to a namespace indicating the depth of 2`
   <details>
   <summary>e.g.: <i>K8s - privesc in ns kube-system from default:default with depth 1</i></summary>
     <pre>
-    MATCH r = (ppal:K8sPrincipal {name:$ppal})-r:PRIVESC*..$depth]->(ppal2:K8sPrincipal)-[:PART_OF]->(ns:K8sNamespace{name:$ns})
+    MATCH r = (ppal:K8sPrincipal)-r:PRIVESC*..2]->(ppal2:K8sPrincipal)-[:PART_OF]->(ns:K8sNamespace)
+    WHERE ppal.name CONTAINS $ppal AND ns.name CONTAINS $ns
     WITH *, relationships(r) as privescs
     RETURN ppal,privescs,ppal2</pre>
   </details>
 
 
-#### K8s - privesc to sa aws from $ppal with depth $depth
-`Show the privilege escalation paths from a principals to service accounts with aws permissions indicating the depth`
+#### K8s - privesc to sa aws from $ppal with depth 2
+`Show the privilege escalation paths from a principals to service accounts with aws permissions with a 2 depth`
   <details>
   <summary>e.g.: <i>K8s - privesc to sa aws from default:default with depth 2</i></summary>
     <pre>
-    MATCH r = (ppal:K8sPrincipal {name:$ppal})-[r:PRIVESC*..$depth]->(sa:K8sServiceAccount) WHERE sa.iam_amazonaws_role_arn <> ""
+    MATCH r = (ppal:K8sPrincipal)-[:PRIVESC*..2]->(sa:K8sServiceAccount) WHERE sa.iam_amazonaws_role_arn <> "" AND ppal.name CONTAINS $ppal
     WITH *, relationships(r) as privescs
     RETURN ppal,privescs,sa</pre>
   </details>
 
 
-#### K8s - privesc to pod aws from $ppal with depth $depth
-`Show the privilege escalation path from a principal to pods with aws permissions indicating the depth`
+#### K8s - privesc to pod aws from $ppal with depth 2
+`Show the privilege escalation path from a principal to pods with aws permissions with a 2 depth`
   <details>
   <summary>e.g.: <i>K8s - privesc to pod aws from default:default with depth 2</i></summary>
     <pre>
     MATCH (p:K8sPod)-[:PART_OF]->(ns:K8sNamespace) WHERE p.iam_amazonaws_com_role <> ""
-    MATCH (ns)<-[:PART_OF]-(ppal1:K8sPrincipal)<-[r:PRIVESC*0..$depth]-(ppal2:K8sPrincipal {name:$ppal}) WHERE r.title CONTAINS "pod creation"
+    MATCH (ns)<-[:PART_OF]-(ppal1:K8sPrincipal)<-[r:PRIVESC*0..2]-(ppal2:K8sPrincipal) WHERE r.title CONTAINS "pod creation" AND ppal2.name CONTAINS $ppal
     RETURN p,r,ppal1,ppal2</pre>
   </details>
 
-#### K8s - privesc to sa gcp from $ppal with depth $depth
-`Show the privilege escalation path from a service account to service accounts with gcp permissions indicating the depth`
+#### K8s - privesc to sa gcp from $ppal with depth 2
+`Show the privilege escalation path from a service account to service accounts with gcp permissions with a 2 depth`
   <details>
   <summary>e.g.: <i>K8s - privesc to sa gcp from default:default with depth 2</i></summary>
     <pre>
-    MATCH r = (ppal:K8sPrincipal {name:$ppal})-[:PRIVESC*..$depth]->(gcpsa:GcpServiceAccount)
+    MATCH r = (ppal:K8sPrincipal)-[:PRIVESC*..2]->(gcpsa:GcpServiceAccount)
+    WHERE ppal2.name CONTAINS $ppal
     WITH *, relationships(r) as privescs
     RETURN ppal,privescs,gcpsa</pre>
   </details>

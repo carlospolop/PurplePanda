@@ -1,9 +1,8 @@
 import logging
-import json
 from kubernetes import client
 from typing import List
 from intel.k8s.discovery.k8s_disc import K8sDisc
-from intel.k8s.models.k8s_model import K8sNamespace, K8sNode, K8sPod, K8sVol, K8sSecret, K8sContainer, K8sEnvVar, K8sServiceAccount
+from intel.k8s.models.k8s_model import K8sNamespace
 
 class DiscPods(K8sDisc):
     logger = logging.getLogger(__name__)
@@ -14,7 +13,7 @@ class DiscPods(K8sDisc):
         """
 
         client_cred = client.CoreV1Api(self.cred)
-        namespaces:List[K8sNamespace] = K8sNamespace.get_all()
+        namespaces:List[K8sNamespace] = K8sNamespace.get_all_by_kwargs(f'_.name =~ "{str(self.cluster_id)}-.*"')
         self._disc_loop(namespaces, self._disc_pods, __name__.split(".")[-1], **{"client_cred": client_cred})
 
     
@@ -22,10 +21,9 @@ class DiscPods(K8sDisc):
         """Discover all the pods of a namespace"""
 
         client_cred = kwargs["client_cred"]
-        ns_name = ns_obj.name
-        pods = client_cred.list_namespaced_pod(namespace=ns_name)
+        pods = self.call_k8s_api(f=client_cred.list_namespaced_pod, namespace=ns_obj.ns_name)
         if not pods or not pods.items:
             return
 
         for pod in pods.items:
-            self._save_pod(pod, ns_obj, ns_obj.name)
+            self._save_pod(pod, ns_obj, ns_obj.ns_name)

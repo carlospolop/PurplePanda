@@ -1,3 +1,4 @@
+from xmlrpc.client import Boolean
 import shodan
 import os
 import ipaddress
@@ -6,6 +7,7 @@ import time
 import dns.resolver
 import ipaddress
 import yaml
+from shutil import which
 from py2neo.integration import Table
 
 from core.db.customogm import graph
@@ -155,3 +157,25 @@ class PurplePanda():
         res_table : Table = res.to_table()
         with open(directory+"/"+q_name+".csv", "w") as f:
             res_table.write_separated_values(separator="|", file=f, header=True)
+    
+    def tool_exists(selt, tool_name) -> bool:
+        """Check if a tool exists"""
+        return which(tool_name) is not None
+    
+    def start_discovery(self, functions: list, writing_analysis=False):
+        """Given a list of functions, initiate them"""
+        threads = []
+        for function, name, kwargs in functions:
+            if not writing_analysis:
+                self.logger.info(f"Enumerating {name}...")
+            else:
+                self.logger.info(f"Writting analysis of {name}...")
+
+            threads.append(POOL.submit(function, **kwargs))
+        
+        while any(not t.done() for t in threads):
+            time.sleep(5)
+        
+        for t in threads:
+            t.result()
+

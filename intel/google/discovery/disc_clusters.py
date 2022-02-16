@@ -1,13 +1,18 @@
 import logging
 import json
+import subprocess
+import tempfile
+import os
 from typing import List
 from urllib.parse import urlparse
+from base64 import b64encode
 from .gcp_disc_client import GcpDisc
 from intel.google.models.gcp_project import GcpProject
 from intel.google.models.gcp_cluster import GcpCluster, GcpNodePool
 from intel.google.models.gcp_compute import GcpSubnetwork
 from core.models.models import PublicIP
 from intel.google.models.gcp_kms import GcpKMSKey
+from intel.k8s.purplepanda_k8s import PurplePandaK8s
 
 
 class DiscClusters(GcpDisc):
@@ -70,6 +75,7 @@ class DiscClusters(GcpDisc):
             location = cluster.get("location", ""),
             enableTpu = cluster.get("enableTpu", False),
             tpuIpv4CidrBlock = cluster.get("tpuIpv4CidrBlock", ""),
+            autopilot = cluster.get("autopilot", {}).get("enabled", False),
 
             master_username = cluster_masterauth.get("username", ""),
             master_password = cluster_masterauth.get("password", ""),
@@ -85,7 +91,7 @@ class DiscClusters(GcpDisc):
 
             databaseEncryption = cluster_databaseEncryption.get("state", ""),
 
-            enablePrivateNodes = cluster_privateClusterConfig.get("cluster_privateClusterConfig", False),
+            enablePrivateNodes = cluster_privateClusterConfig.get("cluster_privateClusterConfig", False), # If True, it's a private cluster
             enablePrivateEndpoint = cluster_privateClusterConfig.get("enablePrivateEndpoint", False),
             masterIpv4CidrBlock = cluster_privateClusterConfig.get("masterIpv4CidrBlock", ""),
             privateEndpoint = cluster_privateClusterConfig.get("privateEndpoint", ""),
@@ -139,17 +145,20 @@ class DiscClusters(GcpDisc):
             kmskey_obj: GcpKMSKey = GcpKMSKey(name=kms_key_name).save()
             cluster_obj.kmskeys.update(kmskey_obj)
             cluster_obj.save()
-
-        # Relate with running SA
+        
         sa_email = cluster_nodeConfig.get("serviceAccount", f"{p_obj.projectNumber}-compute@developer.gserviceaccount.com")
         cluster_obj.relate_sa(sa_email, cluster_nodeConfig["oauthScopes"])
 
         # Relate with running nodepools
         if cluster.get("nodePools"):
             for nodepool in cluster.get("nodePools"):
-                self.save_node_pool(cluster_obj, nodepool)
+                self.save_node_pool(cluster_obj, nodepool, sa_email, cluster_nodeConfig["oauthScopes"])
+        
+        # Try to analize the cluster
+        self.analyze_cluster(cluster_obj, p_obj)
+
     
-    def save_node_pool(self, cluster_obj: GcpCluster, nodepool: dict):
+    def save_node_pool(self, cluster_obj: GcpCluster, nodepool: dict, sa_email: str, oauthScopes: list):
         """Given the nodepool of a cluster, save it"""
         
         nodeconfig = nodepool.get("config", {})
@@ -176,3 +185,33 @@ class DiscClusters(GcpDisc):
         ).save()
         npool_obj.clusters.update(cluster_obj)
         npool_obj.save()
+
+        cluster_obj.relate_sa(sa_email, oauthScopes)
+    
+    def analyze_cluster(self, cluster_obj: GcpCluster, p_obj:GcpProject):
+        """Having found a cluster, try to analyze it"""
+
+        if not self.tool_exists("gcloud"):
+            self.logger.error("Tool gcloud doesn't exist, I cannot analize internal K8s env")
+            return
+        
+        with tempfile.NamedTemporaryFile() as tmp:
+            env={"KUBECONFIG": tmp.name, "PATH": os.getenv("PATH")}
+            out = subprocess.check_output(["gcloud", "container", "clusters", "get-credentials", "--project", p_obj.name.split("/")[1], "--zone", cluster_obj.location, cluster_obj.name], env=env, stderr=subprocess.STDOUT)
+            
+            tmp.read() # Need to read first
+            if tmp.tell() <= 0:
+                self.logger.info(f"Looks like you didn't have enough permissions to get the kubeconfig: {out}")
+                return
+            
+            k8s_config = b64encode(f'k8s:\n- file_path: "{tmp.name}"'.encode())
+            functions = []
+            functions.append((PurplePandaK8s().discover, "kubernetes",
+                {
+                    "k8s_get_secret_values": self.gcp_get_secret_values,
+                    "config": k8s_config,
+                    "belongs_to": cluster_obj,
+                    "cluster_id": cluster_obj.name
+                }
+            ))
+            self.start_discovery(functions)

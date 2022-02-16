@@ -489,7 +489,7 @@ Show all the potential privileged pods:
   <details>
   <summary>e.g.: <i>K8s - unauthenticated users access</i></summary>
     <pre>
-    MATCH (g:K8sGroup)-[r:HAS_PERMS]->(b) WHERE WHERE g.name = "system:unauthenticated" or g.name = "system:anonymous"
+    MATCH (g:K8sGroup)-[r:HAS_PERMS]->(b) WHERE WHERE g.name CONTAINS "system:unauthenticated" OR g.name CONTAINS "system:anonymous"
     RETURN g,r,b</pre>
   </details>
 </details>
@@ -645,7 +645,7 @@ Show all the potential privileged pods:
       p.host_network OR
       p.host_pid OR
       p.host_ipc OR
-      any(path IN p.host_path WHERE any( regex IN ["/", "/proc.*", "/sys.*", "/dev.*", "/var/run.*", ".*docker.sock", ".*crio.sock", ".*/kubelet.*", ".*/pki.*", "/home/admin.*", "/etc.*", ".*/kubernetes.*", ".*/manifests.*", "/root.*"] WHERE regex =~ replace(path,"\\", "\\\\")))
+      any(path IN p.host_path WHERE any( regex IN ["/", "/proc.*", "/sys.*", "/dev.*", "/var", "/var/", "/var/log.*", "/var/run.*", ".*docker.sock", ".*crio.sock", ".*/kubelet.*", ".*/pki.*", "/home/admin.*", "/etc.*", ".*/kubernetes.*", ".*/manifests.*", "/root.*"] WHERE regex =~ replace(path,"\\", "\\\\")))
     RETURN i,r1,svc,r2,p</pre>
   </details>
 

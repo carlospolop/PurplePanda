@@ -1,4 +1,5 @@
 import jwt
+import random
 
 from core.utils.purplepanda_prints import PurplePandaPrints
 from core.utils.discover_saas import DiscoverSaas
@@ -18,22 +19,28 @@ from intel.k8s.discovery.disc_roles import DiscRoles
 from intel.k8s.discovery.disc_serviceaccounts import DiscServiceAccounts
 from intel.k8s.discovery.disc_services import DiscServices
 from intel.k8s.discovery.disc_ingresses import DiscIngresses
+from intel.k8s.discovery.disc_mutatingwebhookconfigurations import DiscMutatingWebhookConfigurations
 from intel.k8s.discovery.analyze_results import AnalyzeResults
 
 
 class PurplePandaK8s():
     def discover(self, **kwargs):
-        k8sdc : K8sDiscClient = K8sDiscClient()
+        config = kwargs.get("config", "")
+        k8sdc : K8sDiscClient = K8sDiscClient(config=config)
         initial_funcs = []
         for cred in k8sdc.creds:
+            kwargs["cluster_id"] = kwargs.get("cluster_id", "")
+            kwargs["cluster_id"] = cred.get("cluster_id", "") if not kwargs["cluster_id"] else kwargs["cluster_id"]
+            kwargs["cluster_id"] = str(random.randint(0,9999)) if not kwargs["cluster_id"] else kwargs["cluster_id"]
             initial_funcs.append(
                 DiscoverSaas(
                     initial_funcs = [
                         DiscNamespaces(cred["cred"], **kwargs).discover,
                         DiscNodes(cred["cred"], **kwargs).discover,
+                        DiscMutatingWebhookConfigurations(cred["cred"], **kwargs).discover,
                         DiscServiceAccounts(cred["cred"], **kwargs).discover,
-                        DiscSecrets(cred["cred"], **kwargs).discover,
                         DiscPods(cred["cred"], **kwargs).discover,
+                        DiscSecrets(cred["cred"], **kwargs).discover,
                         DiscDeployments(cred["cred"], **kwargs).discover,
                         DiscJobs(cred["cred"], **kwargs).discover,
                         DiscCronjobs(cred["cred"], **kwargs).discover,
@@ -44,15 +51,17 @@ class PurplePandaK8s():
                         DiscIngresses(cred["cred"], **kwargs).discover,
                         DiscRoles(cred["cred"], **kwargs).discover,
                     ],
-                    parallel_funcs = []
+                    parallel_funcs = [],
+                    # In K8s launch an analysis per cred
+                    final_funcs=[AnalyzeResults(cred["cred"], **kwargs).discover]
                 ).do_discovery
             )
         
-        # Launch a thread per set of credentials
+       
         DiscoverSaas(
             initial_funcs=initial_funcs,
             parallel_funcs=[],
-            final_funcs=[AnalyzeResults(cred["cred"], **kwargs).discover]
+            final_funcs=[]
         ).do_discovery()
     
     def analyze_creds(self):

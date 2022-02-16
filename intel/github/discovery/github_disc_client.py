@@ -33,12 +33,16 @@ org_name can be empty or unexistent (but better if provided to use more specific
 class GithubDiscClient(PurplePanda):
     logger = logging.getLogger(__name__)
 
-    def __init__(self, get_creds=True):
+    def __init__(self, get_creds=True, config=""):
         super().__init__()
         panop = PurplePandaConfig()
-        self.env_var = panop.get_env_var("github")
-        self.env_var_content = os.getenv(self.env_var)
-        assert bool(self.env_var_content), "Github env variable not configured"
+        
+        if config:
+            self.env_var_content = config
+        else:
+            self.env_var = panop.get_env_var("github")
+            self.env_var_content = os.getenv(self.env_var)
+            assert bool(self.env_var_content), "Github env variable not configured"
         
         self.github_config : dict = yaml.safe_load(b64decode(self.env_var_content))
         assert bool(self.github_config.get("github", None)), "Github env variable isn't a correct yaml"

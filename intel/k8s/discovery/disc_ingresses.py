@@ -16,7 +16,7 @@ class DiscIngresses(K8sDisc):
         """
 
         client_cred = client.NetworkingV1beta1Api(self.cred)
-        namespaces:List[K8sNamespace] = K8sNamespace.get_all()
+        namespaces:List[K8sNamespace] = K8sNamespace.get_all_by_kwargs(f'_.name =~ "{str(self.cluster_id)}-.*"')
         self._disc_loop(namespaces, self._disc_ingresses, __name__.split(".")[-1], **{"client_cred": client_cred})
 
     
@@ -24,7 +24,7 @@ class DiscIngresses(K8sDisc):
         """Discover all the ingresses of a namespace"""
 
         client_cred = kwargs["client_cred"]
-        ingresses = client_cred.list_namespaced_ingress(namespace=ns_obj.name)
+        ingresses = self.call_k8s_api(f=client_cred.list_namespaced_ingress, namespace=ns_obj.ns_name)
         if not ingresses or not ingresses.items:
             return
         

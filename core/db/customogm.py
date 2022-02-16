@@ -184,6 +184,24 @@ class CustomOGM(GraphObject):
         final_objs = [self.node_to_obj(n) for n in final_nodes]
         
         return final_objs
+    
+    def privesc_to(self, rsc, reasons, title, summary, limitations=[]):
+        """
+        Generate a PRIVESC relationship between the 2 indicated nodes
+        self is the origin and "rsc" is the final node
+        """
+
+        query = 'MATCH (a:'+self.__primarylabel__+' {'+self.__primarykey__+':"'+self.__primaryvalue__+'"})\n'
+        query += 'MATCH (b:'+rsc.__primarylabel__+' {'+rsc.__primarykey__+':"'+rsc.__primaryvalue__+'"})\n'
+        query += 'MERGE (a)-[r:PRIVESC {title:"'+title+'", reasons:'+str(reasons)+', summary:"'+summary+'", limitations: "'+limitations+'"}]->(b)\n'
+        query += 'RETURN r'
+        
+        graph.evaluate(query)
+
+        # Return the new object with the new relation
+        return self.__class__(**{self.__primarykey__: self.__primaryvalue__}).save()
+
+
 
     
     """def get_by_relation(self, name_rel):

@@ -16,6 +16,7 @@ class PublicIP(CustomOGM):
     gcp_composerenvs = RelatedFrom("GcpComposerEnv", "HAS_IP")
     k8s_service = RelatedFrom("K8sService", "HAS_IP")
     public_domains = RelatedFrom("PublicDomain", "HAS_IP")
+    k8s_mutatingwebhookconfigs = RelatedFrom("K8sMutatingWebhookConfig", "HAS_IP")
 
 class PublicPort(CustomOGM):
     __primarylabel__ = "PublicPort"
@@ -38,8 +39,17 @@ class PublicDomain(CustomOGM):
     k8s_service = RelatedFrom("K8sService", "HAS_DOMAIN")
     k8s_ingress = RelatedFrom("K8sIngress", "HAS_DOMAIN")
     public_ips = RelatedTo(PublicIP, "HAS_IP")
+    k8s_mutatingwebhookconfigs = RelatedFrom("K8sMutatingWebhookConfig", "HAS_DOMAIN")
+
 
 class RepoPpalPrivesc(CustomOGM):
     __primarylabel__ = "RepoPpalPrivesc"
 
     repo_privesc = RelatedFrom(GithubPrincipal, "PRIVESC")
+
+class CloudCluster(CustomOGM):
+    __primarylabel__ = "CloudCluster"
+
+    k8s_namespaces = RelatedFrom("K8sNamespace", "HAS_NAMESPACE")
+    k8s_nodes = RelatedFrom("K8sNode", "HAS_NODE")
+    k8s_mutatingwebhookconfigurations = RelatedFrom("K8sMutatingWebhookConfig", "HAS_MUTATINGWEBHOOKCONFIG")

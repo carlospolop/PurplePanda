@@ -12,7 +12,7 @@ queries:
 
   - name: SAs with privesc
     query: |
-      MATCH(sa_attacker:Gcp)-[:PRIVESC]->(ppal_victim:Gcp)
+      MATCH(sa_attacker:GcpServiceAccount)-[:PRIVESC]->(ppal_victim:Gcp)
       RETURN sa_attacker.email, collect(distinct ppal_victim.name), collect(distinct ppal_victim.email)
 
  - name: SAs with cross-project permissions
@@ -137,3 +137,9 @@ queries:
       MATCH (cluster:GcpCluster)
       WHERE cluster.master_username <> "" OR cluster.master_password <> "" OR cluster.clientKey <> ""
       RETURN cluster.name, cluster.master_username, cluster.master_password, cluster.clientKey
+  
+  - name: Privesc Outside GCP
+    query: |
+      MATCH(attacker:Gcp)-[:PRIVESC]->(victim)
+      WHERE not "Gcp" in labels(victim)
+      RETURN attacker.email, attacker.name, collect(distinct victim.name), collect(distinct victim.email)

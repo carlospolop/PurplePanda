@@ -22,7 +22,9 @@ from .k8s_model import (
     K8sCronJob,
     K8sJob,
     K8sContainerPort,
-    K8sReplicationController
+    K8sReplicationController,
+    K8sReplicaSet,
+    K8sMutatingWebhookConfig
 )
 
 __all__ = [
@@ -49,5 +51,7 @@ __all__ = [
     "K8sCronJob",
     "K8sJob",
     "K8sContainerPort",
-    "K8sReplicationController"
+    "K8sReplicationController",
+    "K8sReplicaSet",
+    "K8sMutatingWebhookConfig"
 ]

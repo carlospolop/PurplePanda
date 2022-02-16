@@ -16,16 +16,16 @@ class DiscRoles(K8sDisc):
         client_cred = client.RbacAuthorizationV1Api(self.cred)        
 
         # Discover all the roles
-        namespaces:List[K8sNamespace] = K8sNamespace.get_all()
-        self._disc_loop(namespaces, self._disc_roles, __name__.split(".")[-1], **{"client_cred": client_cred})
+        #namespaces:List[K8sNamespace] = K8sNamespace.get_all_by_kwargs(f'_.name =~ "{str(self.cluster_id)}-.*"')
+        #self._disc_loop(namespaces, self._disc_roles, __name__.split(".")[-1], **{"client_cred": client_cred})
 
         # Discover all the roles bindings on each namespace
-        namespaces:List[K8sNamespace] = K8sNamespace.get_all()
+        namespaces:List[K8sNamespace] = K8sNamespace.get_all_by_kwargs(f'_.name =~ "{str(self.cluster_id)}-.*"')
         self._disc_loop(namespaces, self._disc_bindings, __name__.split(".")[-1], **{"client_cred": client_cred})
 
         # Discover clusterroles info AFTER roles info
         # Discover all the clusterroles
-        cluster_roles = client_cred.list_cluster_role()
+        cluster_roles = self.call_k8s_api(f=client_cred.list_cluster_role)
         if cluster_roles and cluster_roles.items:
             self._disc_loop(cluster_roles.items, self._disc_cluster_roles, __name__.split(".")[-1])
         
@@ -69,7 +69,7 @@ class DiscRoles(K8sDisc):
 
         client_cred = kwargs["client_cred"]
 
-        roles = client_cred.list_namespaced_role(namespace=ns_obj.name)
+        roles = self.call_k8s_api(f=client_cred.list_namespaced_role, namespace=ns_obj.ns_name)
 
         if not roles or not roles.items:
             return
@@ -100,7 +100,7 @@ class DiscRoles(K8sDisc):
             r_obj.save()
                 
     
-    def _disc_bindings(self, ns_obj, **kwargs):
+    def _disc_bindings(self, ns_obj:K8sNamespace, **kwargs):
         """
         Discover all the bindings of the clusterroles
         """
@@ -108,9 +108,9 @@ class DiscRoles(K8sDisc):
         client_cred = kwargs["client_cred"]
         
         if ns_obj:
-            r_binds = client_cred.list_namespaced_role_binding(namespace=ns_obj.name)
+            r_binds = self.call_k8s_api(f=client_cred.list_namespaced_role_binding, namespace=ns_obj.ns_name)
         else:
-            r_binds = client_cred.list_cluster_role_binding()
+            r_binds = self.call_k8s_api(f=client_cred.list_cluster_role_binding)
 
         if not r_binds or not r_binds.items:
             return
@@ -152,24 +152,30 @@ class DiscRoles(K8sDisc):
                     kind = subject.kind
                     name: str = subject.name
 
-                    if kind == "ServiceAccount" or kind == "User" and name.startswith("system:serviceaccount:"):
+                    if kind == "ServiceAccount" or (kind == "User" and name.startswith("system:serviceaccount:")):
                         namespace = subject.namespace
-                        if name.startswith("system:serviceaccount:"):
-                            name = ":".join(name.split(":")[1:]) #In ca
-                            
-                        ns_obj = K8sNamespace(name = namespace).save()
-                        sa_obj = K8sServiceAccount(name = f"{namespace}:{name}", potential_escape_to_node=False).save()
-                        sa_obj.namespaces.update(ns_obj)
-                        sa_obj.save()
+                        if namespace is None: #This seems impossible, but isn't for some reason. If not namespace given just search the SA by name
+                            sa_obj = K8sServiceAccount.get_by_kwargs(f'_.name CONTAINS ":{name}" AND _.name CONTAINS "{self.cluster_id}-"')
+                            if not sa_obj:
+                                self.logger.error(f"Uknown namespace of KSA {name}, privescs from this SA might be lost")
+                                continue # If no namespace and not known the 
+                        else:
+                            if name.startswith("system:serviceaccount:"):
+                                name = ":".join(name.split(":")[1:]) #In ca
+                            sa_obj = K8sServiceAccount(name = f"{self.cluster_id}-{namespace}:{name}", potential_escape_to_node=False).save()
+                            ns_obj = self._save_ns_by_name(namespace)
+                            sa_obj.namespaces.update(ns_obj)
+                            sa_obj.save()
+                        
                         #TODO: A different binding may have given the sa/user/group permissions over the res_obj already and we are just saving the last one. Myabe that should be an "add" instead of an "update"
                         res_obj.serviceaccounts.update(sa_obj, role_name=role_name, bind_name=bind_name, kind_bind=kind_bind, verbs=verbs, apiGroups=apiGroups)
 
                     elif kind == "User":
-                        user_obj = K8sUser(name=name, potential_escape_to_node=False).save()
+                        user_obj = K8sUser(name=f"{self.cluster_id}-{name}", potential_escape_to_node=False).save()
                         res_obj.users.update(user_obj, role_name=role_name, bind_name=bind_name, kind_bind=kind_bind, verbs=verbs, apiGroups=apiGroups)
 
                     elif kind == "Group":
-                        group_obj = K8sGroup(name=name, potential_escape_to_node=False).save()
+                        group_obj = K8sGroup(name=f"{self.cluster_id}-{name}", potential_escape_to_node=False).save()
                         res_obj.groups.update(group_obj, role_name=role_name, bind_name=bind_name, kind_bind=kind_bind, verbs=verbs, apiGroups=apiGroups)
                     
                     else:

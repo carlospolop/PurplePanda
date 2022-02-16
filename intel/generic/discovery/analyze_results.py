@@ -29,6 +29,8 @@ class AnalyzeResults(PurplePanda):
         self._disc_loop(ips, self._get_ip_info, __name__.split(".")[-1]+"._get_ip_info")
 
         self._disc_loop([None], self._get_repos_privescs, __name__.split(".")[-1]+"._get_repos_privescs")
+
+        self._disc_loop([None], self._merge_k8s_sas_with_unknwon_cluster_id, __name__.split(".")[-1]+"._merge_k8s_sas_with_unknwon_cluster_id")
         
     
     def _get_domain_info(self, dom_obj: PublicDomain):
@@ -65,13 +67,27 @@ class AnalyzeResults(PurplePanda):
         - If a resource mirror a repo and has a relation to another resource with a RUN_IN relation, can escalate to there
         """
 
-        query1 = """MATCH (ppal)-[r_merge:CAN_MERGE]->(b)<-[r_branch:HAS_BRANCH]-(repo)<-[r_mirror:IS_MIRROR]-(mirror)<-[r_run_in:RUN_IN]-(sa)
-                MERGE (ppal)-[:PRIVESC {title:"Can merge in executed mirror code", reason:"Can merge in "+repo.full_name+" which is mirrored by "+mirror.name+" which run the SA"}]->(sa)
-                return ppal """
-        
-        query2 = """MATCH (ppal)-[r_merge:CAN_MERGE]->(b)<-[r_branch:HAS_BRANCH]-(repo)<-[r_mirror:IS_MIRROR]-(mirror)-[r]-(res)<-[r_run_in:RUN_IN]-(sa)
-                MERGE (ppal)-[:PRIVESC {title:"Can merge in executed mirror code", reason:"Can merge in "+repo.full_name+" which is mirrored by "+mirror.name+" which is used by "+res.name+" which run the SA"}]->(sa)
-                return ppal """
-
+        title = "Can merge in executed mirror code"
+        summary = "Being able to merge into a repo you can compromise a SA running in GCP"
+        reasons = '["Can merge in "+repo.full_name+" which is mirrored by "+mirror.name+" which run the SA"]'
+        query1 = 'MATCH (ppal)-[r_merge:CAN_MERGE]->(b)<-[r_branch:HAS_BRANCH]-(repo)<-[r_mirror:IS_MIRROR]-(mirror)<-[r_run_in:RUN_IN]-(sa)\n'
+        query1 += 'MERGE (ppal)-[:PRIVESC {title:"'+title+'", reasons:'+reasons+', summary:"'+summary+'", limitations: ""}]->(sa)\n'
+        query1 += 'RETURN ppal'
         graph.evaluate(query1)
+        
+        reasons = '["Can merge in "+repo.full_name+" which is mirrored by "+mirror.name+" which is used by "+res.name+" which run the SA"]'
+        query2 = 'MATCH (ppal)-[r_merge:CAN_MERGE]->(b)<-[r_branch:HAS_BRANCH]-(repo)<-[r_mirror:IS_MIRROR]-(mirror)-[r]-(res)<-[r_run_in:RUN_IN]-(sa)\n'
+        query2 += 'MERGE (ppal)-[:PRIVESC {title:"'+title+'", reasons:'+reasons+', summary:"'+summary+'", limitations: ""}]->(sa)\n'
+        query2 += 'RETURN ppal'
         graph.evaluate(query2)
+    
+    def _merge_k8s_sas_with_unknwon_cluster_id(self, _):
+        """GCP doesn't know when it create a SA the cluster_id of that SA, there, lets try to find the real SA, move the relation and delete the noe without cluster_id"""
+
+        query = 'MATCH (ksa:K8sServiceAccount)-[r:PRIVESC]->(b)\n'
+        query += 'MATCH (ksa2:K8sServiceAccount) WHERE ksa2.name =~ ".+-"+ksa.name\n'
+        query += 'MERGE (ksa2)-[:PRIVESC{reasons:r.reasons, title:r.title, summary:r.summary, limitations:r.limitations,}]->(b)\n'
+        query += 'DETACH DELETE (ksa)\n'
+        query += 'RETURN ksa2'
+
+        graph.evaluate(query)

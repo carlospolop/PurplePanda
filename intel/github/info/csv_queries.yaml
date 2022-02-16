@@ -49,7 +49,7 @@ queries:
       MATCH(ppal:GithubPrincipal)-[r:PRIVESC]->(resource)
       RETURN ppal.name,collect(distinct resource.name)
   
-  - name: Ppals ca merge in mirrored repos
+  - name: Ppals can merge in mirrored repos
     query: |
       MATCH (ppal)-[r3:CAN_MERGE]->(b:GithubBranch)<-[r2:HAS_BRANCH]-(repo:GithubRepo)<-[:IS_MIRROR]-(resource)
       RETURN ppal.name,collect(distinct repo.name),collect(distinct resource.name)

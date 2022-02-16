@@ -84,5 +84,10 @@ class DiscServiceAccounts(GcpDisc):
             k8s_ns_obj = K8sNamespace(name=k8s_ns_name).save()
             k8s_sa_obj = K8sServiceAccount(name=f"{k8s_ns_name}:{k8s_sa_name}", potential_escape_to_node=False).save()
             k8s_sa_obj.namespaces.update(k8s_ns_obj)
-            k8s_sa_obj.privesc_to_gcp.update(sa_obj)
             k8s_sa_obj.save()
+
+            reasons=["KSA->GSA: Workload identity access"]
+            title="KSA->GSA: Workload identity access"
+            summary="The KSA was given Workload identity access to the GSA. For more info read https://book.hacktricks.xyz/cloud-security/pentesting-kubernetes/kubernetes-access-to-other-clouds"
+            limitations=""
+            k8s_sa_obj = k8s_sa_obj.privesc_to(sa_obj, reasons=reasons, title=title, summary=summary, limitations=limitations)

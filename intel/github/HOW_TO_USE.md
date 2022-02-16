@@ -17,7 +17,7 @@ Searching for **sensitive information in secrets and leaks** is something all th
 #### Gh - secrets
 `Show all the secrets`
   <details>
-  <summary>e.g.: <i>Gh - orgs</i></summary>
+  <summary>e.g.: <i>Gh - secrets</i></summary>
     <pre>
     MATCH(s:GithubSecret) RETURN s</pre>
   </details>

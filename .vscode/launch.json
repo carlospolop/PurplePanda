@@ -10,7 +10,7 @@
             "request": "launch",
             "program": "main.py",
             "console": "integratedTerminal",
-            "args": ["-e", "--platforms", "google", "--gcp-get-secret-values", "--github-only-org", "--k8s-get-secret-values", "-d", "/tmp"],
+            "args": ["-e", "--platforms", "google", "--github-only-org", "-d", "/tmp"],
             "justMyCode": false
         }
     ]

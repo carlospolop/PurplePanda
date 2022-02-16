@@ -40,7 +40,7 @@ class DiscCloudbuild(GcpDisc):
         builds: List[str] = self.execute_http_req(http_prep, "builds", disable_warn=True, list_kwargs={"projectId": project_id})
         for build in builds:
             bucket, bucketObject, repoProjectId, repoName, repoDir, branchName, tagName, commitSha = "", "", "", "", "", "", "", ""
-            source = build["source"]
+            source = build.get("source", {})
             
             bucketSource = source.get("storageSource", source.get("storageSourceManifest", {}))
             if bucketSource:

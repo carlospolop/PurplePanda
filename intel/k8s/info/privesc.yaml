@@ -6,104 +6,153 @@ extra_info:
 
 #Each technique must indicate:
 # - title: Title of the prives technique
-# - relation: PRIVESC (no other value allowed)
+# - summary: Summary of the potential privesc
+# - limitations: Optional string indicating the limitations of the privesc technique
+# - relation: PRIVESC or NO_RELATION(no other value allowed)
 # - resources: If any of the indicated resources is found in the permission, then the privesc is created
 # - verbs: All of the verbs must be found within the same resource
-# - privesc_to: Options are - "Namespace SAs", "Running SA", "roles". This attr is optinal, it's either this or "class_name" or both.
-# - class_name: Inticate the class_name of the objs to relate the privesc to. This attr is optinal, it's either this or "privesc_to" or both.
+# - privesc_to: Options are - "Namespace SAs" or "Running SA". This attr is optional, it's either this or "class_name" or both.
+# - privesc_to_cloud: Boolean indicating if you can abuse the role to escape to running SAs inside the Pod
+# - class_name: Inticate the class_name of the ppal objs to relate the privesc to. This attr is optinal, it's either this or "privesc_to" or both.
 
 # Privescsc are indicated from more relevant to less relevant
 privesc:
   # Wildcard
   - title: Wildcard verb pod creation
+    summary: "It's possible to create arbitrary pods thanks to the verb '*' in a pod specifiction resources. You can abuse this to create pods with arbitrary SAs and images that exfiltrate the token. For more info: https://book.hacktricks.xyz/cloud-security/pentesting-kubernetes/hardening-roles-clusterroles"
     relation: PRIVESC
     resources: ["pods", "deployments", "daemonsets", "statefulsets", "replicationcontrollers", "replicasets", "jobs", "cronjobs"]
     verbs: ["*"]
     privesc_to: "Namespace SAs"
+    privesc_to_cloud: True
   
   - title: Wildcard verb secrets read
+    summary: "It's possible to read secrets thanks to the verb '*'. For more info: https://book.hacktricks.xyz/cloud-security/pentesting-kubernetes/hardening-roles-clusterroles"
     relation: PRIVESC
     resources: ["secrets"]
     verbs: ["*"]
     privesc_to: "Namespace SAs"
+    privesc_to_cloud: False
   
   - title: Wildcard verb users impersonation
+    summary: "It's possible to impersonate users thanks to the verb '*'. You can abuse this to impersonate users. For more info: https://book.hacktricks.xyz/cloud-security/pentesting-kubernetes/hardening-roles-clusterroles"
     relation: PRIVESC
     verbs: ["*"]
     resources: ["users"]
     class_name: K8sUser
+    privesc_to_cloud: False
   
   - title: Wildcard verb groups impersonation
+    summary: "It's possible to impersonate groups thanks to the verb '*'. You can abuse this to impersonate groups. For more info: https://book.hacktricks.xyz/cloud-security/pentesting-kubernetes/hardening-roles-clusterroles"
     relation: PRIVESC
     verbs: ["*"]
     resources: ["groups"]
     class_name: K8sGroup
+    privesc_to_cloud: False
   
   - title: Wildcard verb service accounts impersonation
+    summary: "It's possible to impersonate service accounts thanks to the verb '*'. You can abuse this to impersonate service accounts. For more info: https://book.hacktricks.xyz/cloud-security/pentesting-kubernetes/hardening-roles-clusterroles"
     relation: PRIVESC
     verbs: ["*"]
     resources: ["serviceaccounts"]
     class_name: K8sServiceAccount
+    privesc_to_cloud: False
   
   # Impersonation
   - title: Users impersonation
+    summary: "It's possible to impersonate users thanks to the verb 'impersonate'. You can abuse this to impersonate users. For more info: https://book.hacktricks.xyz/cloud-security/pentesting-kubernetes/hardening-roles-clusterroles"
     relation: PRIVESC
     verbs: ["impersonate"]
     resources: ["users"]
     class_name: K8sUser
+    privesc_to_cloud: False
   
   - title: Groups impersonation
+    summary: "It's possible to impersonate groups thanks to the verb 'impersonate'. You can abuse this to impersonate groups. For more info: https://book.hacktricks.xyz/cloud-security/pentesting-kubernetes/hardening-roles-clusterroles"
     relation: PRIVESC
     verbs: ["impersonate"]
     resources: ["groups"]
     class_name: K8sGroup
+    privesc_to_cloud: False
   
   - title: SAs impersonation
+    summary: "It's possible to impersonate service accounts thanks to the verb 'impersonate'. You can abuse this to impersonate service accounts. For more info: https://book.hacktricks.xyz/cloud-security/pentesting-kubernetes/hardening-roles-clusterroles"
     relation: PRIVESC
     verbs: ["impersonate"]
     resources: ["serviceaccounts"]
     class_name: K8sServiceAccount
+    privesc_to_cloud: False
 
   - title: New pod creation via create
+    summary: "It's possible to create pods thanks to the verb 'create' in a pod specification resource. You can abuse this to create pods with arbitrary SAs and images that exfiltrate the token. For more info: https://book.hacktricks.xyz/cloud-security/pentesting-kubernetes/hardening-roles-clusterroles"
     relation: PRIVESC
     verbs: ["create"]
     resources: ["pods", "deployments", "daemonsets", "statefulsets", "replicationcontrollers", "replicasets", "jobs", "cronjobs"]
     privesc_to: "Namespace SAs"
+    privesc_to_cloud: True
     
   - title: New pod creation via patch
+    summary: "It's possible to patch pods thanks to the verb 'patch' in a pod specification resource. You can abuse this to create pods with arbitrary SAs and images that exfiltrate the token. For more info: https://book.hacktricks.xyz/cloud-security/pentesting-kubernetes/hardening-roles-clusterroles"
     relation: PRIVESC
     verbs: ["patch"]
     resources: ["pods", "deployments", "daemonsets", "statefulsets", "replicationcontrollers", "replicasets", "jobs", "cronjobs"]
     privesc_to: "Namespace SAs"
+    privesc_to_cloud: True
 
   # Secrets
   - title: Secret service account token steal brute-force
+    summary: "It's possible to read secres thanks to the verb 'get' in 'secrets'. You can get the SA tokens and impersonate them. For more info: https://book.hacktricks.xyz/cloud-security/pentesting-kubernetes/hardening-roles-clusterroles"
     relation: PRIVESC
     verbs: ["get"]
     resources: ["secrets"]
     privesc_to: "Namespace SAs"
+    privesc_to_cloud: False
   
   - title: Secret service account token steal
+    summary: "It's possible to read secres thanks to the verb 'list' in 'secrets'. You can get the SA tokens and impersonate them. For more info: https://book.hacktricks.xyz/cloud-security/pentesting-kubernetes/hardening-roles-clusterroles"
     relation: PRIVESC
     verbs: ["list"]
     resources: ["secrets"]
     privesc_to: "Namespace SAs"
+    privesc_to_cloud: False
   
   # Pod execution
   - title: Exec into pod SA token steal
+    summary: "It's possible to exec into pods thanks to the verb 'create' in the resource 'pods/exec'. You can steal the token of the SAs used in the pods. For more info: https://book.hacktricks.xyz/cloud-security/pentesting-kubernetes/hardening-roles-clusterroles"
     relation: PRIVESC
     verbs: ["create"]
     resources: ["pods/exec"]
     privesc_to: "Running SA"
     class_name: K8sPod
+    privesc_to_cloud: True
   
   # Pod port-forward
   - title: Port-Forward into pod
+    summary: "It's possible to port-forward pods thanks to the verb 'create' in the resource 'pods/portforward'. You can access internal services running inside the pod. For more info: https://book.hacktricks.xyz/cloud-security/pentesting-kubernetes/hardening-roles-clusterroles"
     relation: PRIVESC
     verbs: ["create"]
     resources: ["pods/portforward"]
     privesc_to: "Running SA"
     class_name: K8sPod
+    privesc_to_cloud: False
+  
+  # MutatingWebhookConfiguration
+  ## PurplePanda still doesn't support to indicate interesting permissions that aren't privesc
+  #- title: Create MutatingWebhookConfiguration
+  #  summary: "https://book.hacktricks.xyz/cloud-security/pentesting-kubernetes/hardening-roles-clusterroles"
+  #  relation: NO_RELATION
+  #  resources: ["mutatingwebhookconfigurations"]
+  #  verbs: ["create"]
+  #  privesc_to: None
+  #  privesc_to_cloud: False
+  
+  #- title: Patch MutatingWebhookConfiguration
+  #  summary: "https://book.hacktricks.xyz/cloud-security/pentesting-kubernetes/hardening-roles-clusterroles"
+  #  relation: NO_RELATION
+  #  resources: ["mutatingwebhookconfigurations"]
+  #  verbs: ["path"]
+  #  privesc_to: None
+  #  privesc_to_cloud: False
 
   # Rolebinding
   ## "roles" type MUST be at the end

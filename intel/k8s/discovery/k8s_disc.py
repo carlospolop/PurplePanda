@@ -1,18 +1,35 @@
 import logging
 import json
-from intel.k8s.models import K8sPod, K8sContainer, K8sVol, K8sEnvVar, K8sSecret, K8sNamespace, K8sNode, K8sServiceAccount, K8sPodTemplate, K8sContainerPort
+from intel.k8s.models import K8sPod, K8sContainer, K8sVol, K8sEnvVar, K8sSecret, K8sNamespace, K8sNode, K8sServiceAccount, K8sPodTemplate, K8sContainerPort, K8sBasicModel
 from intel.k8s.discovery.k8s_disc_client import K8sDiscClient
 from kubernetes import client
 
 class K8sDisc(K8sDiscClient):
     logger = logging.getLogger(__name__)
 
-    def __init__(self, cred, **kwargs) -> None:
+    def __init__(self, cred, cluster_id, **kwargs) -> None:
         super().__init__(get_creds=False)
         self.cred: client.__class__ = cred
         self.k8s_get_secret_values = kwargs.get("k8s_get_secret_values", False)
         self.task_name = "K8s"
+        self.cluster_id = cluster_id
+        self.belongs_to = kwargs.get("belongs_to")
     
+    def rel_to_cloud_cluster(self, k8s_obj):
+        """Try to realte the cluster object to the cloud clouster it belongs to"""
+        
+        if self.belongs_to:
+            k8s_obj.cloudclusters.update(self.belongs_to)
+            k8s_obj.save()
+    
+    def call_k8s_api(self, f, **kwargs):
+        """Handle the error when calling K8s APIs"""
+
+        try:
+            return f(**kwargs)
+        except:
+            return None
+
 
     def _pod_selector(self, orig: K8sPodTemplate, dict_of_labels):
         """Given an origin and a dictionary of labels, find the related pods"""
@@ -28,6 +45,15 @@ class K8sDisc(K8sDiscClient):
                 for k8s_obj in ress:
                     orig.pods.update(k8s_obj)
                 orig.save()
+
+
+    def _save_ns_by_name(self, ns_name:str):
+        """Given the name of the NS, save it"""
+
+        name = f"{self.cluster_id}-{ns_name}" if not ns_name.startswith(str(self.cluster_id)) else ns_name
+        ns_obj = K8sNamespace(name=name, ns_name=ns_name).save()
+        self.rel_to_cloud_cluster(ns_obj)
+        return ns_obj.save()
 
 
     def _save_container(self, pod_obj: K8sPod, container, ns_name: str):
@@ -111,10 +137,9 @@ class K8sDisc(K8sDiscClient):
         
         if type(orig) is K8sNamespace:
             ns_obj = orig
-            ns_name = ns_obj.name
         else:
-            ns_name = ns_name
-            ns_obj = K8sNamespace(name = ns_name).save()
+            ns_obj = self._save_ns_by_name(ns_name)
+        ns_name = ns_obj.name
         
         sc = pod.spec.security_context
         pod_name = f"{ns_name}:{pod.metadata.name}" if pod.metadata.name else f"{orig.name}-pod-template" #orig.name already has the namespace name
@@ -148,7 +173,8 @@ class K8sDisc(K8sDiscClient):
             sc_runAsNonRoot = sc.run_as_non_root if hasattr(sc, "run_as_non_root") else False,
             sc_runAsUser = sc.run_as_user if hasattr(sc, "run_as_user") else "",
             sc_seLinuxOptions = json.dumps(sc.se_linux_options) if hasattr(sc, "se_linux_options") else "",
-            sc_seccompProfile = json.dumps(sc.seccomp_profile) if hasattr(sc, "seccomp_profile") else "",
+            sc_seccompProfile_type = sc.seccomp_profile.type if hasattr(sc, "seccomp_profile") and sc.seccomp_profile else "",
+            sc_seccompProfile_localhost_profile = sc.seccomp_profile.localhost_profile if hasattr(sc, "seccomp_profile") and sc.seccomp_profile else "",
             sc_supplemental_groups = sc.supplemental_groups if hasattr(sc, "sc_supplemental_groups") else [],
             sc_sysctls = sc.sysctls if hasattr(sc, "sc_sysctls") else [],
             sc_windowsOptions = json.dumps(sc.windows_options) if hasattr(sc, "windows_options") else "",

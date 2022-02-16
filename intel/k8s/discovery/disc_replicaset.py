@@ -14,7 +14,7 @@ class DiscReplicaSets(K8sDisc):
         """
 
         client_cred = client.AppsV1Api(self.cred)
-        namespaces:List[K8sNamespace] = K8sNamespace.get_all()
+        namespaces:List[K8sNamespace] = K8sNamespace.get_all_by_kwargs(f'_.name =~ "{str(self.cluster_id)}-.*"')
         self._disc_loop(namespaces, self._disc_replicasets, __name__.split(".")[-1], **{"client_cred": client_cred})
 
     
@@ -22,8 +22,7 @@ class DiscReplicaSets(K8sDisc):
         """Discover all the replica sets of a namespace"""
 
         client_cred = kwargs["client_cred"]
-        ns_name = ns_obj.name
-        replica_sets = client_cred.list_namespaced_replica_set(namespace=ns_name)
+        replica_sets = self.call_k8s_api(f=client_cred.list_namespaced_replica_set, namespace=ns_obj.ns_name)
         if not replica_sets or not replica_sets.items:
             return
 
@@ -35,10 +34,10 @@ class DiscReplicaSets(K8sDisc):
         
         if type(orig) is K8sNamespace:
             ns_obj = orig
-            ns_name = ns_obj.name
         else:
             ns_name = rs.metadata.namespace
-            ns_obj = K8sNamespace(name = ns_name).save()
+            ns_obj = self._save_ns_by_name(ns_name)
+        ns_name = ns_obj.name
         
         rs_obj = K8sReplicaSet(
             name = f"{ns_name}:{rs.metadata.name}",
@@ -64,7 +63,7 @@ class DiscReplicaSets(K8sDisc):
         
         rs_obj.save()
 
-        self._save_pod(rs.spec.template, rs_obj, ns_name=ns_name)
+        self._save_pod(rs.spec.template, rs_obj, ns_name=ns_obj.ns_name)
 
         # TODO: Consider ds.spec.selector.match_expressions
         if rs.spec.selector:

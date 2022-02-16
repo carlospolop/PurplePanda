@@ -13,7 +13,7 @@ class DiscNamespaces(K8sDisc):
         """
 
         client_cred = client.CoreV1Api(self.cred)
-        namespaces = client_cred.list_namespace()
+        namespaces = self.call_k8s_api(f=client_cred.list_namespace)
         if not namespaces or not namespaces.items:
             return
         
@@ -21,8 +21,9 @@ class DiscNamespaces(K8sDisc):
         
     
     def _disc_nss(self, ns):
-        K8sNamespace(
-            name = ns.metadata.name,
+        ns_obj = K8sNamespace(
+            name = f"{self.cluster_id}-{ns.metadata.name}",
+            ns_name = ns.metadata.name,
             cluster_name = ns.metadata.cluster_name,
             generate_name = ns.metadata.generate_name,
             self_link = ns.metadata.self_link,
@@ -33,5 +34,6 @@ class DiscNamespaces(K8sDisc):
             iam_amazonaws_com_permitted = ns.metadata.annotations.get("iam.amazonaws.com/permitted", "") if ns.metadata.annotations else "",
             iam_amazonaws_com_allowed_roles = ns.metadata.annotations.get("iam.amazonaws.com/allowed-roles", "") if ns.metadata.annotations else "",
         ).save()
+        self.rel_to_cloud_cluster(ns_obj)
 
 

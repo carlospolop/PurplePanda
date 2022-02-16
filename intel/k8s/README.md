@@ -24,8 +24,10 @@ There are the attribute the config env var supports:
 k8s:
 - token: "string"
   url: "string"
+  cluster_id: "Home_Clusters"
 
 - file_path: "string"
+  cluster_id: "GCP-GKE-Name"
 
 # token + url or file_path is mandatory
 ```

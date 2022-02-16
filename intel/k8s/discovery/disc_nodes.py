@@ -13,7 +13,7 @@ class DiscNodes(K8sDisc):
         """
 
         client_cred = client.CoreV1Api(self.cred)
-        nodes = client_cred.list_node()
+        nodes = self.call_k8s_api(f=client_cred.list_node)
         if not nodes or not nodes.items:
             return
         
@@ -21,7 +21,7 @@ class DiscNodes(K8sDisc):
 
 
     def _disc_nodes(self, node):
-        K8sNode(
+        node_obj = K8sNode(
             name = node.metadata.name,
             generate_name = node.metadata.generate_name,
             self_link = node.metadata.self_link,
@@ -44,3 +44,4 @@ class DiscNodes(K8sDisc):
             os = node.status.node_info.operating_system,
             osImage = node.status.node_info.os_image,
         ).save()
+        self.rel_to_cloud_cluster(node_obj)

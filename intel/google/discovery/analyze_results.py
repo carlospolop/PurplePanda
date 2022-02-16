@@ -1,13 +1,14 @@
 import logging
 import yaml
 import os
-import time
 from typing import List, Tuple
 from intel.google.models.gcp_permission import GcpPermission, GcpRole
 from intel.google.models.gcp_perm_models import GcpPrincipal, GcpResource
+from intel.google.models.gcp_cluster import GcpCluster
 from core.db.customogm import CustomOGM
 from intel.google.models.gcp_project import GcpProject
 from intel.google.models.gcp_service_account import GcpServiceAccount
+from intel.k8s.models import K8sNamespace, K8sServiceAccount
 from .gcp_disc_client import GcpDisc
 
 
@@ -39,9 +40,16 @@ class AnalyzeResults(GcpDisc):
         second_order_permissions = prives_def.get("second_order_permissions", [])
         only_to_classes = prives_def.get("only_to_classes", False)
         extra_privesc_to = prives_def["extra_privesc_to"]
+        running_in = prives_def.get("running_in", [])
         title = prives_def["title"]
         summary = prives_def["summary"]
         relation = prives_def["relation"]
+        limitations = prives_def.get("limitations", "")
+
+        # If type RUNNING_SA, you need to indicate from which class you want to extract the running SA
+        if extra_privesc_to == "RUNNING_SA" and not running_in:
+            self.logger.error(f"The privecs technique {title} is of type RUNNING_SA but no class is indicated in 'running_in'. This won't be checked.")
+            return 
         
         roles = [p.name for p in self._get_roles_with_permission(permissions[0])]
         first_perm_name = permissions[0]
@@ -49,7 +57,7 @@ class AnalyzeResults(GcpDisc):
             
         # Get the principals that could escalate
         for role in roles:
-            ppals_rscs = self._get_principals_with_role(role, only_to_classes, extra_privesc_to)
+            ppals_rscs = self._get_principals_with_role(role, only_to_classes, extra_privesc_to, running_in)
             
             for ppal_rsc in ppals_rscs:
                 ppal: GcpPrincipal = ppal_rsc[0]
@@ -59,7 +67,7 @@ class AnalyzeResults(GcpDisc):
             
                 # Get each resource and reason the ppal is related with the first permission needed
                 for rsc_reasons in resources_and_reasons:
-                    res: GcpResource = rsc_reasons[0]
+                    res = rsc_reasons[0] # Can be GcpResource, K8sServiceAccount...
                     
                     # Update permissions
                     self._update_interesting_permissions(ppal, role, first_perm_name, res, summary)
@@ -70,7 +78,7 @@ class AnalyzeResults(GcpDisc):
                     
                     # Check in the cache if this was already analyzed
                     ppal_name, res_name = ppal.__primaryvalue__, res.__primaryvalue__
-                    uniq_name = f"{ppal_name}-{res_name}-{relation}"
+                    uniq_name = f"{ppal_name}-{res_name}-{relation}-{title}"
                     if uniq_name in self.known_ppal_res:
                         continue
                     else:
@@ -109,7 +117,7 @@ class AnalyzeResults(GcpDisc):
                         # Create the relations
                         for rsc in resources_to_relate:
                             # Check the related resource is a GcpResource
-                            if not rsc.__node__.has_label("GcpResource"):
+                            if rsc.__node__.has_label("Gcp") and not rsc.__node__.has_label("GcpResource"):
                                 self.logger.debug(f"Resource {res.__primaryvalue__} of type {type(res)} is not a GcpResource, so it's not going to be related")
                                 continue
                             
@@ -122,10 +130,8 @@ class AnalyzeResults(GcpDisc):
                                 type(ppal) == type(rsc):
                                 continue
 
-                            ppal.privesc.update(rsc, reasons = reasons, title = title, summary = summary)
-                
-                ppal.save()
-    
+                            ppal = ppal.privesc_to(rsc, reasons=reasons, title=title, summary=summary, limitations=limitations)
+
 
     def _update_interesting_permissions(self, ppal:GcpPrincipal, role: str, permission: str, res:GcpResource, summary:str, second_order=False):
         """Given a principal and the interesting permissions discovered, update it"""
@@ -137,8 +143,10 @@ class AnalyzeResults(GcpDisc):
         
         if not ppal.interesting_permissions:
             ppal.interesting_permissions = [interesting_perm]
-        else:
+            ppal.save()
+        elif not interesting_perm in ppal.interesting_permissions:
             ppal.interesting_permissions.append(interesting_perm)
+            ppal.save()
 
 
     def _get_roles_with_permission(self, perm_name: str) -> List[GcpRole]:
@@ -174,13 +182,16 @@ class AnalyzeResults(GcpDisc):
         if hasattr(res, "projectNumber"):
             projectNumber = getattr(res, "projectNumber")
         else:
-            if hasattr(res, "projects") and hasattr(res.projects._related_objects[0][0], "projectNumber"):
-                projectNumber = res.projects._related_objects[0][0].projectNumber # This can put projectNumber as None
+            if hasattr(res, "projects"):
+                related = res.projects._related_objects
+                if len(related) > 0 and len(related[0]) > 0:
+                    if hasattr(related[0][0], "projectNumber"):
+                        projectNumber = related[0][0].projectNumber # This can put projectNumber as None
         
         return projectNumber
 
 
-    def _get_principals_with_role(self, role: str, only_to_classes: List[str], extra_privesc_to: str) -> List[Tuple[GcpPrincipal, List[Tuple[GcpResource, str]]]]:
+    def _get_principals_with_role(self, role: str, only_to_classes: List[str], extra_privesc_to: str, running_in: list) -> List[Tuple[GcpPrincipal, List[Tuple[GcpResource, str]]]]:
         """
         Given a role, get the principals that have it and the resources they have it over
         """
@@ -189,7 +200,7 @@ class AnalyzeResults(GcpDisc):
         
         ppal_res = []
         for ppal in principals_with_role:
-            resources = self._get_assets_from_principal_with_role(ppal, role, only_to_classes, extra_privesc_to)
+            resources = self._get_assets_from_principal_with_role(ppal, role, only_to_classes, extra_privesc_to, running_in)
             ppal_res.append((ppal, resources))
         
         return ppal_res
@@ -234,7 +245,7 @@ class AnalyzeResults(GcpDisc):
         return (can_escalate, reasons, resources_to_relate)
 
 
-    def _get_assets_from_principal_with_role(self, ppal: GcpPrincipal, role: str, only_to_classes: List[str], extra_privesc_to: str) -> List[Tuple[GcpResource, str]]:
+    def _get_assets_from_principal_with_role(self, ppal: GcpPrincipal, role: str, only_to_classes: List[str], extra_privesc_to: str, running_in: list) -> List[Tuple[GcpResource, str]]:
         """
         Given a principal and a role get all the resources affected from that role.
         Check the defined scopes to also add inherited permissions.
@@ -252,12 +263,12 @@ class AnalyzeResults(GcpDisc):
             if role in roles["roles"]:
                 obj = CustomOGM.node_to_obj(resource.perms.node.end_node)
 
-                resources += self._get_recursive_resources(obj, resources_already, only_to_classes, extra_privesc_to, role, from_obj=None)
+                resources += self._get_recursive_resources(obj, resources_already, only_to_classes, extra_privesc_to, role, running_in, from_obj=None)
         
         return resources
 
 
-    def _get_recursive_resources(self, res, resources_already, only_to_classes, extra_privesc_to, role, from_obj):
+    def _get_recursive_resources(self, res, resources_already, only_to_classes, extra_privesc_to, role, running_in, from_obj):
         """Given a list of resources a ppal has a role over, get the resouces inheriting it"""
 
         more_resources = []
@@ -266,14 +277,30 @@ class AnalyzeResults(GcpDisc):
         if res.__primaryvalue__ in resources_already:
             return more_resources
         
-        # If class not authorized, get the authorized object
-        if only_to_classes and not res.__class__.__name__ in only_to_classes:
+        res_class_name = res.__class__.__name__
+        # If interested in SAs running in specific classes, only allow to pass orgs, fodlders, projects and those classes
+        if running_in:
+            if res_class_name in [s["initial_class_name"] for s in self.analysis_data["scope"]]:
+                pass
+            elif res_class_name in running_in:
+                # If class not authorized, get the authorized object
+                res = self._check_privesc_to_res(res, extra_privesc_to)
+            
+        # If not running_in, then all allowed classes are permitted
+        elif only_to_classes and not res_class_name in only_to_classes:
+            # If class not authorized, get the authorized object
             res = self._check_privesc_to_res(res, extra_privesc_to)
-            # If nothing to relate, or already known, return empty
-            if not res or res.__primaryvalue__ in resources_already:
-                return more_resources
         
-        if not res.__primaryvalue__ in resources_already:
+        # Instead of 1 final res, several might be given
+        if type(res) is list:
+            for r in res:
+                more_resources += self._get_recursive_resources(r, resources_already, only_to_classes, extra_privesc_to, role, running_in, from_obj=from_obj)
+        
+        # If nothing to relate, or already known, return empty
+        elif not res or res.__primaryvalue__ in resources_already:
+            return more_resources
+        
+        elif not res.__primaryvalue__ in resources_already:
             if from_obj:
                 more_resources.append((res, f"Indirect role {role} from {from_obj.__class__.__name__}-{from_obj.__primaryvalue__}"))
             else:
@@ -288,7 +315,7 @@ class AnalyzeResults(GcpDisc):
                     objs = res.get_by_relation(relation_name, where=f"EXISTS ((a)<-[:{relation_name}]-(b))")
 
                     for obj in objs:
-                        more_resources += self._get_recursive_resources(obj, resources_already, only_to_classes, extra_privesc_to, role, from_obj=res)
+                        more_resources += self._get_recursive_resources(obj, resources_already, only_to_classes, extra_privesc_to, role, running_in, from_obj=res)
         
         return more_resources
                         
@@ -304,9 +331,17 @@ class AnalyzeResults(GcpDisc):
                     obj = obj2
 
         # Or just to the running SA in the resource
-        elif extra_privesc_to == "RUNNING_SA" and hasattr(res, "running_service_accounts"):
-            for obj2, _ in res.running_service_accounts._related_objects:
+        elif extra_privesc_to == "RUNNING_SA" and hasattr(res, "running_gcp_service_accounts"):
+            for obj2, _ in res.running_gcp_service_accounts._related_objects:
                 if type(obj2) is GcpServiceAccount:
                     obj = obj2
+        
+        elif extra_privesc_to == "K8S_CLUSTER_SAS" and hasattr(res, "k8s_namespaces"):
+            obj = []
+            res: GcpCluster
+            for k8s_obj, _ in res.k8s_namespaces._related_objects:
+                k8s_obj: K8sNamespace
+                for ksa_obj in K8sServiceAccount.get_all_by_kwargs(f'_.name =~ "^{k8s_obj.name}:.*"'):
+                    obj.append(ksa_obj)
         
         return obj

@@ -14,7 +14,7 @@ class DiscReplicationControllers(K8sDisc):
         """
 
         client_cred = client.CoreV1Api(self.cred)
-        namespaces:List[K8sNamespace] = K8sNamespace.get_all()
+        namespaces:List[K8sNamespace] = K8sNamespace.get_all_by_kwargs(f'_.name =~ "{str(self.cluster_id)}-.*"')
         self._disc_loop(namespaces, self._disc_replicationcontroller, __name__.split(".")[-1], **{"client_cred": client_cred})
 
     
@@ -22,8 +22,7 @@ class DiscReplicationControllers(K8sDisc):
         """Discover all the replicationcontrollers of a namespace"""
 
         client_cred = kwargs["client_cred"]
-        ns_name = ns_obj.name
-        replicationcontroller = client_cred.list_namespaced_replication_controller(namespace=ns_name)
+        replicationcontroller = self.call_k8s_api(f=client_cred.list_namespaced_replication_controller, namespace=ns_obj.ns_name)
         if not replicationcontroller or not replicationcontroller.items:
             return
 
@@ -35,10 +34,10 @@ class DiscReplicationControllers(K8sDisc):
         
         if type(orig) is K8sNamespace:
             ns_obj = orig
-            ns_name = ns_obj.name
         else:
             ns_name = rc.metadata.namespace
-            ns_obj = K8sNamespace(name = ns_name).save()
+            ns_obj = self._save_ns_by_name(ns_name)
+        ns_name = ns_obj.name
         
         rc_obj = K8sReplicationController(
             name = f"{ns_name}:{rc.metadata.name}",
@@ -64,7 +63,7 @@ class DiscReplicationControllers(K8sDisc):
         
         rc_obj.save()
 
-        self._save_pod(rc.spec.template, rc_obj, ns_name=ns_name)
+        self._save_pod(rc.spec.template, rc_obj, ns_name=ns_obj.ns_name)
 
         # TODO: Consider ds.spec.selector.match_expressions
         if rc.spec.selector:

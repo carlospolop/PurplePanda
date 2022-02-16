@@ -8,6 +8,7 @@ from intel.google.models.gcp_project import GcpProject
 from intel.google.models.gcp_composer import GcpComposerEnv, GcpOperation
 from intel.google.models.gcp_cluster import GcpCluster
 from intel.google.models.gcp_kms import GcpKMSKey
+from intel.google.models.gcp_storage import GcpStorage
 from intel.google.info.regions import gcp_regions
 from core.models import PublicIP, PublicDomain
 
@@ -90,6 +91,12 @@ class DiscComposer(GcpDisc):
 
                 composerenv_obj.projects.update(p_obj, zone=location)
                 composerenv_obj.save()
+
+                if config.get("dagGcsPrefix"):
+                    bucket_name = config.get("dagGcsPrefix").split("gs://")[-1].split("/")[0] #Format: gs://folder/folder/folder... to just the first folder
+                    storage_obj = GcpStorage(name=bucket_name).save() 
+                    composerenv_obj.storages.update(storage_obj, link=config.get("dagGcsPrefix"))
+                    composerenv_obj.save()
                 
                 # Potential Public Exposure
                 if config.get("airflowUri"):

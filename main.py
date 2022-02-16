@@ -3,10 +3,9 @@ import logging
 import os
 from rich.logging import RichHandler
 from rich import print
-from time import sleep
 
 from core.utils.purplepanda import set_verbose, PurplePanda
-import core.utils.purplepanda
+from core.utils.purplepanda import PurplePanda, PROGRESS
 from core.utils.purplepanda_config import PurplePandaConfig
 from core.utils.purplepanda_prints import PurplePandaPrints
 from intel.generic.discovery.analyze_results import AnalyzeResults
@@ -45,7 +44,6 @@ def main():
     parser.add_argument('-a', '--analyze', action='store_true', default=False, required=False, help=f'Fast analysis of the indicated (comma-separated) platform credentials.')
     parser.add_argument('-e', '--enumerate', action='store_true', default=False, required=False, help=f'Enumerate the assets of the indicated (comma-separated) platforms.')
     parser.add_argument('-p', '--platforms', type=str, required=True, help=f'Comma-separated list of platforms to analyze/enumerate. Currently available: {currently_available_str}')
-    parser.add_argument('-t', '--threads', type=int, default=15, required=False, help=f'Number of threads to use (default=15)')
     parser.add_argument('-v', '--verbose', action='store_true', default=False, required=False, help=f'Do not remove the progress bar when the task is done')
     parser.add_argument('-d', '--directory', type=str, required=False, help=f'Path to the directory to save an initial analisys of the results in CVS (separator="|") format. If you don\'t indicate any, no analysis will be written to disk')
     
@@ -145,7 +143,7 @@ def main():
                 }
             ))
         
-        start_discovery(functions)
+        PurplePanda().start_discovery(functions)
     
         # Perform a combined analisys
         AnalyzeResults().discover()
@@ -159,30 +157,16 @@ def main():
                         }
                     ))
         
-            start_discovery(write_csv_functions, writing_analysis=True)
+            PurplePanda().start_discovery(write_csv_functions, writing_analysis=True)
     
         print("Finished!")
 
 
-def start_discovery(functions: list, writing_analysis=False):
-    threads = []
-    for function, name, kwargs in functions:
-        if not writing_analysis:
-            logger.info(f"Enumerating {name}...")
-        else:
-            logger.info(f"Writting analysis of {name}...")
 
-        threads.append(core.utils.purplepanda.POOL.submit(function, **kwargs))
-    
-    while any(not t.done() for t in threads):
-        sleep(5)
-    
-    for t in threads:
-        t.result()
 
 
 if __name__ == "__main__":
     # It's very important to maintain the progress initializated here with the main thread or the whole output could stop working if you init it in a different thread
-    with core.utils.purplepanda.PROGRESS:
+    with PROGRESS:
         PurplePandaPrints.print_logo()
         main()

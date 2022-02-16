@@ -19,6 +19,7 @@ class GcpStorage(GcpResource):
 
     projects = RelatedTo(GcpProject, "PART_OF")
     cloudbuils = RelatedFrom("GcpCloudbuild", "HAS_SOURCE")
+    composerenvs = RelatedFrom("GcpComposerEnv", "HAS_CODE")
 
     gcp = Label(name="Gcp")
 

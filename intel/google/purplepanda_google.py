@@ -14,7 +14,7 @@ from intel.google.discovery.disc_storage import DiscStorage
 from intel.google.discovery.disc_compute_instances import DiscComputeInstances
 from intel.google.discovery.disc_compute_networks import DiscComputeNetworks
 from intel.google.discovery.disc_compute_subnetworks import DiscComputeSubnetworks
-from intel.google.discovery.disc_compose import DiscComposer
+from intel.google.discovery.disc_composer import DiscComposer
 from intel.google.discovery.disc_clusters import DiscClusters
 from intel.google.discovery.disc_bigquery import DiscBigquery
 from intel.google.discovery.disc_cloud_run import DiscCloudRun
@@ -29,7 +29,8 @@ from intel.google.discovery.analyze_results import AnalyzeResults
 class PurplePandaGoogle():
 
     def discover(self, **kwargs):
-        gdc : GcpDiscClient = GcpDiscClient()
+        config = kwargs.get("config", "")
+        gdc : GcpDiscClient = GcpDiscClient(config=config)
         initial_funcs = []
         for cred in gdc.creds:
             initial_funcs.append(
@@ -67,7 +68,7 @@ class PurplePandaGoogle():
                 ).do_discovery
             )
         
-        # Launch a thread per set of credentials
+        # In GCP just launch an analysis at the end of all the creds
         DiscoverSaas(
             initial_funcs=initial_funcs,
             parallel_funcs=[],

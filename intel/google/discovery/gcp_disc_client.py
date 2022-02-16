@@ -1,4 +1,3 @@
-from socket import has_dualstack_ipv6
 from typing import List, Optional, Union
 import yaml
 import logging
@@ -45,15 +44,18 @@ class GcpDiscClient(PurplePanda):
 
     logger = logging.getLogger(__name__)
 
-    def __init__(self, get_creds=True) -> None:
+    def __init__(self, get_creds=True, config="") -> None:
         super().__init__()
         self.gcp = True
         panop = PurplePandaConfig()
-        self.env_var = panop.get_env_var("google")
-        self.env_var_content = os.getenv(self.env_var)
 
-        msg = f"Google env variable '{self.env_var}' not configured"
-        assert bool(self.env_var_content), msg
+        if config:
+            self.env_var_content = config
+        else:
+            self.env_var = panop.get_env_var("google")
+            self.env_var_content = os.getenv(self.env_var)
+            msg = f"Google env variable '{self.env_var}' not configured"
+            assert bool(self.env_var_content), msg
         
         self.google_config : dict = yaml.safe_load(b64decode(self.env_var_content))
         assert bool(self.google_config.get("google", None)), "Google env variable isn't a correct yaml"
@@ -80,8 +82,8 @@ class GcpDiscClient(PurplePanda):
             elif os.environ.get("GOOGLE_APPLICATION_CREDENTIALS"):
                 del os.environ["GOOGLE_APPLICATION_CREDENTIALS"]
             
-            file_path = file_path if file_path else os.environ["HOME"]+"/.config/gcloud/application_default_credentials.json"
-            self._remove_quota(file_path)
+            #file_path = file_path if file_path else os.environ["HOME"]+"/.config/gcloud/application_default_credentials.json"
+            #self._remove_quota(file_path)
 
             scopes = entry.get("scopes", ["https://www.googleapis.com/auth/appengine.admin",
                                     "https://www.googleapis.com/auth/accounts.reauth",
@@ -110,7 +112,7 @@ class GcpDiscClient(PurplePanda):
         
         return creds
     
-    def _remove_quota(self, filepath):
+    '''def _remove_quota(self, filepath):
         """Remove quota_project_id from the config file to access more data"""
 
         if os.path.exists(filepath):
@@ -120,7 +122,7 @@ class GcpDiscClient(PurplePanda):
             if config.get("quota_project_id"):
                 del config["quota_project_id"]
                 with open(filepath, 'w') as f:
-                    json.dump(config, f)
+                    json.dump(config, f)'''
 
 
     def execute_http_req(self, prep_http, extract_field:Optional[str], disable_warn=False, ret_err=False, cont=0, list_kwargs={}) -> Union[list, str, dict]:
@@ -136,7 +138,8 @@ class GcpDiscClient(PurplePanda):
                 final_prep_http = prep_http
 
             while final_prep_http is not None:
-                resp: dict = final_prep_http.execute(num_retries=5)
+                final_prep_http.headers
+                resp: dict = final_prep_http.execute(num_retries=3)
 
                 if len(resp) == 0 and not disable_warn:
                     self.logger.debug(f"The http request {final_prep_http.uri}, returned an empty object.")
@@ -188,12 +191,17 @@ class GcpDiscClient(PurplePanda):
             prep_http = resource_service.getIamPolicy(bucket=resource_name)
         else:
             prep_http = resource_service.getIamPolicy(resource=resource_name, **kwargs)
-        
+
+        # Make user v3 is used to not get "_withcond_" permissions: https://cloud.google.com/iam/docs/troubleshooting-withcond
+        prep_http.uri = prep_http.uri.replace(".com/v1/", ".com/v3/")
         bindings: List[str] = self.execute_http_req(prep_http, "bindings", disable_warn=True)
 
         accs_to_roles: dict = {}
         for binding in bindings:
             role_name = binding["role"]
+            if "_withcond_" in role_name:
+                role_name = role_name.split("_withcond_")[0] #Weird case, don't know why the name is incorrect from GCP API
+            
             self._get_role_perms(role_name, obj)
             for member in binding["members"]:
                 if member.startswith("serviceAccount:"):

@@ -15,22 +15,6 @@
     RETURN ppal, r, res LIMIT $limit</pre>
 </details>
 
-
-### Gcp - privesc path from $ppal
-`Get the full privilege escalation path of a principal. Set verbose > 1 and get also the has_roles relationships to check for further possible missed privescs.`
-
-<details>
-    <summary>e.g.: <i>Gcp - full privesc path from username@domain.com</i></summary>
-    <pre>
-    MATCH (ppal:GcpPrincipal) WHERE ppal.email = $ppal OR ppal.domain = $ppal OR ppal.name = $ppal
-    WITH ppal
-    OPTIONAL MATCH (ppal)-[r1:PRIVESC]->(res1)
-    OPTIONAL MATCH r = (ppal)-[:MEMBER_OF*..]->(g)-[rel:PRIVESC]->(res2)
-    WITH *, relationships(r) as rels
-    RETURN ppal,r1,res1,rel,rels,g,res2</pre>
-</details>
-
-
 ### Gcp - full privesc path from $ppal
 `Get the full privilege escalation path of a principal.`
 
@@ -39,10 +23,23 @@
     <pre>
     MATCH (ppal:GcpPrincipal) WHERE ppal.email = $ppal OR ppal.domain = $ppal OR ppal.name = $ppal
     WITH ppal
-    OPTIONAL MATCH (ppal)-[r1:PRIVESC*..]->(res1)
-    OPTIONAL MATCH r = (ppal)-[:MEMBER_OF*..]->(g)-[rel:PRIVESC*..]->(res2)
+    OPTIONAL MATCH r1 =(ppal)-[:PRIVESC*..]->(res1)
+    OPTIONAL MATCH r2 = (ppal)-[:MEMBER_OF*..]->(g)-[:PRIVESC*..]->(res2)
+    WITH *, relationships(r1) as rels1, relationships(r2) as rels2
+    RETURN ppal,res1,rels1,rels2,g,res2</pre>
+</details>
+
+### Gcp - full privesc path to organizations
+`Get the full privilege escalation path to all organizations.`
+
+<details>
+    <summary>e.g.: <i>Gcp - full privesc path to organizations</i></summary>
+    <pre>
+    MATCH (res:GcpOrganization)
+    MATCH (res)<-[r1:PRIVESC]-(ppal1)
+    OPTIONAL MATCH r = (ppal1)<-[:MEMBER_OF*..]-(ppal2)
     WITH *, relationships(r) as rels
-    RETURN ppal,r1,res1,rel,rels,g,res2</pre>
+    RETURN res,r1,ppal1,ppal2,rels</pre>
 </details>
 
 ### Gcp - full privesc path to $res
@@ -53,10 +50,21 @@
     <pre>
     MATCH (res:GcpResource) WHERE res.email = $res OR ppal.domain = $res OR res.name = $res
     WITH res
-    OPTIONAL MATCH (res)<-[r1:PRIVESC]-(ppal1)
+    MATCH (res)<-[r1:PRIVESC]-(ppal1)
     OPTIONAL MATCH r = (ppal1)<-[:MEMBER_OF*..]-(ppal2)
     WITH *, relationships(r) as rels
     RETURN res,r1,ppal1,ppal2</pre>
+</details>
+
+### Gcp - privesc outside gcp
+`Get the privescs from GCP principal to external platforms.`
+
+<details>
+    <summary>e.g.: <i>Gcp - privesc outside gcp</i></summary>
+    <pre>
+    MATCH(attacker:Gcp)-[r:PRIVESC]->(victim)
+    WHERE not "Gcp" in labels(victim)
+    RETURN attacker, r, victim</pre>
 </details>
 </details>
 
