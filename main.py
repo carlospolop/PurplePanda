@@ -107,7 +107,10 @@ def main():
         if "google" in platforms: PurplePandaGoogle().analyze_creds()
         if "github" in platforms: PurplePandaGithub().analyze_creds()
         if "k8s" in platforms: PurplePandaK8s().analyze_creds()
-
+    
+    elif not os.getenv("PURPLEPANDA_NEO4J_URL") or not os.getenv("PURPLEPANDA_PWD"):
+        # Cannot connect to database so finish here, (the error messages are shown from core.db.customogm)
+        exit(1)
 
     elif plat_enumerate:
         # Launch each SaaS discovery module in its own thread (we cannot use diffrent process or they will figth for the progress bar of "rich")

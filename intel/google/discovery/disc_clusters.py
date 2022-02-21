@@ -197,8 +197,12 @@ class DiscClusters(GcpDisc):
         
         with tempfile.NamedTemporaryFile() as tmp:
             env={"KUBECONFIG": tmp.name, "PATH": os.getenv("PATH")}
-            out = subprocess.check_output(["gcloud", "container", "clusters", "get-credentials", "--project", p_obj.name.split("/")[1], "--zone", cluster_obj.location, cluster_obj.name], env=env, stderr=subprocess.STDOUT)
-            
+            try:
+                out = subprocess.check_output(["gcloud", "container", "clusters", "get-credentials", "--project", p_obj.name.split("/")[1], "--zone", cluster_obj.location, cluster_obj.name], env=env, stderr=subprocess.STDOUT)
+            except subprocess.CalledProcessError as e:
+                self.logger.error(f"Couldn't get K8s credentials from cluster {cluster_obj.name} in project {p_obj.name.split('/')[1]} and zone {cluster_obj.location}. Error: {e}")
+                return
+
             tmp.read() # Need to read first
             if tmp.tell() <= 0:
                 self.logger.info(f"Looks like you didn't have enough permissions to get the kubeconfig: {out}")

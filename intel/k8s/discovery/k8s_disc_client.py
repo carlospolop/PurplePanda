@@ -30,18 +30,17 @@ class K8sDiscClient(PurplePanda):
         super().__init__()
         panop = PurplePandaConfig()
 
-        # If given config, use that one, if not, use the env var
-        if config:
-            self.env_var_content = config
-        else:
-            self.env_var = panop.get_env_var("k8s")
-            self.env_var_content = os.getenv(self.env_var)
-            assert bool(self.env_var_content), "Kubernetes env variable not configured"
-        
-        self.k8s_config : dict = yaml.safe_load(b64decode(self.env_var_content))
-        assert bool(self.k8s_config.get("k8s", None)), "Kubernetes env variable isn't a correct yaml"
-
         if get_creds:
+            # If given config, use that one, if not, use the env var
+            if config:
+                self.env_var_content = config
+            else:
+                self.env_var = panop.get_env_var("k8s")
+                self.env_var_content = os.getenv(self.env_var)
+                assert bool(self.env_var_content), "Kubernetes env variable not configured"
+            
+            self.k8s_config : dict = yaml.safe_load(b64decode(self.env_var_content))
+            assert bool(self.k8s_config.get("k8s", None)), "Kubernetes env variable isn't a correct yaml"
             self.creds : dict = self._k8s_creds()
     
     def _k8s_creds(self):

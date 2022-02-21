@@ -124,7 +124,8 @@ class DiscComposer(GcpDisc):
                     cluster_obj.composer_environments.update(composerenv_obj)
                     cluster_obj.save()
                 
-                self._get_operations(p_obj, location, composerenv_obj)
+                # Useless data to privesc?
+                #self._get_operations(p_obj, location, composerenv_obj)
 
 
     def _get_operations(self, p_obj, location, composerenv_obj):

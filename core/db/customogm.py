@@ -7,18 +7,19 @@ from py2neo.ogm import Repository, GraphObject
 
 neo4j_url = os.getenv("PURPLEPANDA_NEO4J_URL")
 neo4j_pwd = os.getenv("PURPLEPANDA_PWD")
+logger = logging.getLogger(__name__)
+repo, graph = None, None
 
 if not neo4j_url:
     print("Error: no env variable PURPLEPANDA_NEO4J_URL witht he neo4j url (e.g.: bolt://neo4j@localhost:7687)")
-    exit(1)
 
 if not neo4j_pwd:
     print("Error: no env variable PURPLEPANDA_PWD witht he neo4j password")
-    exit(1)
 
-repo = Repository(neo4j_url, password=neo4j_pwd)
-graph = repo.graph
-logger = logging.getLogger(__name__)
+if neo4j_url and neo4j_pwd:
+    repo = Repository(neo4j_url, password=neo4j_pwd)
+    graph = repo.graph
+
 
 class CustomOGM(GraphObject):
     repo = repo

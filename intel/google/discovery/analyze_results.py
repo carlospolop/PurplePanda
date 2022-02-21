@@ -70,7 +70,8 @@ class AnalyzeResults(GcpDisc):
                     res = rsc_reasons[0] # Can be GcpResource, K8sServiceAccount...
                     
                     # Update permissions
-                    self._update_interesting_permissions(ppal, role, first_perm_name, res, summary)
+                    # Too many results
+                    #self._update_interesting_permissions(ppal, role, first_perm_name, res, summary)
 
                     # If not privesc relation, don't continue searching
                     if relation != "PRIVESC":
@@ -95,7 +96,7 @@ class AnalyzeResults(GcpDisc):
                     # Check if the ppal has each required permission inside the project
                     ## If it was already checked and the answere was false, just leave
                     if can_escalate is None:
-                        can_escalate, more_reasons, _ = self._has_other_perms_to_escalate(permissions, projectNumber, ppal, summary)
+                        can_escalate, more_reasons, _ = self._has_other_perms_to_escalate(permissions, projectNumber, ppal, summary, only_to_classes, extra_privesc_to, running_in)
                     
                     if can_escalate is False:
                         break
@@ -105,7 +106,7 @@ class AnalyzeResults(GcpDisc):
                     # Check if "res" contains all the required second order permissions
                     if second_order_permissions:
                         if res.__primaryvalue__ not in self.known_2order_res:
-                            self.known_2order_res[res.__primaryvalue__] = self._has_other_perms_to_escalate(permissions, projectNumber, res, summary, second_order=True)
+                            self.known_2order_res[res.__primaryvalue__] = self._has_other_perms_to_escalate(permissions, projectNumber, res, summary, only_to_classes, extra_privesc_to, running_in, second_order=True)
                         
                         can_escalate += self.known_2order_res[res.__primaryvalue__][0]
                         reasons += self.known_2order_res[res.__primaryvalue__][1]
@@ -206,7 +207,7 @@ class AnalyzeResults(GcpDisc):
         return ppal_res
 
 
-    def _has_other_perms_to_escalate(self, permissions, projectNumber, ppal, summary, second_order=False):
+    def _has_other_perms_to_escalate(self, permissions, projectNumber, ppal, summary, only_to_classes: List[str], extra_privesc_to: str, running_in: list, second_order=False):
         """Check if a ppal has all the required permissions to be able to escalate"""
         
         can_escalate = True
@@ -217,7 +218,7 @@ class AnalyzeResults(GcpDisc):
             
             for role in roles:
                 can_escalate = False
-                rsc_reasons2 = self._get_assets_from_principal_with_role(ppal, role)
+                rsc_reasons2 = self._get_assets_from_principal_with_role(ppal, role, only_to_classes, extra_privesc_to, running_in)
                 
                 # If something found, and same projectnumber, it can escalate
                 for rsc_reason2 in rsc_reasons2:

@@ -577,9 +577,9 @@ class GithubDisc(GithubDiscClient):
             for line in content.splitlines():
                 # If not "@" in line then the line is probably to remove access from previous given access and there is no entity specified
                 if line and " " in line and "@" in line:
-                    entity = line.split(" ")[1]
-                    if entity:
-                        entities.add(entity.strip())
+                    for entity in line.split(" ")[1:]: #Remove first element as it's the path and in this moment we don't care about that
+                        if entity.strip():
+                            entities.add(entity.strip())
 
             return list(entities)
         

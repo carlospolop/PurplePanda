@@ -43,23 +43,21 @@ class PurplePandaGoogle():
                         DiscServiceAccounts(cred=cred["cred"], **kwargs).discover,
                         DiscGroupsUsers(cred=cred["cred"], **kwargs).discover,
                         DiscComputeSubnetworks(cred=cred["cred"], **kwargs).discover, #Needed by DiscClusters
+                        DiscClusters(cred=cred["cred"], **kwargs).discover,
                     ],
 
                     parallel_funcs = [
-                        [DiscKMS(cred=cred["cred"], **kwargs).discover],
-                        [
-                            DiscClusters(cred=cred["cred"], **kwargs).discover,
-                            DiscComposer(cred=cred["cred"], **kwargs).discover
-                        ],
+                        [DiscKMS(cred=cred["cred"], **kwargs).discover],    
+                        [DiscComposer(cred=cred["cred"], **kwargs).discover],
                         [DiscBigquery(cred=cred["cred"], **kwargs).discover],
                         [
                             DiscComputeInstances(cred=cred["cred"], **kwargs).discover,
                             DiscComputeNetworks(cred=cred["cred"], **kwargs).discover,
                         ],
-                        [DiscCloudRun(cred=cred["cred"], **kwargs).discover],
                         [DiscPubSub(cred=cred["cred"], **kwargs).discover],
-                        [DiscCloudFunctions(cred=cred["cred"], **kwargs).discover],
+                        [DiscCloudRun(cred=cred["cred"], **kwargs).discover],
                         [DiscStorage(cred=cred["cred"], **kwargs).discover],
+                        [DiscCloudFunctions(cred=cred["cred"], **kwargs).discover],
                         [DiscCloudbuild(cred=cred["cred"], **kwargs).discover],
                         [DiscSecrets(cred=cred["cred"], **kwargs).discover],
                         [DiscSourceRepos(cred=cred["cred"], **kwargs).discover],

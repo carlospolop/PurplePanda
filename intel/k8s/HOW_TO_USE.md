@@ -282,9 +282,9 @@ Moreover, a privilege escalation can grant a principal **more privileges over ot
   <details>
   <summary>e.g.: <i>K8s - external privesc to ns default</i></summary>
     <pre>
-    MATCH (ns:K8sNamespace)<-[:PART_OF]-(ppal1:K8sPrincipal)<-[r:PRIVESC]-(ppal2:K8sServiceAccount)
+    MATCH (ns:K8sNamespace)<-[r1:PART_OF]-(ppal1:K8sPrincipal)<-[r2:PRIVESC]-(ppal2:K8sServiceAccount)
     WHERE ns.name CONTAINS $ns AND NOT EXISTS( (ppal2)-[:PART_OF]->(ns) )
-    RETURN ns,ppal1,r,ppal2</pre>
+    RETURN ns,r1,ppal1,r2,ppal2</pre>
   </details>
 
 

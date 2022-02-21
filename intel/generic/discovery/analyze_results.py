@@ -86,7 +86,7 @@ class AnalyzeResults(PurplePanda):
 
         query = 'MATCH (ksa:K8sServiceAccount)-[r:PRIVESC]->(b)\n'
         query += 'MATCH (ksa2:K8sServiceAccount) WHERE ksa2.name =~ ".+-"+ksa.name\n'
-        query += 'MERGE (ksa2)-[:PRIVESC{reasons:r.reasons, title:r.title, summary:r.summary, limitations:r.limitations,}]->(b)\n'
+        query += 'MERGE (ksa2)-[:PRIVESC{reasons:r.reasons, title:r.title, summary:r.summary, limitations:r.limitations}]->(b)\n'
         query += 'DETACH DELETE (ksa)\n'
         query += 'RETURN ksa2'
 

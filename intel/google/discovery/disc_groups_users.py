@@ -66,7 +66,11 @@ class DiscGroupsUsers(GcpDisc):
     
     def _proc_member(self, member: dict, g_obj: GoogleGroup, w_obj: GoogleWorkspace):
         name: str = member["member"]
-        email: str = member["preferredMemberKey"][0]["id"]
+        try:
+            email: str = member["preferredMemberKey"][0]["id"]
+        except:
+            email: str = member["member"].split("/")[1] + "@" + "".join(g_obj.email.split("@")[1:])
+        
         roles: List[str] = [r["role"] for r in member["roles"]]
 
         if name.startswith("users/"):
