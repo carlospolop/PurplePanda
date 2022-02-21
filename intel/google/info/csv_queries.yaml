@@ -1,9 +1,9 @@
 queries:
   - name: Privesc to google managed SAs
     query: |
-      MATCH(a:Gcp)-[r:PRIVESC]->(b:GcpServiceAccount)
-      WHERE not "name" in keys(b)
-      RETURN a,r,b
+      MATCH(ppal:Gcp)-[r:PRIVESC]->(sa:GcpServiceAccount)
+      WHERE sa.name is Null AND sa.name <> "default"
+      RETURN ppal.name, sa.email
 
   - name: Organizations privesc
     query: |
@@ -89,8 +89,13 @@ queries:
   - name: SAs with API Keys
     query: |
       MATCH(sa:GcpServiceAccount)-[r:HAS_KEY]->(k)
-      RETURN sa.email
+      RETURN distinct sa.email
   
+  - name: Default SAs used
+    query: |
+      MATCH(sa:GcpServiceAccount{default_sa:True})-[:RUN_IN]-(res)
+      RETURN distinct sa.email
+    
   - name: Projects with permissions over other projects resources
     query: |
       MATCH (project:GcpProject)-[basic_roles:HAS_BASIC_ROLES]->(resource) WHERE NOT EXISTS((resource)-[:PART_OF]->(project))

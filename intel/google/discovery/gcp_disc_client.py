@@ -215,7 +215,8 @@ class GcpDiscClient(PurplePanda):
             prep_http = resource_service.getIamPolicy(resource=resource_name, **kwargs)
 
         # Make user v3 is used to not get "_withcond_" permissions: https://cloud.google.com/iam/docs/troubleshooting-withcond
-        prep_http.uri = prep_http.uri.replace(".com/v1/", ".com/v3/")
+        #prep_http.uri = prep_http.uri.replace(".com/v1/", ".com/v3/")
+        # Even if you do this you will find "_withcond_" permissions and you won't find some permissions, like permissions to allUsers for cloud functions
         bindings: List[str] = self.execute_http_req(prep_http, "bindings", disable_warn=True)
 
         accs_to_roles: dict = {}
