@@ -29,6 +29,11 @@ PurplePanda has **2 analysis modes**:
 - `-e` (*enumerate*): This is the **main one**, it will try to gather data and analyze it.
 - `-a` (*analyze*): This will perform a **quick analysis of the provided credentials**.
 
+### Video tutorial
+Check how to use and inspect the data gathered by PurplePanda:
+
+[![Tutorial](https://img.youtube.com/vi/zl5NdvoWHX4/0.jpg)](https://www.youtube.com/watch?v=zl5NdvoWHX4)
+
 ### For Blue/Purple Teams
 
 Use credentials for each platform with at least **admin read access to all the resources** of the platform. This will help you to see exactly the **privesc paths** that can be abused within your configurations in each platform and across
