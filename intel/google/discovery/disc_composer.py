@@ -12,6 +12,8 @@ from intel.google.models.gcp_storage import GcpStorage
 from intel.google.info.regions import gcp_regions
 from core.models import PublicIP, PublicDomain
 
+NOT_COMPOSER_REGIONS = []
+
 class DiscComposer(GcpDisc):
     resource = 'composer'
     version = 'v1'
@@ -31,7 +33,12 @@ class DiscComposer(GcpDisc):
     def _disc_composer(self, p_obj:GcpProject):
         """Discover all the composer resources from a given project"""
 
+        global NOT_COMPOSER_REGIONS
+
         for location in gcp_regions:
+            if location in NOT_COMPOSER_REGIONS:
+                continue
+
             http_prep = self.service.projects().locations().environments()#.list(parent=f"{p_obj.name}/locations/{location}")
             environments: Union[list, str] = self.execute_http_req(http_prep, "environments", disable_warn=True, ret_err=True, list_kwargs={"parent": f"{p_obj.name}/locations/{location}"})
 
@@ -40,7 +47,10 @@ class DiscComposer(GcpDisc):
                 if "Cloud Composer API has not been used" in environments:
                     break
 
-                # If other error, continue checking zones
+                if "Unexpected location" in environments:
+                    NOT_COMPOSER_REGIONS.append(location)
+                
+                # Continue checking locations
                 continue
 
             for compose_env in environments:
@@ -123,6 +133,13 @@ class DiscComposer(GcpDisc):
                     cluster_obj: GcpCluster = GcpCluster(name=cluster_name).save()
                     cluster_obj.composer_environments.update(composerenv_obj)
                     cluster_obj.save()
+                
+                if compose_env.get("config", {}).get("nodeConfig"):
+                    sa_email = compose_env["config"]["nodeConfig"]["serviceAccount"]
+                    oauthScopes = compose_env["config"]["nodeConfig"]["oauthScopes"]
+                    composerenv_obj.relate_sa(sa_email, oauthScopes)
+                else:
+                    self.logger.warning(f"I couldn't find the nodeConfig of the composer cluster: {compose_env['name']}")
                 
                 # Useless data to privesc?
                 #self._get_operations(p_obj, location, composerenv_obj)

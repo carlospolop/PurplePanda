@@ -1,13 +1,14 @@
 from py2neo.ogm import Property, Label, RelatedFrom, RelatedTo
 
 from core.db.customogm import CustomOGM
+from intel.google.models.gcp_perm_models import GcpRunningSA
 from intel.google.models.gcp_project import GcpProject
 from intel.google.models.gcp_storage import GcpStorage
 from core.models import PublicDomain, PublicIP
 from intel.google.models.gcp_kms import GcpKMSKey
 
 
-class GcpComposerEnv(CustomOGM):
+class GcpComposerEnv(CustomOGM, GcpRunningSA):
     __primarylabel__ = "GcpComposerEnv"
     __primarykey__ = "name"
 

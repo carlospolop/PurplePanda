@@ -2,6 +2,7 @@ import logging
 import json
 from intel.k8s.models import K8sPod, K8sContainer, K8sVol, K8sEnvVar, K8sSecret, K8sNamespace, K8sNode, K8sServiceAccount, K8sPodTemplate, K8sContainerPort, K8sBasicModel
 from intel.k8s.discovery.k8s_disc_client import K8sDiscClient
+from core.models.models import ContainerImage
 from kubernetes import client
 
 class K8sDisc(K8sDiscClient):
@@ -68,6 +69,7 @@ class K8sDisc(K8sDiscClient):
             command = container.command,
             args = container.args,
             working_dir = container.working_dir,
+            image = container.image,
             image_pull_policy = container.image_pull_policy,
             lifecycle_post_start = json.dumps(container.lifecycle.post_start) if container.lifecycle else "",
             lifecycle_pre_stop = json.dumps(container.lifecycle.post_start) if container.lifecycle else "",
@@ -87,6 +89,11 @@ class K8sDisc(K8sDiscClient):
             sc_seccompProfile = json.dumps(sc.seccomp_profile) if hasattr(sc, "seccomp_profile") else None,
             sc_windowsOptions = json.dumps(sc.windows_options) if hasattr(sc, "windows_options") else None,
         ).save()
+
+        if container.image:
+            conimg_obj = ContainerImage(name=container.image).save()
+            container_obj.run_images.update(conimg_obj)
+            container_obj.save()
 
         if container.ports:
             for p in container.ports:

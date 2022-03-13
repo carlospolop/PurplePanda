@@ -45,7 +45,7 @@ def main():
     parser.add_argument('-e', '--enumerate', action='store_true', default=False, required=False, help=f'Enumerate the assets of the indicated (comma-separated) platforms.')
     parser.add_argument('-p', '--platforms', type=str, required=True, help=f'Comma-separated list of platforms to analyze/enumerate. Currently available: {currently_available_str}')
     parser.add_argument('-v', '--verbose', action='store_true', default=False, required=False, help=f'Do not remove the progress bar when the task is done')
-    parser.add_argument('-d', '--directory', type=str, required=False, help=f'Path to the directory to save an initial analisys of the results in CVS (separator="|") format. If you don\'t indicate any, no analysis will be written to disk')
+    parser.add_argument('-d', '--directory', type=str, required=False, help=f'Path to the directory to save an initial analysis of the results in CVS (separator="|") format. If you don\'t indicate any, no analysis will be written to disk')
     
     parser.add_argument('--github-only-org', action='store_true', default=False, required=False, help=f'Only get information of the specified github orgs (no personal repos info')
     parser.add_argument('--github-only-org-and-org-users', action='store_true', default=False, required=False, help=f'Only get information of the specified github orgs and users of the specified orgs')
@@ -75,7 +75,7 @@ def main():
             parser.print_help()
             exit(1)
         
-        directory = f"{directory}/purplepanda_analisys"
+        directory = f"{directory}/purplepanda_analysis"
         if not os.path.exists(directory):
             os.mkdir(directory)
 
@@ -117,12 +117,12 @@ def main():
         functions = []
         
         # Google
-        if "google" in platforms:
-            functions.append((PurplePandaGoogle().discover, "google",
-                {
-                    "gcp_get_secret_values": gcp_get_secret_values
-                }
-            ))
+        #if "google" in platforms:
+        #    functions.append((PurplePandaGoogle().discover, "google",
+        #        {
+        #            "gcp_get_secret_values": gcp_get_secret_values
+        #        }
+        #    ))
         
         # Github
         if "github" in platforms:
@@ -148,8 +148,8 @@ def main():
         
         PurplePanda().start_discovery(functions)
     
-        # Perform a combined analisys
-        AnalyzeResults().discover()
+        # Perform a combined analysis
+        #AnalyzeResults().discover()
 
         # If directory specified write some analysis in CSV files
         if directory:

@@ -17,10 +17,6 @@
 
 ## Privilege Escalation paths
 - Find SAs without .name as those are SAs not managed by the organization
-
-
-## Privesc through kubernetes
-- If not private and any container permission of K8s, escalate to the RUN_IN SA or to all the RUN_IN SAs in clusters that are public
-- If possible, download kubectl creds file and run K8s discovery
+- Find write permissions over composer and registry buckets and privesc to composers running SAs or KSAs in the pods using the images from the registry
 
 

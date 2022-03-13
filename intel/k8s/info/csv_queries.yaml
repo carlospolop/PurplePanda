@@ -93,7 +93,7 @@ queries:
   - name: Pods that can escape to node
     query: |
       MATCH (pod:K8sPod {potential_escape_to_node:True})
-      OPTIONAL MATCH (pod)<-[:PART_OF]-(c:K8sContainer)
+      OPTIONAL MATCH (pod)<-[:PART_OF]-(container:K8sContainer)
       RETURN pod.name, collect(distinct container.name)
   
   - name: Containers that can escape to node
@@ -161,5 +161,5 @@ queries:
   
   - name: Unauthenticated ppals permissions
     query: |
-      MATCH (g:K8sGroup)-[perms:HAS_PERMS]->(victim) WHERE g.name CONATINS "system:unauthenticated" OR g.name CONTAINS "system:anonymous"
+      MATCH (g:K8sGroup)-[perms:HAS_PERMS]->(victim) WHERE g.name CONTAINS "system:unauthenticated" OR g.name CONTAINS "system:anonymous"
       RETURN victim.name, perms.verbs

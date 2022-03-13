@@ -15,7 +15,7 @@ queries:
       MATCH(sa_attacker:GcpServiceAccount)-[:PRIVESC]->(ppal_victim:Gcp)
       RETURN sa_attacker.email, collect(distinct ppal_victim.name), collect(distinct ppal_victim.email)
 
- - name: SAs with cross-project permissions
+  - name: SAs with cross-project permissions
     query: |
       MATCH (origin_project:GcpProject)<-[:PART_OF]-(service_account:GcpServiceAccount)-[role:HAS_ROLE]->(resource:Gcp)
       WHERE NOT EXISTS((service_account)-[:PART_OF]->(resource)) AND NOT EXISTS((origin_project)<-[:PART_OF]-(resource))
@@ -127,8 +127,8 @@ queries:
   
   - name: Users and Groups not from Workspace
     query: |
-      OPTIONAL MATCH (group:GoogleGroup) WHERE NOT EXISTS((g)-[:PART_OF]->(:GoogleWorkspace))
-      OPTIONAL MATCH (user:GcpUserAccount) WHERE NOT EXISTS((u)-[:PART_OF]->(:GoogleWorkspace))
+      OPTIONAL MATCH (group:GoogleGroup) WHERE NOT EXISTS((group)-[:PART_OF]->(:GoogleWorkspace))
+      OPTIONAL MATCH (user:GcpUserAccount) WHERE NOT EXISTS((user)-[:PART_OF]->(:GoogleWorkspace))
       RETURN group.email,user.email
 
   - name: Principals with interesting permissions

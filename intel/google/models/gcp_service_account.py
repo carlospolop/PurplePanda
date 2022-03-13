@@ -27,6 +27,7 @@ class GcpServiceAccount(GcpPrincipal, GcpResource):
     gcp = Label(name="Gcp")
 
     def __init__(self, email, *args, **kwargs):
+        kwargs["email"] = email
         super().__init__(*args, **kwargs)
         self.default_sa = any(ie in email for ie in internal_emails)        
         self.gcp = True

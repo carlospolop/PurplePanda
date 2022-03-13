@@ -52,6 +52,20 @@ SET o.name = apoc.text.random(10, "A-Z0-9.$")
 RETURN o.name
 ```
 
+- Randomize full_names
+```
+MATCH(s:Github)
+SET s.full_name = apoc.text.random(10, "A-Z0-9.$")
+RETURN s.full_name
+```
+
+- Randomize privesc reason
+```
+MATCH(ppal:GithubPrincipal)-[r:PRIVESC]->(res)
+SET r.reasons = ["Can merge in [REPO_NAME] which is mirrored by [MIRROR ADDRESS] which is used by [CLOUD FUNCTION] which run the SA"]
+RETURN ppal,r,res
+```
+
 ## Kubernetes
 - Randomize ingresses names
 ```
@@ -144,6 +158,14 @@ SET k.ns_name = apoc.text.random(10, "A-Z0-9.$")
 RETURN k.ns_name
 ```
 
+- Randomize iam_amazonaws_role_arn
+```
+MATCH (k:K8s) WHERE EXISTS(k.iam_amazonaws_role_arn) AND size(k.iam_amazonaws_role_arn) > 0
+SET k.iam_amazonaws_role_arn = "arn:aws:iam::" + apoc.text.random(10, "0-9") + ":role/" + apoc.text.random(10, "A-Z")
+RETURN k.iam_amazonaws_role_arn
+```
+
+
 ## GCP
 ```
 MATCH (g:Gcp) WHERE EXISTS(g.name)
@@ -183,7 +205,7 @@ SET g.description = apoc.text.random(10, "0-9")
 RETURN g.description
 
 MATCH (g:Gcp) WHERE EXISTS(g.interesting_permissions)
-SET g.interesting_permissions = ["REASON TO ESCALATE."]
+SET g.interesting_permissions = apoc.text.regreplace(g.interesting_permissions[0], " over [^ ]+", " over projects/FAKE_PROJECT")
 RETURN g.interesting_permissions
 
 MATCH (g:Gcp)-[r:PRIVESC]->(b)
@@ -191,7 +213,7 @@ SET r.reasons = apoc.text.regreplace(r.reasons[0], " to .*", " to <RESOURCE NAME
 RETURN r.reasons
 
 MATCH (g:Gcp)-[r:HAS_ROLE]->(b)
-SET r.roles = [r.roles[-1]]
+SET r.roles = [apoc.text.regreplace(r.roles[0], "projects/[^/]+/", "")]
 RETURN r.roles
 ```
 

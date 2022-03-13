@@ -3,7 +3,7 @@ from py2neo.ogm import Property, Label, RelatedTo, RelatedFrom
 from core.db.customogm import CustomOGM
 from intel.google.models.gcp_service_account import GcpServiceAccount
 from intel.google.models.gcp_perm_models import GcpRunningSA
-from core.models.models import PublicIP, PublicDomain, CloudCluster
+from core.models.models import PublicIP, PublicDomain, CloudCluster, RunsContainerImage
 
 # In K8s objects primary keys must be "name"
 
@@ -106,7 +106,7 @@ class K8sNode(K8sBasicModel):
         super().__init__(*args, **kwargs)
 
 
-class K8sContainer(K8sBasicModel):
+class K8sContainer(K8sBasicModel, RunsContainerImage):
     __primarylabel__ = "K8sContainer"
     __primarykey__ = "name"
 
@@ -114,6 +114,7 @@ class K8sContainer(K8sBasicModel):
     args = Property()
     args = Property()
     working_dir = Property()
+    image = Property() #eu.gcr.io/<project_name>/<name>:<tag>
     image_pull_policy = Property()
     lifecycle_post_start = Property()
     lifecycle_pre_stop = Property()
