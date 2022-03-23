@@ -1,7 +1,7 @@
 from py2neo.ogm import Property, RelatedTo, RelatedFrom
 
 from core.db.customogm import CustomOGM
-from intel.github.models.github_model import GithubPrincipal
+from intel.github.models.github_model import GithubPrincipal, GithubRepo
 
 
 ########################
@@ -22,6 +22,7 @@ class PublicIP(CustomOGM):
     k8s_service = RelatedFrom("K8sService", "HAS_IP")
     public_domains = RelatedFrom("PublicDomain", "HAS_IP")
     k8s_mutatingwebhookconfigs = RelatedFrom("K8sMutatingWebhookConfig", "HAS_IP")
+    concourse_workers = RelatedFrom("ConcurseWorker", "HAS_IP")
 
 class PublicPort(CustomOGM):
     __primarylabel__ = "PublicPort"
@@ -45,6 +46,7 @@ class PublicDomain(CustomOGM):
     k8s_ingress = RelatedFrom("K8sIngress", "HAS_DOMAIN")
     public_ips = RelatedTo(PublicIP, "HAS_IP")
     k8s_mutatingwebhookconfigs = RelatedFrom("K8sMutatingWebhookConfig", "HAS_DOMAIN")
+    concourse_workers = RelatedFrom("ConcourseWorker", "HAS_DOMAIN")
 
 class RepoPpalPrivesc(CustomOGM):
     __primarylabel__ = "RepoPpalPrivesc"
@@ -80,7 +82,7 @@ class ContainerImage(CustomOGM):
     def save(self, *args, **kwargs):
         ret = super().save(*args, **kwargs)
         
-        if "gcr.io/" in self.name:
+        if "gcr.io/" in self.name and not "k8s.gcr.io/" in self.name:
             from intel.google.models import GcpStorage
             zone_subdomain = self.name.split(".gcr.io/")[0]
             project_name = self.name.split("gcr.io/")[1].split("/")[0]
@@ -100,3 +102,13 @@ class RunsContainerImage(CustomOGM):
     __primarylabel__ = "RunsContainerImage"
 
     run_images = RelatedTo(ContainerImage, "RUN_IMAGE")
+
+
+########################
+###### CODE REPOS ######
+########################
+
+class GithubMirror(CustomOGM):
+    __primarylabel__ = "RunsContainerImage"
+
+    github_repos = RelatedTo(GithubRepo, "IS_MIRROR")

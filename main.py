@@ -1,6 +1,7 @@
 import argparse
 import logging
 import os
+import sys
 from rich.logging import RichHandler
 from rich import print
 
@@ -13,10 +14,12 @@ from intel.generic.discovery.analyze_results import AnalyzeResults
 from intel.google.purplepanda_google import PurplePandaGoogle
 from intel.github.purplepanda_github import PurplePandaGithub
 from intel.k8s.purplepanda_k8s import PurplePandaK8s
+from intel.concourse.purplepanda_concourse import PurplePandaConcourse
 
 from intel.github.discovery.github_disc_client import GithubDiscClient
 from intel.google.discovery.gcp_disc_client import GcpDiscClient
 from intel.k8s.discovery.k8s_disc_client import K8sDiscClient
+from intel.concourse.discovery.concourse_disc_client import ConcourseDiscClient
 
 
 logger = logging.getLogger("main")
@@ -67,13 +70,13 @@ def main():
     if not analyze and not plat_enumerate:
         logger.error(f"Error: Indicate '-a' or '-e'")
         parser.print_help()
-        exit(1)
+        sys.exit(1)
     
     if directory:
         if (not os.path.exists(directory) or not os.path.isdir(directory) or not os.access(directory, os.W_OK)):
             logger.error(f"Error: Output directory doesn't exist or isn't a directory or isn't writable")
             parser.print_help()
-            exit(1)
+            sys.exit(1)
         
         directory = f"{directory}/purplepanda_analysis"
         if not os.path.exists(directory):
@@ -96,33 +99,35 @@ def main():
         if not platform in currently_available:
             logger.error(f"Error: Platform {platform} wasn't found")
             parser.print_help()
-            exit(1)
+            sys.exit(1)
 
     # Configuration parsing checks
     if "google" in platforms: GcpDiscClient()
     if "github" in platforms: GithubDiscClient()
     if "k8s" in platforms: K8sDiscClient()
+    if "concourse" in platforms: ConcourseDiscClient()
 
     if analyze:
         if "google" in platforms: PurplePandaGoogle().analyze_creds()
         if "github" in platforms: PurplePandaGithub().analyze_creds()
         if "k8s" in platforms: PurplePandaK8s().analyze_creds()
+        if "concourse" in platforms: PurplePandaConcourse().analyze_creds()
     
     elif not os.getenv("PURPLEPANDA_NEO4J_URL") or not os.getenv("PURPLEPANDA_PWD"):
         # Cannot connect to database so finish here, (the error messages are shown from core.db.customogm)
-        exit(1)
+        sys.exit(1)
 
     elif plat_enumerate:
         # Launch each SaaS discovery module in its own thread (we cannot use diffrent process or they will figth for the progress bar of "rich")
         functions = []
         
         # Google
-        #if "google" in platforms:
-        #    functions.append((PurplePandaGoogle().discover, "google",
-        #        {
-        #            "gcp_get_secret_values": gcp_get_secret_values
-        #        }
-        #    ))
+        if "google" in platforms:
+            functions.append((PurplePandaGoogle().discover, "google",
+                {
+                    "gcp_get_secret_values": gcp_get_secret_values
+                }
+            ))
         
         # Github
         if "github" in platforms:
@@ -146,10 +151,17 @@ def main():
                 }
             ))
         
+        # Concourse
+        if "concourse" in platforms:
+            functions.append((PurplePandaConcourse().discover, "concourse",
+                {
+                }
+            ))
+        
         PurplePanda().start_discovery(functions)
     
         # Perform a combined analysis
-        #AnalyzeResults().discover()
+        AnalyzeResults().discover()
 
         # If directory specified write some analysis in CSV files
         if directory:
@@ -163,8 +175,6 @@ def main():
             PurplePanda().start_discovery(write_csv_functions, writing_analysis=True)
     
         print("Finished!")
-
-
 
 
 

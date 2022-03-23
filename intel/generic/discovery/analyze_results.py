@@ -31,6 +31,8 @@ class AnalyzeResults(PurplePanda):
         self._disc_loop([None], self._get_repos_privescs, __name__.split(".")[-1]+"._get_repos_privescs")
 
         self._disc_loop([None], self._merge_k8s_sas_with_unknwon_cluster_id, __name__.split(".")[-1]+"._merge_k8s_sas_with_unknwon_cluster_id")
+
+        self._disc_loop([None], self._merge_concourse_workers_with_pods, __name__.split(".")[-1]+"._merge_concourse_workers_with_pods")
         
     
     def _get_domain_info(self, dom_obj: PublicDomain):
@@ -82,7 +84,7 @@ class AnalyzeResults(PurplePanda):
         graph.evaluate(query2)
     
     def _merge_k8s_sas_with_unknwon_cluster_id(self, _):
-        """GCP doesn't know when it create a SA the cluster_id of that SA, there, lets try to find the real SA, move the relation and delete the noe without cluster_id"""
+        """GCP doesn't know when it create a SA the cluster_id of that SA, therefore, lets try to find the real SA, move the relation and delete the noe without cluster_id"""
 
         query = 'MATCH (ksa:K8sServiceAccount)-[r:PRIVESC]->(b)\n'
         query += 'MATCH (ksa2:K8sServiceAccount) WHERE ksa2.name =~ ".+-"+ksa.name\n'
@@ -91,3 +93,13 @@ class AnalyzeResults(PurplePanda):
         query += 'RETURN ksa2'
 
         graph.evaluate(query)
+    
+    def _merge_concourse_workers_with_pods(self, _):
+        """Concourse doesn't know when it create a worker the cluster_id of that pod, therefore, lets try to find the real pod and relate them"""
+
+        query = 'MATCH(worker:ConcourseWorker)\n'
+        query += 'MATCH(pod:K8sPod) WHERE pod.name =~ ".+"+worker.name\n'
+        query += 'MERGE (worker)<-[:RUN_CONCOURSE]-(pod)'
+
+        graph.evaluate(query)
+

@@ -208,6 +208,7 @@ class K8sPod(K8sContainsContainer, GcpRunningSA):
     serviceaccounts = RelatedFrom("K8sServiceAccount", "RUN_IN")
     services_attached = RelatedTo("K8sPod", "HAS_SERVICE")
     containspodtemplate = RelatedTo("K8sPodTemplate", "PART_OF")
+    concourse_workers = RelatedTo("ConcourseWorker", "RUN_CONCOURSE")
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

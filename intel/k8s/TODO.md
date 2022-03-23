@@ -5,3 +5,5 @@
 - At the moment all the techniques to escalate privileges require 1 verb. In the future they may require more than one. Now we are just checking if all the resources and verbs of a privesc technique are satified within 1 binding, but if more than 1 verb is needed it might be satisfied in 2 different bindings, therefore the process to check if a principal has access over a resource should consider all the bindings over the resource and not just 1 by 1.
 
 - The relation between ingresses and services in disc_ingresses should be able to be more than 1
+
+- If clusterroles or roles or their bindings equivalents aren't accessible by the current user, we should get it's privileges via "auth can-i --list"

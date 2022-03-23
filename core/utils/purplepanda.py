@@ -1,7 +1,5 @@
-from xmlrpc.client import Boolean
 import shodan
 import os
-import ipaddress
 import logging
 import time
 import dns.resolver
