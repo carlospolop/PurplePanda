@@ -14,11 +14,16 @@ class PurplePandaPrints():
     @staticmethod
     def print_dict(the_dict):
         for k,v in the_dict.items():
+            k = k.replace("_", " ").replace("-", " ").capitalize()
             PurplePandaPrints.print_key_val(k,v)
 
     @staticmethod
     def print_key_val(k, v):
         console.print(f"{k}: [purple]{v}[/purple]", style="green bold", highlight=False)
+    
+    @staticmethod
+    def print_val(v):
+        console.print(v, style="purple bold", highlight=False)
     
     @staticmethod
     def print_separator():

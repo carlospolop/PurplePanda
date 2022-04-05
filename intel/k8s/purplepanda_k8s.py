@@ -39,19 +39,23 @@ class PurplePandaK8s():
                         DiscNodes(cred["cred"], **kwargs).discover,
                         DiscMutatingWebhookConfigurations(cred["cred"], **kwargs).discover,
                         DiscServiceAccounts(cred["cred"], **kwargs).discover,
-                        DiscPods(cred["cred"], **kwargs).discover,
-                        DiscSecrets(cred["cred"], **kwargs).discover,
-                        DiscDeployments(cred["cred"], **kwargs).discover,
-                        DiscJobs(cred["cred"], **kwargs).discover,
-                        DiscCronjobs(cred["cred"], **kwargs).discover,
-                        DiscDaemonsets(cred["cred"], **kwargs).discover,
-                        DiscReplicaSets(cred["cred"], **kwargs).discover,
-                        DiscReplicationControllers(cred["cred"], **kwargs).discover,
-                        DiscServices(cred["cred"], **kwargs).discover,
-                        DiscIngresses(cred["cred"], **kwargs).discover,
-                        DiscRoles(cred["cred"], **kwargs).discover,
                     ],
-                    parallel_funcs = [],
+                    parallel_funcs = [
+                        [
+                            DiscPods(cred["cred"], **kwargs).discover,
+                            DiscSecrets(cred["cred"], **kwargs).discover,
+                            DiscDeployments(cred["cred"], **kwargs).discover,
+                            DiscJobs(cred["cred"], **kwargs).discover,
+                            DiscCronjobs(cred["cred"], **kwargs).discover,
+                            DiscDaemonsets(cred["cred"], **kwargs).discover,
+                            DiscReplicaSets(cred["cred"], **kwargs).discover,
+                            DiscReplicationControllers(cred["cred"], **kwargs).discover,
+                            DiscServices(cred["cred"], **kwargs).discover,
+                            DiscIngresses(cred["cred"], **kwargs).discover
+                        ],
+
+                        [DiscRoles(cred["cred"], **kwargs).discover]
+                    ],
                     # In K8s launch an analysis per cred
                     final_funcs=[AnalyzeResults(cred["cred"], **kwargs).discover]
                 ).do_discovery

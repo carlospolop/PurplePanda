@@ -32,13 +32,13 @@ The **only mandatory params are `url` and `token` or `username and password`**.
 
 Example:
 ```yaml
-k8s:
+concourse:
   - uri: http://127.0.0.1:8080
     token: 9rEpFtDcE1234aIuwVNEn+jok24E9jNiAAAAAA
 ```
-Just encode in base64 that file and export it in the `CONCOURSE_DISCOVERY` env var and you will be ready to **use the github module**:
+Just encode in base64 that file and export it in the `CONCOURSE_DISCOVERY` env var and you will be ready to **use the concourse module**:
 ```bash
-export CONCOURSE_DISCOVERY="azhzOgogIC0gdXJpOiBodHRwOi8vMTI3LjAuMC4xOjgwODAKICAgIHRva2VuOiA5ckVwRnREY0UxMjM0YUl1d1ZORW4ram9rMjRFOWpOaUFBQUFBQQo="
+export CONCOURSE_DISCOVERY="Y29uY291cnNlOgogIC0gdXJpOiBodHRwOi8vMTI3LjAuMC4xOjgwODAKICAgIHRva2VuOiA5ckVwRnREY0UxMjM0YUl1d1ZORW4ram9rMjRFOWpOaUFBQUFBQQo="
 python3 main.py -p concourse -e
 ```
 

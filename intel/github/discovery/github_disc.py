@@ -7,7 +7,9 @@ import subprocess
 import os
 
 from .github_disc_client import GithubDiscClient
+from intel.circleci.discovery.circleci_disc_client import disc_vars_in_txt
 from intel.github.models.github_model import GithubUser, GithubTeam, GithubRepo, GithubBranch, GithubOrganization, GithubSecret, GithubLeak, GithubEnvironment, GithubSelfHostedRunner
+from intel.circleci.models import CircleCIProject, CircleCIOrganization, CircleCIVar
 
 
 USERS = dict()
@@ -430,6 +432,8 @@ class GithubDisc(GithubDiscClient):
             for leak in leaks:
                 gh_leak: GithubLeak = GithubLeak(name=leak["name"], description=leak["description"]).save()
                 repo_obj.leaks.update(gh_leak, commit=leak["commit"], file=leak["file"], match=leak["match"])
+            
+            self.get_circleci(github_repo, repo_obj)
 
             repo_obj.save()
             self.get_branches(github_repo, repo_obj)
@@ -584,6 +588,31 @@ class GithubDisc(GithubDiscClient):
             return list(entities)
         
         return []
+    
+    def get_circleci(self, github_repo, repo_obj: GithubRepo) -> None:
+        """
+        Get vars of the circleci file of a repo
+        """
+
+        try:
+            github_content = self.call_github(github_repo.get_dir_contents, ret_val=[], path="/.circleci/config.yml")
+        except:
+            return
+
+        if github_content:
+            corg_obj = CircleCIOrganization(name="gh/" + github_repo.full_name.split("/")[0]).save()
+            ghorg_obj = GithubOrganization(name=github_repo.full_name.split("/")[0]).save()
+            corg_obj.gh_orgs.update(ghorg_obj)
+            corg_obj.save()
+
+            cproj_obj = CircleCIProject(name="gh/" + github_repo.full_name).save()
+            cproj_obj.gh_repos.update(repo_obj)
+            cproj_obj.orgs.update(corg_obj)
+            cproj_obj.save()
+        
+            content = github_content.decoded_content.decode("utf-8")
+
+            disc_vars_in_txt(cproj_obj, content)            
 
 
     def get_secrets_from_workflows(self, github_repo) -> Tuple[str, List[str]]:

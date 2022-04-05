@@ -11,3 +11,4 @@ requests
 google-cloud-secret-manager==2.5.0
 validators
 concoursepy
+pycircleci

@@ -36,8 +36,8 @@ class ConcourseDiscClient(PurplePanda):
         self.env_var_content = os.getenv(self.env_var)
         assert bool(self.env_var_content), "Concourse env variable not configured"
         
-        self.github_config : dict = yaml.safe_load(b64decode(self.env_var_content))
-        assert bool(self.github_config.get("concourse", None)), "Concourse env variable isn't a correct yaml"
+        self.concurse_config : dict = yaml.safe_load(b64decode(self.env_var_content))
+        assert bool(self.concurse_config.get("concourse", None)), "Concourse env variable isn't a correct yaml"
 
         if get_creds:
             self.creds : dict = self._concourse_creds()
@@ -49,7 +49,7 @@ class ConcourseDiscClient(PurplePanda):
 
         creds : dict = []
 
-        for entry in self.github_config["concourse"]:
+        for entry in self.concurse_config["concourse"]:
             url = entry["url"]
             if entry.get("token"):
                 kwargs = {"token": entry.get("token")}

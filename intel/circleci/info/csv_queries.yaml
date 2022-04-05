@@ -1,0 +1,32 @@
+
+queries:
+  - name: All Secrets
+    query: |
+      MATCH(secret:CircleCISecret)
+      RETURN secret.name, secret.value
+  
+  - name: All Context Secrets
+    query: |
+      MATCH (context:CircleCIContext)-[:HAS_SECRET]->(secret:CircleCISecret)
+      RETURN context.name, collect(distinct secret.name)
+  
+  - name: All Project Secrets
+    query: |
+      MATCH (project:CircleCIProject)-[:HAS_SECRET]->(secret:CircleCISecret)
+      RETURN project.name, collect(distinct secret.name)
+    
+  - name: All Vars
+    query: |
+      MATCH(var:CircleCIVar)
+      RETURN var.name, var.value
+  
+  - name: Who can steal each secret
+    query: |
+      MATCH(secret:CircleCISecret)<-[r:CAN_STEAL_SECRET]-(ppal)
+      RETURN secret.name, collect(distinct ppal.name)
+  
+  - name: All Projects with Org
+    query: |
+      MATCH(project:CircleCIProject)
+      OPTIONAL MATCH (project)-[:PART_OF]->(org:CircleCIOrganization)
+      RETURN project.name, org.name

@@ -41,7 +41,7 @@ Moreover, checking who has **access as member, owner or admin** is also very imp
 #### Concourse - params
 `Show all the plans with some param or var declared.`
   <details>
-  <summary>e.g.: <i>K8s - envars with value</i></summary>
+  <summary>e.g.: <i>Concourse - envars with value</i></summary>
     <pre>
     MATCH(plan:ConcoursePlan) WHERE ((plan.params IS NOT NULL AND plan.params <> "null") OR (plan.runparams IS NOT NULL AND plan.runparams <> "null") OR (plan.vars IS NOT NULL AND plan.vars <> "null"))
     RETURN plan.name,plan.params,plan.runparams,plan.vars</pre>
@@ -62,10 +62,10 @@ Moreover, checking who has **access as member, owner or admin** is also very imp
     RETURN team,r,ppal</pre>
   </details>
 
-#### K8s - privileged ppals
+#### Concourse - privileged ppals
 `Show only the privileged principals`
   <details>
-  <summary>e.g.: <i>K8s - privileged ppals</i></summary>
+  <summary>e.g.: <i>Concourse - privileged ppals</i></summary>
     <pre>
     MATCH(team:ConcourseTeam)<-[r:HAS_ROLE]-(ppal:ConcoursePrincipal)
     WHERE r.role <> "viewer" and r.role <> "pipeline-operator"

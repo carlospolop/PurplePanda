@@ -9,6 +9,7 @@ from google.auth import impersonated_credentials, default
 from googleapiclient.http import HttpRequest
 from base64 import b64decode
 import googleapiclient.discovery
+from google_auth_httplib2 import AuthorizedHttp
 from intel.google.models.gcp_service_account import GcpServiceAccount
 from intel.google.models.gcp_user_account import GcpUserAccount
 from intel.google.models.google_group import GoogleGroup
@@ -126,7 +127,7 @@ class GcpDiscClient(PurplePanda):
                     json.dump(config, f)'''
 
 
-    def execute_http_req(self, prep_http: googleapiclient.discovery.Resource, extract_field:Optional[str], 
+    def execute_http_req(self, prep_http: Union[googleapiclient.discovery.Resource, googleapiclient.http.HttpRequest], extract_field:Optional[str], 
         disable_warn=False, ret_err=False, cont=0, list_kwargs={}, headers={}, status_dis="") -> Union[list, str, dict]:
         """Access Google API sending the prepared http request"""
         
@@ -176,14 +177,22 @@ class GcpDiscClient(PurplePanda):
             if "403" in str(e) and ("or it is disabled" in str(e) or "or a custom role" in str(e)):
                 # If first time and something in _quota_project_id, try without it
                 if status_dis == "" and final_prep_http.http.credentials._quota_project_id:
-                    prep_http._http.credentials._quota_project_id = ""
+                    if type(prep_http) is googleapiclient.discovery.Resource:
+                        prep_http._http.credentials._quota_project_id = ""
+                    else:
+                        prep_http.http.credentials._quota_project_id = ""
+                    
                     return self.execute_http_req(prep_http, extract_field=extract_field, disable_warn=disable_warn, ret_err=ret_err, cont=cont+1, list_kwargs=list_kwargs, status_dis="empty")
 
                 # If not first time, try with the objetive project as _quota_project_id
                 elif "/projects/" in final_prep_http.uri and status_dis != "terminate":
                     project_name = final_prep_http.uri.split("/projects/")[1].split("/")[0]
                     headers = {"X-Goog-User-Project": project_name}
-                    prep_http._http.credentials._quota_project_id = project_name # This is to set the header "X-Goog-User-Project" of the library will change it
+                    if type(prep_http) is googleapiclient.discovery.Resource:
+                        prep_http._http.credentials._quota_project_id = project_name  # This is to set the header "X-Goog-User-Project" of the library will change it
+                    else:
+                        prep_http.http.credentials._quota_project_id = project_name
+
                     return self.execute_http_req(prep_http, extract_field=extract_field, disable_warn=disable_warn, ret_err=ret_err, cont=cont+1, list_kwargs=list_kwargs, headers=headers, status_dis="terminate")
             
             if not disable_warn and not "The caller does not have permission" in str(e) and not "403" in str(e) and not "has not been used in project" in str(e):

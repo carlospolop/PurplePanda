@@ -53,6 +53,7 @@ class GithubUser(GithubPrincipal):
     repos_cos = RelatedTo("GithubRepo", "CODE_OWNER")
     secrets = RelatedTo("GithubSecrets", "CAN_STEAL_SECRET")
     selfhosted_runners = RelatedTo("GithubSelfHostedRunner", "RUN_IN")
+    circleci_secrets = RelatedTo("CircleCISecret", "CAN_STEAL_SECRET") #Created by neo4j query
 
     github = Label(name="Github")
 
@@ -84,7 +85,8 @@ class GithubTeam(GithubPrincipal):
     secrets = RelatedTo("GithubSecrets", "CAN_STEAL_SECRET")
     selfhosted_runners = RelatedTo("GithubSelfHostedRunner", "CAN_RUN")
     branch_merge = RelatedTo("GithubBranch", "CAN_MERGE")
-
+    circleci_contexts = RelatedTo("CircleCIContext", "CAN_ACCESS")
+    circleci_secrets = RelatedTo("CircleCISecret", "CAN_STEAL_SECRET") #Created by neo4j query
 
     github = Label(name="Github")
 
@@ -208,6 +210,7 @@ class GithubRepo(CustomOGM):
     self_hosted_runners = RelatedFrom(GithubSelfHostedRunner, "RUN_IN")
     gcp_source_repos = RelatedFrom("GcpSourceRepo", "IS_MIRROR")
     gcp_cloudbuild_trigger = RelatedFrom("GcpCloudbuildTrigger", "IS_MIRROR")
+    circleci_projects = RelatedTo("CircleCIProject", "IN_CIRCLECI")
 
 
     github = Label(name="Github")
@@ -229,7 +232,7 @@ class GithubRepo(CustomOGM):
 
 class GithubOrganization(CustomOGM):
     __primarylabel__ = "GithubOrganization"
-    __primarykey__ = "id"
+    __primarykey__ = "name"
 
     id = Property()
     name = Property() #login
@@ -263,6 +266,7 @@ class GithubOrganization(CustomOGM):
     users = RelatedFrom(GithubUser, "PART_OF")
     repos = RelatedFrom(GithubRepo, "PART_OF")
     secrets = RelatedTo(GithubSecret, "USES_SECRET")
+    circleci_orgs = RelatedTo("CircleCIOrganization", "IN_CIRCLECI")
 
     github = Label(name="Github")
 

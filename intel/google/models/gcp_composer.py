@@ -4,6 +4,7 @@ from core.db.customogm import CustomOGM
 from intel.google.models.gcp_perm_models import GcpRunningSA
 from intel.google.models.gcp_project import GcpProject
 from intel.google.models.gcp_storage import GcpStorage
+from intel.google.models.gcp_service_account import GcpServiceAccount #Needed
 from core.models import PublicDomain, PublicIP
 from intel.google.models.gcp_kms import GcpKMSKey
 

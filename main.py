@@ -15,11 +15,13 @@ from intel.google.purplepanda_google import PurplePandaGoogle
 from intel.github.purplepanda_github import PurplePandaGithub
 from intel.k8s.purplepanda_k8s import PurplePandaK8s
 from intel.concourse.purplepanda_concourse import PurplePandaConcourse
+from intel.circleci.purplepanda_circleci import PurplePandaCircleCI
 
 from intel.github.discovery.github_disc_client import GithubDiscClient
 from intel.google.discovery.gcp_disc_client import GcpDiscClient
 from intel.k8s.discovery.k8s_disc_client import K8sDiscClient
 from intel.concourse.discovery.concourse_disc_client import ConcourseDiscClient
+from intel.circleci.discovery.circleci_disc_client import CircleCIDiscClient
 
 
 logger = logging.getLogger("main")
@@ -106,12 +108,14 @@ def main():
     if "github" in platforms: GithubDiscClient()
     if "k8s" in platforms: K8sDiscClient()
     if "concourse" in platforms: ConcourseDiscClient()
+    if "circleci" in platforms: CircleCIDiscClient()
 
     if analyze:
         if "google" in platforms: PurplePandaGoogle().analyze_creds()
         if "github" in platforms: PurplePandaGithub().analyze_creds()
         if "k8s" in platforms: PurplePandaK8s().analyze_creds()
         if "concourse" in platforms: PurplePandaConcourse().analyze_creds()
+        if "circleci" in platforms: PurplePandaCircleCI().analyze_creds()
     
     elif not os.getenv("PURPLEPANDA_NEO4J_URL") or not os.getenv("PURPLEPANDA_PWD"):
         # Cannot connect to database so finish here, (the error messages are shown from core.db.customogm)
@@ -120,6 +124,7 @@ def main():
     elif plat_enumerate:
         # Launch each SaaS discovery module in its own thread (we cannot use diffrent process or they will figth for the progress bar of "rich")
         functions = []
+        functions2 = []
         
         # Google
         if "google" in platforms:
@@ -158,7 +163,26 @@ def main():
                 }
             ))
         
+        # CircleCI
+        if "circleci" in platforms:
+            # If github, launch circleci in a second round
+            if "github" in platforms:
+                logger.warning(f"CircleCI and Github detected. Executing CircleCI in a secound round after github has been executed.")
+                functions2.append((PurplePandaCircleCI().discover, "circleci",
+                    {
+                    }
+                ))
+            else:
+                functions.append((PurplePandaCircleCI().discover, "circleci",
+                    {
+                    }
+                ))
+        
+        # First round of functions
         PurplePanda().start_discovery(functions)
+
+        # Second round of functions
+        PurplePanda().start_discovery(functions2)
     
         # Perform a combined analysis
         AnalyzeResults().discover()

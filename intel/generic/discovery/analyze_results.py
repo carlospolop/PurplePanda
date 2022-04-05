@@ -33,6 +33,8 @@ class AnalyzeResults(PurplePanda):
         self._disc_loop([None], self._merge_k8s_sas_with_unknwon_cluster_id, __name__.split(".")[-1]+"._merge_k8s_sas_with_unknwon_cluster_id")
 
         self._disc_loop([None], self._merge_concourse_workers_with_pods, __name__.split(".")[-1]+"._merge_concourse_workers_with_pods")
+
+        self._disc_loop([None], self._merge_github_writers_steal_circleci_secrets, __name__.split(".")[-1]+"._merge_github_writers_steal_circleci_secrets")
         
     
     def _get_domain_info(self, dom_obj: PublicDomain):
@@ -79,8 +81,7 @@ class AnalyzeResults(PurplePanda):
         
         reasons = '["Can merge in "+repo.full_name+" which is mirrored by "+mirror.name+" which is used by "+res.name+" which run the SA"]'
         query2 = 'MATCH (ppal)-[r_merge:CAN_MERGE]->(b)<-[r_branch:HAS_BRANCH]-(repo)<-[r_mirror:IS_MIRROR]-(mirror)-[r]-(res)<-[r_run_in:RUN_IN]-(sa)\n'
-        query2 += 'MERGE (ppal)-[:PRIVESC {title:"'+title+'", reasons:'+reasons+', summary:"'+summary+'", limitations: ""}]->(sa)\n'
-        query2 += 'RETURN ppal'
+        query2 += 'MERGE (ppal)-[:PRIVESC {title:"'+title+'", reasons:'+reasons+', summary:"'+summary+'", limitations: ""}]->(sa)'
         graph.evaluate(query2)
     
     def _merge_k8s_sas_with_unknwon_cluster_id(self, _):
@@ -89,8 +90,7 @@ class AnalyzeResults(PurplePanda):
         query = 'MATCH (ksa:K8sServiceAccount)-[r:PRIVESC]->(b)\n'
         query += 'MATCH (ksa2:K8sServiceAccount) WHERE ksa2.name =~ ".+-"+ksa.name\n'
         query += 'MERGE (ksa2)-[:PRIVESC{reasons:r.reasons, title:r.title, summary:r.summary, limitations:r.limitations}]->(b)\n'
-        query += 'DETACH DELETE (ksa)\n'
-        query += 'RETURN ksa2'
+        query += 'DETACH DELETE (ksa)'
 
         graph.evaluate(query)
     
@@ -103,3 +103,29 @@ class AnalyzeResults(PurplePanda):
 
         graph.evaluate(query)
 
+    def _merge_github_writers_steal_circleci_secrets(self, _):
+        """
+        CircleCI project secrets can be stolen by anyone with write access to the repo.
+        By default, CircleCI context secet can be stolen by anynoe with write access to any CircleCI repo.
+        """
+
+        query =  'MATCH(ppal:Github)-[perms:HAS_PERMS]->(repo:GithubRepo)-[r_circle:IN_CIRCLECI]->(project:CircleCIProject)-[r_secrets:HAS_SECRET]->(secret:CircleCISecret)\n'
+        query += 'WHERE perms.admin = True OR perms.maintain = True OR perms.push = True\n'
+        query += 'MERGE (ppal)-[:CAN_STEAL_SECRET {reason:"Can write in repo " + repo.full_name}]->(secret)'
+
+        graph.evaluate(query)
+
+        # TODO: The CircleCI API doesn't give the teams that has access to the context, it would be nice to have that info
+
+        query =  'MATCH (org)<-[:PART_OF]-(:CircleCIContext)-[:HAS_SECRET]->(secret:CircleCISecret)\n'
+        query += 'WITH org,  COLLECT (DISTINCT secret) as s\n'
+
+        query += 'MATCH (org)<-[:PART_OF]-(:CircleCIProject)<-[:IN_CIRCLECI]-(:GithubRepo)<-[perms:HAS_PERMS]-(ppal:Github)\n'
+        query += 'WHERE perms.admin = True OR perms.maintain = True OR perms.push = True\n'
+        query += 'WITH COLLECT (DISTINCT ppal) as p,s\n'
+
+        query += 'UNWIND (p) as ppal\n'
+        query += 'UNWIND (s) as secret\n'
+        query += 'MERGE (ppal)-[:CAN_STEAL_SECRET {reason:"Can write in CircleCI project repo" }]->(secret)'
+
+        graph.evaluate(query)

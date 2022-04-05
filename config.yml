@@ -10,3 +10,6 @@ env_vars:
 
 - name: concourse
   env_var: CONCOURSE_DISCOVERY
+
+- name: circleci
+  env_var: CIRCLECI_DISCOVERY
