@@ -51,6 +51,21 @@ Searching for **sensitive information in secrets and leaks** is something all th
   </details>
 </details>
 
+### Webhooks
+
+<details>
+<summary><b>Show queries to search webhooks</b></summary>
+
+#### Gh - webhooks
+`Show all the webhooks and their associated repos`
+  <details>
+  <summary>e.g.: <i>Gh - webhooks with repos</i></summary>
+    <pre>
+    MATCH(webhook:GithubWebhook)<-[r:HAS_WEBHOOK]-(repo:GithubRepo)
+    RETURN webhook,r,repo</pre>
+  </details>
+</details>
+
 ---
 
 ## Purple & Blue Teams

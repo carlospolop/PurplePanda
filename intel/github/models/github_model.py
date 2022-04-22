@@ -208,6 +208,7 @@ class GithubRepo(CustomOGM):
     leaks = RelatedFrom(GithubLeak, "PART_OF")
     environments = RelatedFrom(GithubEnvironment, "PART_OF")
     self_hosted_runners = RelatedFrom(GithubSelfHostedRunner, "RUN_IN")
+    webhooks = RelatedTo("GithubWebhook", "HAS_WEBHOOK")
     gcp_source_repos = RelatedFrom("GcpSourceRepo", "IS_MIRROR")
     gcp_cloudbuild_trigger = RelatedFrom("GcpCloudbuildTrigger", "IS_MIRROR")
     circleci_projects = RelatedTo("CircleCIProject", "IN_CIRCLECI")
@@ -300,6 +301,23 @@ class GithubBranch(CustomOGM):
     teams_push  = RelatedFrom(GithubTeam, "CAN_PUSH")
     users_merge = RelatedFrom(GithubUser, "CAN_MERGE")
     teamss_merge = RelatedFrom(GithubTeam, "CAN_MERGE")
+
+    github = Label(name="Github")
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.github = True
+
+class GithubWebhook(CustomOGM):
+    __primarylabel__ = "GithubWebhook"
+    __primarykey__ = "name"
+
+    name = Property()
+    insecure_ssl = Property()
+
+    repos = RelatedFrom(GithubRepo, "HAS_WEBHOOK")
+    public_ips = RelatedTo("PublicIP", "HAS_IP")
+    public_domains = RelatedTo("PublicDomain", "HAS_DOMAIN")
 
     github = Label(name="Github")
 

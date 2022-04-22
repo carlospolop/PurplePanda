@@ -1,10 +1,20 @@
 ## Platforms
+### Under maintenance
+- GCP
+- Kubernetes
+- Github
+- Concourse
+- CircleCI
+- Atlantis (in https://book.hacktricks.xyz/cloud-security/atlantis, no action is performed here as there is no API)
+
+### To investigate
 - AWS
 - Azure
 - Gitlab
 - Bitbucket
-- CircleCI
+- Gitea
 - Jenkins
+- Infracost
 
 ## Create Web Server
 - Show the results in a proper web client and no in Neo4jBool
@@ -14,4 +24,3 @@
 
 ## Analysis
 - Instead of using py2neo, create queries that generate the PRIVESC relationships
-- Create relations between all the nodes that sue the same email

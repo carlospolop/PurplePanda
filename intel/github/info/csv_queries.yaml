@@ -58,3 +58,8 @@ queries:
     query: |
       MATCH(repo:GithubRepo) WHERE repo.unkown_codeowners <> [] OR repo.no_codeowners
       RETURN repo.name, repo.unkown_codeowners, repo.no_codeowners
+  
+  - name: Insecure Webhooks
+    query: |
+      MATCH(webhook:GithubWebhook) WHERE webhook.insecure_ssl <> "0"
+      RETURN webhook.name, webhook.insecure_ssl

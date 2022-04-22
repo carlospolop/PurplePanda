@@ -1,7 +1,7 @@
 from py2neo.ogm import Property, RelatedTo, RelatedFrom
 
 from core.db.customogm import CustomOGM
-from intel.github.models.github_model import GithubPrincipal, GithubRepo
+from intel.github.models.github_model import GithubPrincipal, GithubRepo, GithubWebhook
 
 
 ########################
@@ -23,6 +23,7 @@ class PublicIP(CustomOGM):
     public_domains = RelatedFrom("PublicDomain", "HAS_IP")
     k8s_mutatingwebhookconfigs = RelatedFrom("K8sMutatingWebhookConfig", "HAS_IP")
     concourse_workers = RelatedFrom("ConcurseWorker", "HAS_IP")
+    gh_webhooks = RelatedFrom(GithubWebhook, "HAS_IP")
 
 class PublicPort(CustomOGM):
     __primarylabel__ = "PublicPort"
@@ -47,6 +48,7 @@ class PublicDomain(CustomOGM):
     public_ips = RelatedTo(PublicIP, "HAS_IP")
     k8s_mutatingwebhookconfigs = RelatedFrom("K8sMutatingWebhookConfig", "HAS_DOMAIN")
     concourse_workers = RelatedFrom("ConcourseWorker", "HAS_DOMAIN")
+    gh_webhooks = RelatedFrom(GithubWebhook, "HAS_DOMAIN")
 
 class RepoPpalPrivesc(CustomOGM):
     __primarylabel__ = "RepoPpalPrivesc"

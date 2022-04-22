@@ -6,6 +6,7 @@ from core.utils.discover_saas import DiscoverSaas
 
 from intel.k8s.discovery.k8s_disc_client import K8sDiscClient
 from intel.k8s.discovery.disc_namespaces import DiscNamespaces
+from intel.k8s.discovery.disc_current_perms import DiscCurrentPerms
 from intel.k8s.discovery.disc_nodes import DiscNodes
 from intel.k8s.discovery.disc_pods import DiscPods
 from intel.k8s.discovery.disc_daemonsets import DiscDaemonsets
@@ -54,7 +55,10 @@ class PurplePandaK8s():
                             DiscIngresses(cred["cred"], **kwargs).discover
                         ],
 
-                        [DiscRoles(cred["cred"], **kwargs).discover]
+                        [
+                            DiscCurrentPerms(cred["cred"], **kwargs).discover, 
+                            DiscRoles(cred["cred"], **kwargs).discover
+                        ]
                     ],
                     # In K8s launch an analysis per cred
                     final_funcs=[AnalyzeResults(cred["cred"], **kwargs).discover]
@@ -82,7 +86,7 @@ class PurplePandaK8s():
             if description:
                 PurplePandaPrints.print_key_val("Description", description)
 
-            if "authorization" in cred.configuration.api_key:
+            if "authorization" in cred.configuration.api_key and " " in cred.configuration.api_key["authorization"]:
                 jwt_token = cred.configuration.api_key["authorization"].split(" ")[1]
                 PurplePandaPrints.print_dict(jwt.decode(jwt_token, options={"verify_signature": False}))
             

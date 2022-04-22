@@ -1,15 +1,18 @@
 import json
-from typing import List, Tuple
-from github import NamedUser, Team, Repository, Organization, Branch, Membership
 import time
-from shutil import which
 import subprocess
 import os
+import validators
+from urllib.parse import urlparse
+from shutil import which
+from typing import List, Tuple
+from github import NamedUser, Team, Repository, Organization, Branch, Membership
 
 from .github_disc_client import GithubDiscClient
 from intel.circleci.discovery.circleci_disc_client import disc_vars_in_txt
-from intel.github.models.github_model import GithubUser, GithubTeam, GithubRepo, GithubBranch, GithubOrganization, GithubSecret, GithubLeak, GithubEnvironment, GithubSelfHostedRunner
+from intel.github.models.github_model import GithubUser, GithubTeam, GithubRepo, GithubBranch, GithubOrganization, GithubSecret, GithubLeak, GithubEnvironment, GithubSelfHostedRunner, GithubWebhook
 from intel.circleci.models import CircleCIProject, CircleCIOrganization, CircleCIVar
+from core.models import PublicIP, PublicDomain
 
 
 USERS = dict()
@@ -433,6 +436,28 @@ class GithubDisc(GithubDiscClient):
                 gh_leak: GithubLeak = GithubLeak(name=leak["name"], description=leak["description"]).save()
                 repo_obj.leaks.update(gh_leak, commit=leak["commit"], file=leak["file"], match=leak["match"])
             
+            webhooks =self._get_webhooks(github_repo)
+            for webhook in webhooks:
+                url = webhook["url"]
+                wh_obj = GithubWebhook(
+                    name = url,
+                    insecure_ssl = webhook["insecure_ssl"],
+                ).save()
+
+                uparsed = urlparse(url)
+                hostname = uparsed.hostname
+                if validators.domain(hostname) is True:
+                    dom_obj = PublicDomain(name=hostname).save()
+                    dom_obj.gh_webhooks.update(wh_obj)
+                    dom_obj.save()
+
+                else:
+                    ip_obj = PublicIP(name=hostname).save()
+                    ip_obj.gh_webhooks.update(wh_obj)
+                    ip_obj.save()
+
+                repo_obj.webhooks.update(wh_obj)
+            
             self.get_circleci(github_repo, repo_obj)
 
             repo_obj.save()
@@ -478,6 +503,22 @@ class GithubDisc(GithubDiscClient):
                 return self._get_org_secrets(org_name)
         
         return data
+
+    def _get_webhooks(self, github_repo):
+        """Get all the WebHooks of the repo"""
+        
+        webhooks = list()
+        hooks = self.call_github(github_repo.get_hooks, ret_val=[])
+        for hook in hooks:
+            hook_obj = self.call_github(github_repo.get_hook, ret_val=[], id=hook.id)
+            
+            if hook_obj and hasattr(hook_obj, "config"):
+                webhooks.append(hook_obj.config)
+            
+            else:
+                self.logger.error(f"No config found in repo {github_repo.full_name} with id {hook.id}")
+        
+        return webhooks
 
 
     @GithubDiscClient.call_github_decorator
@@ -572,7 +613,19 @@ class GithubDisc(GithubDiscClient):
         try:
             github_content = self.call_github(github_repo.get_dir_contents, ret_val=[], path="/CODEOWNERS")
         except:
-            return []
+            pass
+        
+        if not github_content:
+            try:
+                github_content = self.call_github(github_repo.get_dir_contents, ret_val=[], path="/docs/CODEOWNERS")
+            except:
+                pass
+        
+        if not github_content:
+            try:
+                github_content = self.call_github(github_repo.get_dir_contents, ret_val=[], path="/.github/CODEOWNERS")
+            except:
+                pass
         
         if github_content:
             content = github_content.decoded_content.decode("utf-8")
@@ -600,7 +653,7 @@ class GithubDisc(GithubDiscClient):
             return
 
         if github_content:
-            corg_obj = CircleCIOrganization(name="gh/" + github_repo.full_name.split("/")[0]).save()
+            corg_obj = CircleCIOrganization(name="github/" + github_repo.full_name.split("/")[0]).save()
             ghorg_obj = GithubOrganization(name=github_repo.full_name.split("/")[0]).save()
             corg_obj.gh_orgs.update(ghorg_obj)
             corg_obj.save()

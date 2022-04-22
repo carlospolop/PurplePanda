@@ -402,6 +402,7 @@ class K8sUser(K8sPrincipal):
     __primarykey__ = "name"
 
     name = Property()
+    email = Property()
     potential_escape_to_node = Property()
 
     groups = RelatedTo("K8sGroup", "MEMBER_OF")

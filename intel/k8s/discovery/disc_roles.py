@@ -16,8 +16,8 @@ class DiscRoles(K8sDisc):
         client_cred = client.RbacAuthorizationV1Api(self.cred)        
 
         # Discover all the roles
-        #namespaces:List[K8sNamespace] = K8sNamespace.get_all_by_kwargs(f'_.name =~ "{str(self.cluster_id)}-.*"')
-        #self._disc_loop(namespaces, self._disc_roles, __name__.split(".")[-1], **{"client_cred": client_cred})
+        namespaces:List[K8sNamespace] = K8sNamespace.get_all_by_kwargs(f'_.name =~ "{str(self.cluster_id)}-.*"')
+        self._disc_loop(namespaces, self._disc_roles, __name__.split(".")[-1], **{"client_cred": client_cred})
 
         # Discover all the roles bindings on each namespace
         namespaces:List[K8sNamespace] = K8sNamespace.get_all_by_kwargs(f'_.name =~ "{str(self.cluster_id)}-.*"')

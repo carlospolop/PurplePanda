@@ -35,6 +35,8 @@ class AnalyzeResults(PurplePanda):
         self._disc_loop([None], self._merge_concourse_workers_with_pods, __name__.split(".")[-1]+"._merge_concourse_workers_with_pods")
 
         self._disc_loop([None], self._merge_github_writers_steal_circleci_secrets, __name__.split(".")[-1]+"._merge_github_writers_steal_circleci_secrets")
+
+        self._disc_loop([None], self._create_same_emails_rels, __name__.split(".")[-1]+"._create_same_emails_rels")
         
     
     def _get_domain_info(self, dom_obj: PublicDomain):
@@ -129,3 +131,18 @@ class AnalyzeResults(PurplePanda):
         query += 'MERGE (ppal)-[:CAN_STEAL_SECRET {reason:"Can write in CircleCI project repo" }]->(secret)'
 
         graph.evaluate(query)
+
+
+    def _create_same_emails_rels(self, _):
+        """This query will relate entities that use the same email"""
+
+        query =  'MATCH (user1), (user2)'
+        query += 'WHERE ID(user1) <> ID(user2) AND ('
+        query += '    (user1.email <> "" AND user2.email <> "" AND user1.email = user2.email)'
+        query += '    OR (user1.name =~ "^[\w\-]+@[\w\-\.]+$" AND user1.name = user2.name)'
+        query += ')'
+
+        query += 'MERGE (user1)-[:HAS_SAME_EMAIL]-(user2)'
+
+        graph.evaluate(query)
+
