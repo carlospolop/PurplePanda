@@ -15,6 +15,7 @@ class DiscSecrets(K8sDisc):
         Discover all the secrets of each namespace
         """
 
+        if not self.reload_api(): return
         client_cred = client.CoreV1Api(self.cred)
         namespaces:List[K8sNamespace] = K8sNamespace.get_all_by_kwargs(f'_.name =~ "{str(self.cluster_id)}-.*"')
         self._disc_loop(namespaces, self._disc_secrets, __name__.split(".")[-1], **{"client_cred": client_cred})

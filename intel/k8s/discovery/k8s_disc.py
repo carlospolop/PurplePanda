@@ -8,9 +8,10 @@ from kubernetes import client
 class K8sDisc(K8sDiscClient):
     logger = logging.getLogger(__name__)
 
-    def __init__(self, cred, cluster_id, **kwargs) -> None:
+    def __init__(self, cred, config, cluster_id, **kwargs) -> None:
         super().__init__(get_creds=False)
         self.cred: client.__class__ = cred
+        self.config = config
         self.k8s_get_secret_values = kwargs.get("k8s_get_secret_values", False)
         self.task_name = "K8s"
         self.cluster_id = cluster_id
@@ -30,6 +31,15 @@ class K8sDisc(K8sDiscClient):
             return f(**kwargs)
         except:
             return None
+    
+    def reload_api(self):
+        cred = self._get_cred(self.config)
+        if not cred:
+            self.logger.error("I couldn't reload the kubernetes key")
+            return False
+        
+        self.cred = cred["cred"]
+        return True
 
 
     def _pod_selector(self, orig: K8sPodTemplate, dict_of_labels):

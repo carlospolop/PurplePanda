@@ -13,10 +13,11 @@ class DiscCurrentPerms(K8sDisc):
         Discover the current user, its groups, and its permissions
         """
 
+        if not self.reload_api(): return
         # Discover current user
         if "authorization" in self.cred.configuration.api_key and " " in self.cred.configuration.api_key["authorization"]:
             jwt_token = self.cred.configuration.api_key["authorization"].split(" ")[1]
-            data = jwt.decode(jwt_token, options={"verify_signature": False})
+            data = jwt.decode(jwt_token, options={"verify_signature": False, "verify_aud": False})
             email = data["email"]
             username =  data["name"]
             groups = data["groups"]

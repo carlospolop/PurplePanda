@@ -17,6 +17,7 @@ class DiscMutatingWebhookConfigurations(K8sDisc):
         Discover all the MutationWebHook Configurations.
         """
 
+        if not self.reload_api(): return
         client_cred = client.AdmissionregistrationV1Api(self.cred)
         mwcs = self.call_k8s_api(f=client_cred.list_mutating_webhook_configuration)
         if not mwcs or not mwcs.items:

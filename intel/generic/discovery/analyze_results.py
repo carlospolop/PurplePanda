@@ -53,7 +53,7 @@ class AnalyzeResults(PurplePanda):
                 if not ip_private:
                     dom_obj.is_external = True
                 
-                ip_obj = PublicIP(ip=ip, is_private=ip_private).save()
+                ip_obj = PublicIP(name=ip, is_private=ip_private).save()
                 dom_obj.public_ips.update(ip_obj)
             
             dom_obj.save()
@@ -62,7 +62,7 @@ class AnalyzeResults(PurplePanda):
     def _get_ip_info(self, ip_obj: PublicIP):
         """Get info from all the PublicIps discovered"""
         
-        ip_obj.isprivate = self.is_ip_private(ip_obj.ip)
+        ip_obj.isprivate = self.is_ip_private(ip_obj.name)
         ip_obj.save()
         self.get_open_ports(ip_obj)
 

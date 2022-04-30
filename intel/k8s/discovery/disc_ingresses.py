@@ -15,6 +15,7 @@ class DiscIngresses(K8sDisc):
         Discover all the services of each namespace
         """
 
+        if not self.reload_api(): return
         client_cred = client.NetworkingV1beta1Api(self.cred)
         namespaces:List[K8sNamespace] = K8sNamespace.get_all_by_kwargs(f'_.name =~ "{str(self.cluster_id)}-.*"')
         self._disc_loop(namespaces, self._disc_ingresses, __name__.split(".")[-1], **{"client_cred": client_cred})
@@ -48,7 +49,7 @@ class DiscIngresses(K8sDisc):
 
                     for path in ingress.spec.rules[0].http.paths:
                         url_path = path.path
-                        path_type = path.path_type
+                        path_type = path.path_type if hasattr(path, "path_type") else ""
                         port = path.backend.service_port
                         service_name = path.backend.service_name
                         if service_name:

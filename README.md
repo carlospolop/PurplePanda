@@ -12,7 +12,9 @@ Download **[Neo4jDesktop](https://neo4j.com/download-center/#desktop)** and crea
 
 If you want **shodan** to be used with public IPs discovered during the enumeration **export a env variable called *SHODAN_KEY* with a valid api key of shodan**.
 
-Then just install and launch the program indicating the platforms you want to enumerate comma separated like:
+Then just install and launch the program indicating the platforms you want to enumerate comma separated like.
+
+### Local install
 ```bash
 git clone https://github.com/carlospolop/PurplePanda
 cd PurplePanda
@@ -22,7 +24,29 @@ python3 -m pip install -r requirements.txt
 export PURPLEPANDA_NEO4J_URL="bolt://neo4j@localhost:7687"
 export PURPLEPANDA_PWD="neo4j_pwd_4_purplepanda"
 python3 main.py -h # Get help
-python3 main.py -e --enumerate google,github,k8s --github-only-org --k8s-get-secret-values --gcp-get-secret-values # Enumerate google, github and k8s
+python3 main.py -e -p google,github,k8s --github-only-org --k8s-get-secret-values --gcp-get-secret-values # Enumerate google, github and k8s
+```
+
+### Docker
+```bash
+# Consider adding the API keys in the Dockerfile
+docker rm -f purplepanda
+docker build --tag=purplepanda .
+# Execute -h
+## CHange -h for the params you want to run purplepanda with
+docker run -t \
+    -e PURPLEPANDA_NEO4J_URL="bolt://neo4j@host.docker.internal:7687" \
+    -e PURPLEPANDA_PWD="s3cr3t" \
+    -e GOOGLE_DISCOVERY=... \
+    -e GITHUB_DISCOVERY=... \
+    -e K8S_DISCOVERY=... \
+    -e CONCOURSE_DISCOVERY=... \
+    -e CIRCLECI_DISCOVERY=... \
+    purplepanda python3 main.py -h
+
+## -t is needed to see the output properly
+## If you are using Neo4Desktop to connec to the DB use the domain host.docker.internal
+## You might need to use the option '-v' to mount files with configurations
 ```
 
 PurplePanda has **2 analysis modes**:

@@ -12,6 +12,7 @@ class DiscNamespaces(K8sDisc):
         Discover all the namespaces of the cluster
         """
 
+        if not self.reload_api(): return
         client_cred = client.CoreV1Api(self.cred)
         namespaces = self.call_k8s_api(f=client_cred.list_namespace)
         if not namespaces or not namespaces.items:

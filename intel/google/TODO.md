@@ -12,8 +12,7 @@
     - Use googleapiclient.discovery.build("containeranalysis", "v1", credentials=cred, cache_discovery=False) to get notes and vulnerabilities of the images
 - Check if current user can impersonate each discovered SA
     -   Offer to automatically impersonate the ones that he can and rerun the analysis
-- Apply x-goog-user-project header when the API service isn't enabled i the billing project
-- Anyway that can write in the composer dags bucket, can escalate to the running cluster SA
+- Anyone that can write in the composer dags bucket, can escalate to the running cluster SA
 
 ## Privilege Escalation paths
 - Find SAs without .name as those are SAs not managed by the organization

@@ -1,4 +1,4 @@
-# K8s Discovery Module
+# Concourse Discovery Module
 This module allows you to discover the following **Concourse resources**:
 - Users
 - Groups

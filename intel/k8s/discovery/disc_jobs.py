@@ -13,6 +13,7 @@ class DiscJobs(K8sDisc):
         Discover all the jobs of each namespace, relate it with the namespaces and the running containers.
         """
 
+        if not self.reload_api(): return
         client_cred = client.BatchV1Api(self.cred)
         namespaces:List[K8sNamespace] = K8sNamespace.get_all_by_kwargs(f'_.name =~ "{str(self.cluster_id)}-.*"')
         self._disc_loop(namespaces, self._disc_jobs, __name__.split(".")[-1], **{"client_cred": client_cred})
@@ -48,7 +49,7 @@ class DiscJobs(K8sDisc):
             annotations = json.dumps(jb.metadata.annotations) if jb.metadata.annotations else "",
 
             parallelism = jb.spec.parallelism,
-            suspend = jb.spec.suspend,
+            suspend = jb.spec.suspend if hasattr(jb.spec, "suspend") else False,
             completions = jb.spec.completions
         ).save()
         jb_obj.namespaces.update(ns_obj)

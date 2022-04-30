@@ -129,14 +129,14 @@ class DiscClusters(GcpDisc):
         if cluster.get("endpoint"):
             uparsed = urlparse(cluster.get("endpoint"))
             hostname = uparsed.hostname if uparsed.hostname else cluster.get("endpoint")
-            ip_obj = PublicIP(ip=hostname).save()
+            ip_obj = PublicIP(name=hostname).save()
             cluster_obj.public_ips.update(ip_obj)
         else:
             self.logger.warning(f"Cluster {cluster['name']} found without endpoint")
         
         # Public IP
         if cluster_privateClusterConfig.get("publicEndpoint"):
-            ip_obj = PublicIP(ip=cluster_privateClusterConfig.get("publicEndpoint")).save()
+            ip_obj = PublicIP(name=cluster_privateClusterConfig.get("publicEndpoint")).save()
             cluster_obj.public_ips.update(ip_obj)
         
         # Potential KMS to encrypt K8s secrets (ETCD)

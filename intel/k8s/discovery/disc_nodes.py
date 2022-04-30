@@ -12,6 +12,7 @@ class DiscNodes(K8sDisc):
         Discover all the namespaces of the cluster
         """
 
+        if not self.reload_api(): return
         client_cred = client.CoreV1Api(self.cred)
         nodes = self.call_k8s_api(f=client_cred.list_node)
         if not nodes or not nodes.items:

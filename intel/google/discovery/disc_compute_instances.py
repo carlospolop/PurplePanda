@@ -119,11 +119,11 @@ class DiscComputeInstances(GcpDisc):
                         subnet_obj.save()
 
                         for natIP in natIps:
-                            ip_obj = PublicIP(ip=natIP).save()
+                            ip_obj = PublicIP(name=natIP).save()
                             inst_obj.public_ips.update(ip_obj)
                         
                         for natIP in natIpsv6:
-                            ip_obj = PublicIP(ip=natIP).save()
+                            ip_obj = PublicIP(name=natIP).save()
                             inst_obj.public_ips.update(ip_obj)
                         
                         inst_obj.save()

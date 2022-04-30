@@ -13,6 +13,7 @@ class DiscRoles(K8sDisc):
         Discover all the clusterroles, clusterrolesbinding, and roles and rolebindings of each namespace
         """
 
+        if not self.reload_api(): return
         client_cred = client.RbacAuthorizationV1Api(self.cred)        
 
         # Discover all the roles

@@ -74,7 +74,7 @@ class PurplePanda():
     def get_open_ports(self, ip_obj: PublicIP) -> None:
         '''Find open ports of public IP addresses using shodan'''
         
-        ip_address = ip_obj.ip
+        ip_address = ip_obj.name
         if ipaddress.ip_address(ip_address).is_private or not os.getenv("SHODAN_KEY"):
             return
         

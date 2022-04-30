@@ -230,6 +230,6 @@ RETURN p.name
 - Randomize PublicIP names
 ```
 MATCH(ip:PublicIP)
-SET ip.ip = apoc.text.random(2, "0-9")+"."+apoc.text.random(2, "0-9")+"."+apoc.text.random(2, "0-9")+"."+apoc.text.random(2, "0-9")
-RETURN ip.ip
+SET ip.name = apoc.text.random(2, "0-9")+"."+apoc.text.random(2, "0-9")+"."+apoc.text.random(2, "0-9")+"."+apoc.text.random(2, "0-9")
+RETURN ip.name
 ```

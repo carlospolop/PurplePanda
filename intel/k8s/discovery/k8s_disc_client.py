@@ -47,33 +47,36 @@ class K8sDiscClient(PurplePanda):
         creds : list = []
 
         for entry in self.k8s_config["k8s"]:
-            if entry.get("file_path"):
-                assert exists(entry.get("file_path")), "Indicated file path to config doesn't exist"
-                api_client = config.kube_config.new_client_from_config(config_file=entry.get("file_path"))
-
-            else:
-                token = entry.get("token")
-                assert token, "Token no specified"
-                
-                url = entry.get("url")
-                assert url, "URL not specified"
-                
-                configuration = client.Configuration()
-                configuration.verify_ssl=False
-                configuration.debug = False
-                configuration.api_key_prefix['authorization'] = 'Bearer'
-                configuration.api_key['authorization'] = token
-                configuration.host = url
-                api_client = client.ApiClient(configuration)            
-            
-            try:
-                # Test that the Kube-API is accessible
-                requests.get(api_client.configuration.host, verify=False)
-                creds.append({"cred": api_client, "cluster_id": entry.get("cluster_id", "")})
-            except:
-                self.logger.error(f"I cannot check Kubernetes because I cannot access {api_client.configuration.host}")
-                pass
-        
+            cred = self._get_cred(entry)
+            if cred:
+                creds.append(cred)
         return creds
+    
+    def _get_cred(self, entry):
+        if entry.get("file_path"):
+            assert exists(entry.get("file_path")), "Indicated file path to config doesn't exist"
+            api_client = config.kube_config.new_client_from_config(config_file=entry.get("file_path"))
 
-
+        else:
+            token = entry.get("token")
+            assert token, "Token no specified"
+            
+            url = entry.get("url")
+            assert url, "URL not specified"
+            
+            configuration = client.Configuration()
+            configuration.verify_ssl=False
+            configuration.debug = False
+            configuration.api_key_prefix['authorization'] = 'Bearer'
+            configuration.api_key['authorization'] = token
+            configuration.host = url
+            api_client = client.ApiClient(configuration)            
+        
+        try:
+            # Test that the Kube-API is accessible
+            requests.get(api_client.configuration.host, verify=False)
+            return {"cred": api_client, "cluster_id": entry.get("cluster_id", ""), "config": entry}
+        
+        except:
+            self.logger.error(f"I cannot check Kubernetes because I cannot access {api_client.configuration.host}")
+            return None

@@ -15,6 +15,7 @@ class DiscServices(K8sDisc):
         Discover all the services of each namespace
         """
 
+        if not self.reload_api(): return
         client_cred = client.CoreV1Api(self.cred)
         namespaces:List[K8sNamespace] = K8sNamespace.get_all_by_kwargs(f'_.name =~ "{str(self.cluster_id)}-.*"')
         self._disc_loop(namespaces, self._disc_services, __name__.split(".")[-1], **{"client_cred": client_cred})
@@ -31,11 +32,22 @@ class DiscServices(K8sDisc):
         ns_name = ns_obj.name
         for service in services.items:
             cluster_ips = [service.spec.cluster_ip] if service.spec.cluster_ip else []
-            if service.spec.cluster_i_ps:
+            if hasattr(service.spec, "cluster_i_ps") and service.spec.cluster_i_ps:
                 # Create array of non-repeated IPs
                 for ip in service.spec.cluster_i_ps:
                     if not ip in cluster_ips:
                         cluster_ips.add(ip)
+            
+            ports = []
+            if hasattr(service.spec, "ports") and service.spec.ports:
+                for p in service.spec.ports:
+                    port = str(p.port)
+                    port += f":{p.protocol}" if hasattr(p, "protocol") else ""
+                    port += f":{p.target_port}" if hasattr(p, "target_port") else ""
+                    port += f":{p.name}" if hasattr(p, "name") else ""
+                    port += f":{p.node_port}" if hasattr(p, "node_port") else ""
+                    port += f":{p.app_protocol}" if hasattr(p, "app_protocol") else ""
+                    ports.append(port)
             
             service_obj = K8sService(
                 name = f"{ns_name}:{service.metadata.name}",
@@ -43,17 +55,17 @@ class DiscServices(K8sDisc):
                 uid = service.metadata.uid,
                 labels = json.dumps(service.metadata.labels),
 
-                external_traffic_policy = service.spec.external_traffic_policy if service.spec.external_traffic_policy else "",
-                health_check_node_port = service.spec.health_check_node_port if service.spec.health_check_node_port else "",
-                internal_traffic_policy = service.spec.internal_traffic_policy if service.spec.internal_traffic_policy else "",
-                ip_families = service.spec.ip_families if service.spec.ip_families else [],
-                ip_family_policy = service.spec.ip_family_policy if service.spec.ip_family_policy else "",
-                load_balancer_class = service.spec.load_balancer_class if service.spec.load_balancer_class else "",
-                load_balancer_ip = service.spec.load_balancer_ip if service.spec.load_balancer_ip else "",
-                load_balancer_source_ranges = service.spec.load_balancer_source_ranges if service.spec.load_balancer_source_ranges else [],
+                external_traffic_policy = service.spec.external_traffic_policy if hasattr(service.spec, "external_traffic_policy") and service.spec.external_traffic_policy else "",
+                health_check_node_port = service.spec.health_check_node_port if hasattr(service.spec, "health_check_node_port") and service.spec.health_check_node_port else "",
+                internal_traffic_policy = service.spec.internal_traffic_policy if hasattr(service.spec, "internal_traffic_policy") and service.spec.internal_traffic_policy else "",
+                ip_families = service.spec.ip_families if hasattr(service.spec, "ip_families") and service.spec.ip_families else [],
+                ip_family_policy = service.spec.ip_family_policy if hasattr(service.spec, "ip_family_policy") and service.spec.ip_family_policy else "",
+                load_balancer_class = service.spec.load_balancer_class if hasattr(service.spec, "load_balancer_class") and service.spec.load_balancer_class else "",
+                load_balancer_ip = service.spec.load_balancer_ip if hasattr(service.spec, "load_balancer_ip") and service.spec.load_balancer_ip else "",
+                load_balancer_source_ranges = service.spec.load_balancer_source_ranges if hasattr(service.spec, "load_balancer_source_ranges") and service.spec.load_balancer_source_ranges else [],
 
                 type = service.spec.type,
-                ports = [f"{p.port}:{p.protocol}:{p.target_port}:{p.name}:{p.node_port}:{p.app_protocol}" for p in service.spec.ports] if service.spec.ports else [],
+                ports = ports,
                 cluster_ips = cluster_ips
             ).save()
             service_obj.namespaces.update(ns_obj)
@@ -62,7 +74,7 @@ class DiscServices(K8sDisc):
             # Get external ips
             if service.spec.external_i_ps:
                 for ip in service.spec.external_i_ps:
-                    pip_obj = PublicIP(ip=ip).save()
+                    pip_obj = PublicIP(name=ip).save()
                     service_obj.public_ips.update(pip_obj)
                 
                 service_obj.save()

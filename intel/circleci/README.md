@@ -1,4 +1,4 @@
-# K8s Discovery Module
+# CirceCI Discovery Module
 This module allows you to discover the following **CircleCI resources**:
 - Orgs
 - Contexts

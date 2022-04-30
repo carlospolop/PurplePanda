@@ -12,6 +12,7 @@ class DiscPods(K8sDisc):
         Discover all the pods of each namespace, relate it with the namespaces and the running containers.
         """
 
+        if not self.reload_api(): return
         client_cred = client.CoreV1Api(self.cred)
         namespaces:List[K8sNamespace] = K8sNamespace.get_all_by_kwargs(f'_.name =~ "{str(self.cluster_id)}-.*"')
         self._disc_loop(namespaces, self._disc_pods, __name__.split(".")[-1], **{"client_cred": client_cred})

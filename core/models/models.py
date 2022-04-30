@@ -10,9 +10,9 @@ from intel.github.models.github_model import GithubPrincipal, GithubRepo, Github
 
 class PublicIP(CustomOGM):
     __primarylabel__ = "PublicIP"
-    __primarykey__ = "ip"
+    __primarykey__ = "name"
 
-    ip = Property()
+    name = Property()
     is_private = Property()
 
     ports = RelatedTo("PublicPort", "HAS_PORT")
