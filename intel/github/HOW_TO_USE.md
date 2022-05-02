@@ -194,7 +194,7 @@ Usually Red Teams will **compromise a few set of credentials** and they will be 
 <details>
   <summary>e.g.: <i>Gh - secrets carlospolop can steal</i></summary>
     <pre>
-    MATCH(u:GithubPrincipal{name:$user})-[r:CAN_STEAL_SECRET]->(s)
+    MATCH(u:GithubPrincipal{name:$ppal})-[r:CAN_STEAL_SECRET]->(s)
     RETURN u,r,s</pre>
   </details>
 </details>

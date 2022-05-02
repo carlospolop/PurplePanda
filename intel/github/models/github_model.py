@@ -52,7 +52,7 @@ class GithubUser(GithubPrincipal):
     branch_merge = RelatedTo("GithubBranch", "CAN_MERGE")
     repos_cos = RelatedTo("GithubRepo", "CODE_OWNER")
     secrets = RelatedTo("GithubSecrets", "CAN_STEAL_SECRET")
-    selfhosted_runners = RelatedTo("GithubSelfHostedRunner", "RUN_IN")
+    selfhosted_runners = RelatedTo("GithubSelfHostedRunner", "RUNNER")
     circleci_secrets = RelatedTo("CircleCISecret", "CAN_STEAL_SECRET") #Created by neo4j query
 
     github = Label(name="Github")
@@ -207,7 +207,7 @@ class GithubRepo(CustomOGM):
     secrets = RelatedTo(GithubSecret, "USES_SECRET")
     leaks = RelatedFrom(GithubLeak, "PART_OF")
     environments = RelatedFrom(GithubEnvironment, "PART_OF")
-    self_hosted_runners = RelatedFrom(GithubSelfHostedRunner, "RUN_IN")
+    self_hosted_runners = RelatedFrom(GithubSelfHostedRunner, "RUNNER")
     webhooks = RelatedTo("GithubWebhook", "HAS_WEBHOOK")
     gcp_source_repos = RelatedFrom("GcpSourceRepo", "IS_MIRROR")
     gcp_cloudbuild_trigger = RelatedFrom("GcpCloudbuildTrigger", "IS_MIRROR")

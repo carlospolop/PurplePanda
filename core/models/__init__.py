@@ -1,3 +1,3 @@
-from .models import PublicIP, PublicPort, PublicDomain, ContainerImage, RunsContainerImage, GithubMirror
+from .models import PublicIP, PublicPort, PublicDomain, CloudCluster, ContainerImage, StoresContainerImage, RunsContainerImage, GithubMirror
 
-__all__ = ["PublicDomain", "PublicIP", "PublicPort", "ContainerImage", "RunsContainerImage", "GithubMirror"]
+__all__ = ["PublicDomain", "PublicIP", "CloudCluster", "PublicPort", "ContainerImage", "StoresContainerImage", "RunsContainerImage", "GithubMirror"]

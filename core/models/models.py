@@ -1,4 +1,4 @@
-from py2neo.ogm import Property, RelatedTo, RelatedFrom
+from py2neo.ogm import Property, RelatedTo, RelatedFrom, Label
 
 from core.db.customogm import CustomOGM
 from intel.github.models.github_model import GithubPrincipal, GithubRepo, GithubWebhook
@@ -73,7 +73,7 @@ class CloudCluster(CustomOGM):
 ########################
 
 class ContainerImage(CustomOGM):
-    __primarylabel__ = "CloudCluster"
+    __primarylabel__ = "ContainerImage"
     __primarykey__ = "name"
 
     name = Property()
@@ -86,9 +86,9 @@ class ContainerImage(CustomOGM):
         
         if "gcr.io/" in self.name and not "k8s.gcr.io/" in self.name:
             from intel.google.models import GcpStorage
-            zone_subdomain = self.name.split(".gcr.io/")[0]
+            zone_subdomain = self.name.split(".gcr.io/")[0] + "." if ".gcr.io/" in self.name else "" # Get "eu." in "eu.gcr.io/..."
             project_name = self.name.split("gcr.io/")[1].split("/")[0]
-            bucket_name = f"{zone_subdomain}.artifacts.{project_name}.appspot.com"
+            bucket_name = f"{zone_subdomain}artifacts.{project_name}.appspot.com"
             storage_obj = GcpStorage(name=bucket_name).save()
             self.image_containers.update(storage_obj)
             return super().save(*args, **kwargs)
@@ -100,10 +100,22 @@ class StoresContainerImage(CustomOGM):
 
     container_images = RelatedTo(ContainerImage, "STORES_IMAGE")
 
+    label = Label(name="StoresContainerImage")
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.label = True
+
 class RunsContainerImage(CustomOGM):
     __primarylabel__ = "RunsContainerImage"
 
     run_images = RelatedTo(ContainerImage, "RUN_IMAGE")
+
+    label = Label(name="RunsContainerImage")
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.label = True
 
 
 ########################
@@ -111,6 +123,12 @@ class RunsContainerImage(CustomOGM):
 ########################
 
 class GithubMirror(CustomOGM):
-    __primarylabel__ = "RunsContainerImage"
+    __primarylabel__ = "GithubMirror"
 
     github_repos = RelatedTo(GithubRepo, "IS_MIRROR")
+
+    label = Label(name="GithubMirror")
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.label = True

@@ -38,6 +38,7 @@ class AnalyzeResults(GcpDisc):
         self.known_2order_res = dict() #Reset these values
         permissions = prives_def["permissions"]
         second_order_permissions = prives_def.get("second_order_permissions", [])
+        second_order_relations = prives_def.get("second_order_relations", [])
         only_to_classes = prives_def.get("only_to_classes", False)
         extra_privesc_to = prives_def["extra_privesc_to"]
         running_in = prives_def.get("running_in", [])
@@ -45,6 +46,10 @@ class AnalyzeResults(GcpDisc):
         summary = prives_def["summary"]
         relation = prives_def["relation"]
         limitations = prives_def.get("limitations", "")
+
+        # Remove this when we create anothe DB to store interesting permissions
+        if relation != "PRIVESC":
+            return
 
         # If type RUNNING_SA, you need to indicate from which class you want to extract the running SA
         if extra_privesc_to == "RUNNING_SA" and not running_in:
@@ -57,12 +62,12 @@ class AnalyzeResults(GcpDisc):
             
         # Get the principals that could escalate
         for role in roles:
-            ppals_rscs = self._get_principals_with_role(role, only_to_classes, extra_privesc_to, running_in)
+            ppals_rscs = self._get_principals_with_role(role, only_to_classes, extra_privesc_to, running_in, second_order_relations)
             
             for ppal_rsc in ppals_rscs:
                 ppal: GcpPrincipal = ppal_rsc[0]
                 resources_and_reasons = ppal_rsc[1]
-                can_escalate = None # Must be None at begginig to check ig the ppal can escalate
+                can_escalate = None # Must be None at begginig to check if the ppal can escalate
                 more_reasons = [] # If more than 1 permissions is needed this will host the reasons of the other permissions
             
                 # Get each resource and reason the ppal is related with the first permission needed
@@ -74,8 +79,9 @@ class AnalyzeResults(GcpDisc):
                     #self._update_interesting_permissions(ppal, role, first_perm_name, res, summary)
 
                     # If not privesc relation, don't continue searching
-                    if relation != "PRIVESC":
-                        continue
+                    # Uncomment this when we re-activate the previous part
+                    #if relation != "PRIVESC":
+                    #    continue
                     
                     # Check in the cache if this was already analyzed
                     ppal_name, res_name = ppal.__primaryvalue__, res.__primaryvalue__
@@ -96,7 +102,8 @@ class AnalyzeResults(GcpDisc):
                     # Check if the ppal has each required permission inside the project
                     ## If it was already checked and the answere was false, just leave
                     if can_escalate is None:
-                        can_escalate, more_reasons, _ = self._has_other_perms_to_escalate(permissions, projectNumber, ppal, summary, only_to_classes, extra_privesc_to, running_in)
+                        can_escalate, more_reasons, _ = self._has_other_perms_to_escalate(permissions, projectNumber, 
+                            ppal, summary, only_to_classes, extra_privesc_to, running_in, is_second_order_relations=bool(second_order_relations))
                     
                     if can_escalate is False:
                         break
@@ -106,7 +113,8 @@ class AnalyzeResults(GcpDisc):
                     # Check if "res" contains all the required second order permissions
                     if second_order_permissions:
                         if res.__primaryvalue__ not in self.known_2order_res:
-                            self.known_2order_res[res.__primaryvalue__] = self._has_other_perms_to_escalate(permissions, projectNumber, res, summary, only_to_classes, extra_privesc_to, running_in, second_order=True)
+                            self.known_2order_res[res.__primaryvalue__] = self._has_other_perms_to_escalate(second_order_permissions,
+                                projectNumber, res, summary, only_to_classes, extra_privesc_to, running_in, is_second_order_perms=True)
                         
                         can_escalate += self.known_2order_res[res.__primaryvalue__][0]
                         reasons += self.known_2order_res[res.__primaryvalue__][1]
@@ -192,7 +200,8 @@ class AnalyzeResults(GcpDisc):
         return projectNumber
 
 
-    def _get_principals_with_role(self, role: str, only_to_classes: List[str], extra_privesc_to: str, running_in: list) -> List[Tuple[GcpPrincipal, List[Tuple[GcpResource, str]]]]:
+    def _get_principals_with_role(self, role: str, only_to_classes: List[str], extra_privesc_to: str, 
+        running_in: list, second_order_relations: List[str]) -> List[Tuple[GcpPrincipal, List[Tuple[GcpResource, str]]]]:
         """
         Given a role, get the principals that have it and the resources they have it over
         """
@@ -201,14 +210,21 @@ class AnalyzeResults(GcpDisc):
         
         ppal_res = []
         for ppal in principals_with_role:
-            resources = self._get_assets_from_principal_with_role(ppal, role, only_to_classes, extra_privesc_to, running_in)
+            resources = self._get_assets_from_principal_with_role(ppal, role, only_to_classes, extra_privesc_to, running_in, second_order_relations)
             ppal_res.append((ppal, resources))
         
         return ppal_res
 
 
-    def _has_other_perms_to_escalate(self, permissions, projectNumber, ppal, summary, only_to_classes: List[str], extra_privesc_to: str, running_in: list, second_order=False):
-        """Check if a ppal has all the required permissions to be able to escalate"""
+    def _has_other_perms_to_escalate(self, permissions, projectNumber, ppal, summary, only_to_classes: List[str],
+        extra_privesc_to: str, running_in: list, is_second_order_perms=False, is_second_order_relations=False):
+        """
+        Check if a ppal has all the required permissions to be able to escalate.
+        This is only looking if the ppal has the rest permissions over SOMETHING in the same project
+        TODO: Fix potential False Positives:
+        - It might all required permissions but over different objects
+        - If is_second_order_relations or is_second_order_perms, just having the permission over anything will return can_escalate as True
+        """
         
         can_escalate = True
         reasons = []
@@ -218,19 +234,19 @@ class AnalyzeResults(GcpDisc):
             
             for role in roles:
                 can_escalate = False
-                rsc_reasons2 = self._get_assets_from_principal_with_role(ppal, role, only_to_classes, extra_privesc_to, running_in)
+                rsc_reasons2 = self._get_assets_from_principal_with_role(ppal, role, only_to_classes, extra_privesc_to, running_in, second_order_relations=[])
                 
                 # If something found, and same projectnumber, it can escalate
                 for rsc_reason2 in rsc_reasons2:
                     res2: GcpResource = rsc_reason2[0]
                     projectNumber2 = self._get_project_number_from_res(res2)
-                    self._update_interesting_permissions(ppal, role, perm, res2, summary, second_order=second_order)
+                    #self._update_interesting_permissions(ppal, role, perm, res2, summary, second_order=is_second_order_perms)
                     
-                    if (projectNumber == projectNumber2) or second_order:
+                    if (projectNumber == projectNumber2) or is_second_order_perms or is_second_order_relations:
                         can_escalate = True                        
                         reasons.append(f"{perm}: {rsc_reason2[1]} to {res2.__primaryvalue__}")
                         
-                        if second_order: # Only interested in second order resources from second order privescs
+                        if is_second_order_perms: # Only interested in second order resources from second order privescs
                             resources_to_relate.append(rsc_reason2[0])
                         
                         break # Remove this break to get all the reasons
@@ -246,7 +262,8 @@ class AnalyzeResults(GcpDisc):
         return (can_escalate, reasons, resources_to_relate)
 
 
-    def _get_assets_from_principal_with_role(self, ppal: GcpPrincipal, role: str, only_to_classes: List[str], extra_privesc_to: str, running_in: list) -> List[Tuple[GcpResource, str]]:
+    def _get_assets_from_principal_with_role(self, ppal: GcpPrincipal, role: str, only_to_classes: List[str], extra_privesc_to: str, 
+        running_in: list, second_order_relations: List[str]) -> List[Tuple[GcpResource, str]]:
         """
         Given a principal and a role get all the resources affected from that role.
         Check the defined scopes to also add inherited permissions.
@@ -262,14 +279,16 @@ class AnalyzeResults(GcpDisc):
 
         for resource,roles in ppal.has_perm._related_objects:
             if role in roles["roles"]:
-                obj = CustomOGM.node_to_obj(resource.perms.node.end_node)
+                resource = CustomOGM.node_to_obj(resource.perms.node.end_node)
 
-                resources += self._get_recursive_resources(obj, resources_already, only_to_classes, extra_privesc_to, role, running_in, from_obj=None)
+                resources += self._get_recursive_resources(resource, resources_already, only_to_classes, 
+                    extra_privesc_to, role, running_in, second_order_relations, from_obj=[])
         
         return resources
 
 
-    def _get_recursive_resources(self, res, resources_already, only_to_classes, extra_privesc_to, role, running_in, from_obj):
+    def _get_recursive_resources(self, res, resources_already, only_to_classes, extra_privesc_to, 
+        role, running_in, second_order_relations, from_obj=[]):
         """Given a list of resources a ppal has a role over, get the resouces inheriting it"""
 
         more_resources = []
@@ -279,23 +298,33 @@ class AnalyzeResults(GcpDisc):
             return more_resources
         
         res_class_name = res.__class__.__name__
-        # If interested in SAs running in specific classes, only allow to pass orgs, fodlders, projects and those classes
-        if running_in:
+
+        # Check if we need to escalate to a relation of the found objects
+        if second_order_relations:
+            from_obj += [res]
+            res = self._get_second_relations([res], second_order_relations) #returned res WILL be a list!
+        
+        # If interested in SAs running in specific classes, only allow to pass orgs, folders, projects and those classes
+        elif running_in:
             if res_class_name in [s["initial_class_name"] for s in self.analysis_data["scope"]]:
                 pass
             elif res_class_name in running_in:
                 # If class not authorized, get the authorized object
-                res = self._check_privesc_to_res(res, extra_privesc_to)
+                from_obj += [res]
+                res = self._check_privesc_to_res(res, extra_privesc_to) #returned res COULD be a list!
             
         # If not running_in, then all allowed classes are permitted
         elif only_to_classes and not res_class_name in only_to_classes:
             # If class not authorized, get the authorized object
-            res = self._check_privesc_to_res(res, extra_privesc_to)
+            from_obj += [res]
+            res = self._check_privesc_to_res(res, extra_privesc_to) #returned res COULD be a list!
         
         # Instead of 1 final res, several might be given
         if type(res) is list:
             for r in res:
-                more_resources += self._get_recursive_resources(r, resources_already, only_to_classes, extra_privesc_to, role, running_in, from_obj=from_obj)
+                # second_order_relations has already being check, so send it empty
+                more_resources += self._get_recursive_resources(r, resources_already, only_to_classes, 
+                    extra_privesc_to, role, running_in, second_order_relations=[], from_obj=from_obj)
         
         # If nothing to relate, or already known, return empty
         elif not res or res.__primaryvalue__ in resources_already:
@@ -303,26 +332,29 @@ class AnalyzeResults(GcpDisc):
         
         elif not res.__primaryvalue__ in resources_already:
             if from_obj:
-                more_resources.append((res, f"Indirect role {role} from {from_obj.__class__.__name__}-{from_obj.__primaryvalue__}"))
+                more_resources.append((res, f"Indirect role {role} from {' -> '.join([f.__class__.__name__+'('+f.__primaryvalue__+')' for f in from_obj])}"))
             else:
                 more_resources.append((res, f"Direct role {role}"))
             
             resources_already.add(res.__primaryvalue__)
 
-            for scope in self.analysis_data["scope"]: # Organizations, Folders and Projects (in that specific order)
+            # Get interesting objects from Organizations, Folders and Projects (in that specific order)
+            for scope in self.analysis_data["scope"]:
                 class_name = scope["initial_class_name"]
                 relation_name = scope["relation"]
                 if res.__class__.__name__ == class_name:
                     objs = res.get_by_relation(relation_name, where=f"EXISTS ((a)<-[:{relation_name}]-(b))")
 
                     for obj in objs:
-                        more_resources += self._get_recursive_resources(obj, resources_already, only_to_classes, extra_privesc_to, role, running_in, from_obj=res)
-        
+                        from_obj += [res]
+                        more_resources += self._get_recursive_resources(obj, resources_already, only_to_classes, extra_privesc_to, 
+                            role, running_in, second_order_relations, from_obj=from_obj)
+
         return more_resources
                         
 
-    def _check_privesc_to_res(self, res, extra_privesc_to):
-        """Given a resource, check if it's inside the scope to privesc or get the obj where it shuold prives"""
+    def _check_privesc_to_res(self, res:CustomOGM, extra_privesc_to):
+        """Given a resource, check if it's inside the scope to privesc or get the obj where it should privesc"""
         
         obj = None
         # Check if you should escalate to all project SAs
@@ -332,10 +364,9 @@ class AnalyzeResults(GcpDisc):
                     obj = obj2
 
         # Or just to the running SA in the resource
-        elif extra_privesc_to == "RUNNING_SA" and hasattr(res, "running_gcp_service_accounts"):
-            for obj2, _ in res.running_gcp_service_accounts._related_objects:
-                if type(obj2) is GcpServiceAccount:
-                    obj = obj2
+        elif extra_privesc_to == "RUNNING_SA":
+            for obj2 in res.get_by_relation("RUN_IN"):
+                obj = obj2
         
         elif extra_privesc_to == "K8S_CLUSTER_SAS" and hasattr(res, "k8s_namespaces"):
             obj = []
@@ -346,3 +377,35 @@ class AnalyzeResults(GcpDisc):
                     obj.append(ksa_obj)
         
         return obj
+
+
+    def _get_second_relations(self, rscs:List[CustomOGM], sor:List[str]) -> List[CustomOGM]:
+        """
+        Recursively check from all the given resources each second order relation
+        until there aren't more relations to check, then, return found objs
+        """
+        
+        if len(sor) > 0:
+            rel_name = sor[0]
+            sec_rscs = []
+            known_cache = set()
+
+            # Get all the relations of all the given resources
+            for rsc in rscs:
+                for sec_rsc in rsc.get_by_relation(rel_name):
+                    cache_name = sec_rsc.__primaryvalue__ + sec_rsc.__primarylabel__
+                    if not cache_name in known_cache:
+                        known_cache.add(cache_name)
+                        sec_rscs.append(sec_rsc)
+
+            sor = sor[1:] #Remove the relation we just check
+
+            # Return calling the same function again
+            if sec_rscs:
+                return self._get_second_relations(sec_rscs, sor)
+            
+            else: # Nothing found matching, return nothing
+                return []
+        
+        else:
+            return rscs

@@ -1,3 +1,5 @@
+from core.models.models import *
+
 from .gcp_api_key import GcpApiKey
 from .gcp_bigquery import GcpBqDataset, GcpBqTable
 from .gcp_cloud_function import GcpCloudFunction

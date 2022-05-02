@@ -61,7 +61,9 @@ def main():
     parser.add_argument('--github-write-as-merge', action='store_true', default=False, required=False, help=f'By default if the user doesn\'t have perms to see the branch protection, only codeowners and admins are supposed to be able to merge in the branch (low false possitives rate). With this option you can indicate to treat anyone with write permissions as if he has merge permissions (high false possitives rate potencially).')
     
     parser.add_argument('--k8s-get-secret-values', action='store_true', default=False, required=False, help=f'Get the secret values (if you have access')
+    
     parser.add_argument('--gcp-get-secret-values', action='store_true', default=False, required=False, help=f'Get the secret values (if you have access')
+    parser.add_argument('--gcp-get-kms', action='store_true', default=False, required=False, help=f'Enumerate KMS (need to check every location on each project), might some hours)')
 
     args = parser.parse_args()    
     platforms = args.platforms.lower().split(",")
@@ -93,7 +95,10 @@ def main():
     github_write_as_merge = args.github_write_as_merge
 
     k8s_get_secret_values = args.k8s_get_secret_values
+    
     gcp_get_secret_values = args.gcp_get_secret_values
+    gcp_get_kms = args.gcp_get_kms
+    
     set_verbose(args.verbose)
 
     # Check the user input platforms are well-written
@@ -130,7 +135,8 @@ def main():
         if "google" in platforms:
             functions.append((PurplePandaGoogle().discover, "google",
                 {
-                    "gcp_get_secret_values": gcp_get_secret_values
+                    "gcp_get_secret_values": gcp_get_secret_values,
+                    "gcp_get_kms": gcp_get_kms
                 }
             ))
         

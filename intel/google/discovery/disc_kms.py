@@ -18,6 +18,11 @@ class DiscKMS(GcpDisc):
         This module will create the KMS key rings and keys and relate them with the parent project.
         """
 
+        # Checking each location of each project might take a lot of time
+        # so by default this is not executed
+        if not self.gcp_get_kms:
+            return
+
         projects: List[GcpProject] = GcpProject.get_all()
         self._disc_loop(projects, self._disc_keyrings, __name__.split(".")[-1])
     
@@ -44,7 +49,8 @@ class DiscKMS(GcpDisc):
 
                 self.get_iam_policy(keyring_obj, self.service.projects().locations().keyRings(), keyring_obj.name)
                 self._disc_keys(p_obj, keyring_obj)
-    
+
+
     def _disc_keys(self, p_obj:GcpProject, keyring_obj: GcpKMSKeyRing):
         """Discover all the KMS Keys of a keyring"""
 

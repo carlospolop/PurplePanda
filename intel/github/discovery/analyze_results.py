@@ -23,16 +23,16 @@ class AnalyzeResults(GithubDisc):
         """
 
         # Set as repos admin all the org admin
-        self._disc_loop(GithubOrganization.get_all(), self._set_repo_admins, __name__.split(".")[-1]+"._set_repo_admins")
+        #self._disc_loop(GithubOrganization.get_all(), self._set_repo_admins, __name__.split(".")[-1]+"._set_repo_admins")
 
         # Roles write, maintain and admin --> steal repo secrets and org secrets
-        self._disc_loop(GithubOrganization.get_all(), self._steal_repo_secrets, __name__.split(".")[-1]+"._steal_repo_secrets")
+        #self._disc_loop(GithubOrganization.get_all(), self._steal_repo_secrets, __name__.split(".")[-1]+"._steal_repo_secrets")
 
         # orgs.members_can_create_repositories --> Any user can steal org secrets
-        self._disc_loop(GithubOrganization.get_all(), self._steal_org_secrets_with_generic_write_permission, __name__.split(".")[-1]+"._steal_org_secrets_with_generic_write_permission")
+        #self._disc_loop(GithubOrganization.get_all(), self._steal_org_secrets_with_generic_write_permission, __name__.split(".")[-1]+"._steal_org_secrets_with_generic_write_permission")
 
         # Find users that can write in repos with self-hosted runners
-        self._disc_loop(GithubOrganization.get_all(), self._run_selfhosted_runner, __name__.split(".")[-1]+"._run_selfhosted_runner")
+        #self._disc_loop(GithubOrganization.get_all(), self._run_selfhosted_runner, __name__.split(".")[-1]+"._run_selfhosted_runner")
 
         # Find users that can write to the default branch
         self._disc_loop(GithubOrganization.get_all(), self._write_to_default_branch, __name__.split(".")[-1]+"._write_to_default_branch")
@@ -129,6 +129,12 @@ class AnalyzeResults(GithubDisc):
 
         for repo_obj in org_obj.get_by_relation("PART_OF"):
             if type(repo_obj) == GithubRepo:
+                branches = repo_obj.branches._related_objects
+                
+                # If no branches probably this is an archived repo and there isn't privesc
+                if not branches:
+                    continue
+                
                 write_ppals = []
                 admin_ppals = []
                 for ppal_obj, roles in repo_obj.users._related_objects + repo_obj.teams._related_objects:
@@ -139,7 +145,7 @@ class AnalyzeResults(GithubDisc):
                         admin_ppals.append(ppal_obj)
                 
                 default_branch_name = repo_obj.default_branch
-                for branch_obj, _ in repo_obj.branches._related_objects: 
+                for branch_obj, _ in branches:
                     if branch_obj.name == default_branch_name:
                         #- If no branch protection
                         if not branch_obj.protected:
@@ -150,13 +156,12 @@ class AnalyzeResults(GithubDisc):
                         if not known_protections and not self.printed_no_protections_msg:
                             self.printed_no_protections_msg = True
                             if not self.github_write_as_merge:
-                                self.logger.error("I couldn't get branch protections so False Positives and False Negatives can occur. I will try to minimize them...")
+                                self.logger.error("I couldn't get branch protections of all or some repos so False Positives and False Negatives can occur. I will try to minimize them...")
                             else:
-                                self.logger.error("I couldn't get branch protections so False Positives and False Negatives can occur. I will treat all write as merge permission as indicated.")
+                                self.logger.error("I couldn't get branch protections of all or some repos so False Positives and False Negatives can occur. I will treat all write as merge permission as indicated.")
                                 self._relate_to_merge(branch_obj, write_ppals, reason="User indicated to treat all writes as merge")
                                 continue
-                        
-                        
+
                         # - If allow_force_pushes allows everyone or at least your user
                         #TODO: We are only getting if everyone is allowed. Get if specific people/groups are allowed
                         elif known_protections and branch_obj.allow_force_pushes:

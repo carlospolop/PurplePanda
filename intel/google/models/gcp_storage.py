@@ -4,7 +4,7 @@ from intel.google.models.gcp_perm_models import GcpResource
 from intel.google.models.gcp_service_account import GcpServiceAccount
 from core.models.models import StoresContainerImage
 
-class GcpStorage(GcpResource, StoresContainerImage):
+class GcpStorage(StoresContainerImage, GcpResource):
     __primarylabel__ = "GcpStorage"
     __primarykey__ = "name"
 

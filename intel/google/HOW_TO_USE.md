@@ -198,7 +198,7 @@
 <details>
     <summary>e.g.: <i>Gcp - SAs with cross-project permissions</i></summary>
     <pre>
-    OPTIONAL MATCH (sa:GcpServiceAccount)-[rel:HAS_ROLE]->(res:Gcp) 
+    MATCH (sa:GcpServiceAccount)-[rel:HAS_ROLE]->(res:Gcp) 
     WHERE EXISTS((sa)-[:PART_OF]->(:GcpProject)) AND NOT EXISTS((sa)-[:PART_OF]->(res)) AND NOT EXISTS((sa)-[:PART_OF]->(:GcpProject)<-[:PART_OF]-(res))
     RETURN sa, rel, res</pre>
 </details>

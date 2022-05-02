@@ -107,17 +107,39 @@ class CustomOGM(GraphObject):
         labels = str(node.labels).replace(":GcpPrincipal", "").replace(":GcpResource", "")
         if "Gcp" in labels:
             full_module_name = "intel.google.models"
+            label_prefixes = ["Gcp", "Google"]
         
-        if "Github" in labels:
+        elif "Github" in labels:
             full_module_name = "intel.github.models"
+            label_prefixes = ["Github"]
         
-        if "K8s" in labels:
+        elif "K8s" in labels:
             full_module_name = "intel.k8s.models"
+            label_prefixes = ["K8s"]
+        
+        else:
+            full_module_name = "core.models"
+            label_prefixes = [""]
         
         class_name = labels.split(":")[-1]
-        models_module = importlib.import_module(full_module_name)
+        for l in reversed(labels.split(":")):
+            if any(l.startswith(lp) for lp in label_prefixes):
+                class_name = l
+                break
+        
+        try:
+            models_module = importlib.import_module(full_module_name)
+        except Exception as e:
+            logger.error(f"Could not find correctly type in labels {labels} ({node}: {e})")
+            raise Exception(f"Could not find correctly type in labels {labels} ({node}: {e})")
+
         klass = getattr(models_module, class_name)
-        obj = klass(**{klass.__primarykey__: node[klass.__primarykey__]}).save()
+        try:
+            obj = klass(**{klass.__primarykey__: node[klass.__primarykey__]}).save()
+        except Exception as e:
+            logger.error(f"Could not convert correctly to {class_name}, node with labels {labels} ({node}: {e})")
+            raise Exception(f"Could not convert correctly to {class_name}, node with labels {labels} ({node}: {e})")
+        
         return obj
 
     

@@ -106,7 +106,7 @@ class K8sNode(K8sBasicModel):
         super().__init__(*args, **kwargs)
 
 
-class K8sContainer(K8sBasicModel, RunsContainerImage):
+class K8sContainer(RunsContainerImage, K8sBasicModel):
     __primarylabel__ = "K8sContainer"
     __primarykey__ = "name"
 

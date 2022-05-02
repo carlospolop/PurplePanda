@@ -44,6 +44,8 @@ class PurplePandaGoogle():
                         DiscGroupsUsers(cred=cred["cred"], **kwargs).discover,
                         DiscComputeSubnetworks(cred=cred["cred"], **kwargs).discover, #Needed by DiscClusters
                         DiscClusters(cred=cred["cred"], **kwargs).discover,
+                        DiscStorage(cred=cred["cred"], **kwargs).discover,
+                        DiscSecrets(cred=cred["cred"], **kwargs).discover
                     ],
 
                     parallel_funcs = [
@@ -56,10 +58,8 @@ class PurplePandaGoogle():
                         ],
                         [DiscPubSub(cred=cred["cred"], **kwargs).discover],
                         [DiscCloudRun(cred=cred["cred"], **kwargs).discover],
-                        [DiscStorage(cred=cred["cred"], **kwargs).discover],
                         [DiscCloudFunctions(cred=cred["cred"], **kwargs).discover],
                         [DiscCloudbuild(cred=cred["cred"], **kwargs).discover],
-                        [DiscSecrets(cred=cred["cred"], **kwargs).discover],
                         [DiscSourceRepos(cred=cred["cred"], **kwargs).discover],
                     ],
                     final_funcs=[DiscServiceAccounts(cred=cred["cred"], **kwargs).discover] #Re-discover and re-relate possible missing SAs with projects

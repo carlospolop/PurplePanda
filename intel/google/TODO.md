@@ -12,10 +12,9 @@
     - Use googleapiclient.discovery.build("containeranalysis", "v1", credentials=cred, cache_discovery=False) to get notes and vulnerabilities of the images
 - Check if current user can impersonate each discovered SA
     -   Offer to automatically impersonate the ones that he can and rerun the analysis
-- Anyone that can write in the composer dags bucket, can escalate to the running cluster SA
 
 ## Privilege Escalation paths
 - Find SAs without .name as those are SAs not managed by the organization
-- Find write permissions over composer and registry buckets and privesc to composers running SAs or KSAs in the pods using the images from the registry
 
-
+## Improve Privesc analysis
+- Remove false positives in more than 1 permissions by looking for all the resources a ppal can escalate to with each permission and checking only reporting coincidences

@@ -17,15 +17,17 @@ scope:
 # - limitations: Indicate here if this technique has any limitation to privesc
 # - relation: Must be PRIVESC or NO_RELATION (required)
 # - permissions: Array with the required permissions (required)
-# - second_order_permissions: The permissions taht must have the principals discovered after checking the first permissionss
-# - only_to_classes: Array with the names of the classes this privesc can affect to
+# - second_order_permissions: The permissions that must have the principals discovered after checking the first permissionss
+# - only_to_classes: Array with the names of the classes this privesc can affect to (usually limited to SA and Org/Folder/Project)
 # - extra_privesc_to: if related to a last step resource (not org folder or proj) decide if you can privesc to all the SAs of the project (ALL_PROJECT_SAS), just to the running one (RUNNING_SA) or NONE (you can only privesc to allowed classes) (required)
 # - running_in: Class where the SA needs to be running
+# - second_order_relations: Relations to follow to find the latest object that will be used to escalate privs
 # Note that the relation is going to be created to the assets where the principal has the first permission (in the "permissions" array) with.
 # If that is an Organization, Folder, or Project, all their children will be used taken ad the ones in only_to_classes will be related
 
 
 privesc:
+
   - title: "Pod execution with 'container.pods.exec', privesc to k8s"
     summary: "You have permission to exec into pods. You can abuse it to access any k8s cluster SA. More information: https://book.hacktricks.xyz/cloud-security/gcp-security/gcp-interesting-permissions/gcp-privesc-to-other-principals"
     limitations: "You need to be able to contact the Kube-API (by default it's public, but if private, you need to find your way into the subnetwork)"
@@ -649,6 +651,26 @@ privesc:
     permissions: [storage.hmacKeys.create]
     only_to_classes: [GcpStorage, GcpOrganization, GcpFolder, GcpProject]
     extra_privesc_to: NONE
+  
+  - title: "Airflow DAG creation with 'storage.objects.create'"
+    summary: "You have permission to create/exec a DAG inside Airflow. You can abuse it to steal Composer's SA. More information: https://book.hacktricks.xyz/cloud-security/gcp-security/gcp-interesting-permissions/gcp-privesc-to-other-principals"
+    relation: PRIVESC
+    permissions: [storage.objects.create]
+    only_to_classes: [GcpServiceAccount, GcpStorage, GcpOrganization, GcpFolder, GcpProject]
+    extra_privesc_to: RUNNING_SA
+    second_order_relations: ["HAS_CODE"]
+    running_in: [GcpComposerEnv]
+  
+  - title: "Modification of Docker image used in K8s"
+    summary: "You have permission to modify a docker image inside GCR taht is run in K8s. You can abuse it to privesc to the KSA run in that image. More information: https://book.hacktricks.xyz/cloud-security/gcp-security/gcp-interesting-permissions/gcp-privesc-to-other-principals"
+    relation: PRIVESC
+    permissions: [storage.objects.create, storage.objects.delete]
+    only_to_classes: [K8sServiceAccount, GcpStorage, GcpOrganization, GcpFolder, GcpProject]
+    extra_privesc_to: RUNNING_SA
+    # Bucket -STORES_IMAGE-> ContainerImage <-RUN_IMAGE- RunsContainerImage -PART_OF-> K8sPod <-RUN_IN- K8sServiceAccount
+    second_order_relations: ["STORES_IMAGE", "RUN_IMAGE", "PART_OF"] # "RUN_IN" not necesary as we are already using RUNNING_SA in extra_privesc_to
+    running_in: [K8sPod]
+
     
   # secretmanager
   - title: "Read secrets via 'secretmanager.secrets.get'"

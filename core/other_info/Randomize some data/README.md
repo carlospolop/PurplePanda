@@ -97,7 +97,7 @@ RETURN p.name
 
 - Randomize namespaces names
 ```
-MATCH(ns:K8sNamespace)
+MATCH(ns:K8sNamespace) WHERE not ns.name CONTAINS "-default"
 SET ns.name = apoc.text.random(10, "A-Z0-9.$")
 RETURN ns.name
 ```
@@ -130,7 +130,7 @@ SET k.priorityClassName = apoc.text.random(10, "A-Z0-9.$")
 RETURN k.priorityClassName
 ```
 
-- Randomize annotations
+- Randomize self_link
 ```
 MATCH (k:K8s) WHERE EXISTS(k.self_link)
 SET k.self_link = apoc.text.random(10, "A-Z0-9.$")
