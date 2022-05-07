@@ -22,13 +22,9 @@ jobs:
         username: ${{ secrets.DOCKERHUB_USERNAME }}
         password: ${{ secrets.DOCKERHUB_TOKEN }}
     
-    - name: Get current date
-      id: date
-      run: echo "::set-output name=date::$(date +'%Y%m%d')"
-    
     - name: Build and push
       uses: docker/build-push-action@v3
       with:
         context: .
         push: true
-        tags: carlospolop/purplepanda:${{steps.date.outputs.date}}
+        tags: carlospolop/purplepanda:latest
