@@ -14,25 +14,25 @@ class DiscCronjobs(K8sDisc):
         """
 
         if not self.reload_api(): return
-        client_cred = client.BatchV1beta1Api(self.cred)
         namespaces:List[K8sNamespace] = K8sNamespace.get_all_by_kwargs(f'_.name =~ "{str(self.cluster_id)}-.*"')
-        self._disc_loop(namespaces, self._disc_cronjobs, __name__.split(".")[-1], **{"client_cred": client_cred})
+        self._disc_loop(namespaces, self._disc_cronjobs, __name__.split(".")[-1])
 
     
     def _disc_cronjobs(self, ns_obj:K8sNamespace, **kwargs):
         """Discover all the cronjobs of a namespace"""
 
-        client_cred = kwargs["client_cred"]
+        client_cred = client.BatchV1beta1Api(self.cred)
         cronjobs = self.call_k8s_api(f=client_cred.list_namespaced_cron_job, namespace=ns_obj.ns_name)
         if not cronjobs or not cronjobs.items:
             return
 
-        for cj in cronjobs.items:
-            self._save_cronjob(cj, ns_obj)    
+        self._disc_loop(cronjobs.items, self._save_cronjob, __name__.split(".")[-1]+f"-{ns_obj.ns_name}", **{"orig": ns_obj})
 
-    def _save_cronjob(self, cj, orig, **kwargs):
+
+    def _save_cronjob(self, cj, **kwargs):
         """Given K8s cronjobs information, save it"""
         
+        orig = kwargs["orig"]
         if type(orig) is K8sNamespace:
             ns_obj = orig
         else:
@@ -56,4 +56,4 @@ class DiscCronjobs(K8sDisc):
         cj_obj.namespaces.update(ns_obj)
         cj_obj.save()
 
-        self._save_pod(cj.spec.job_template.spec.template, cj_obj, ns_name=ns_obj.ns_name)
+        self._save_pod(cj.spec.job_template.spec.template, orig=cj_obj, ns_name=ns_obj.ns_name)

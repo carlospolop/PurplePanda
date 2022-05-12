@@ -14,25 +14,25 @@ class DiscReplicaSets(K8sDisc):
         """
 
         if not self.reload_api(): return
-        client_cred = client.AppsV1Api(self.cred)
+        
         namespaces:List[K8sNamespace] = K8sNamespace.get_all_by_kwargs(f'_.name =~ "{str(self.cluster_id)}-.*"')
-        self._disc_loop(namespaces, self._disc_replicasets, __name__.split(".")[-1], **{"client_cred": client_cred})
+        self._disc_loop(namespaces, self._disc_replicasets, __name__.split(".")[-1])
 
     
     def _disc_replicasets(self, ns_obj:K8sNamespace, **kwargs):
         """Discover all the replica sets of a namespace"""
 
-        client_cred = kwargs["client_cred"]
+        client_cred = client.AppsV1Api(self.cred)
         replica_sets = self.call_k8s_api(f=client_cred.list_namespaced_replica_set, namespace=ns_obj.ns_name)
         if not replica_sets or not replica_sets.items:
             return
 
-        for rs in replica_sets.items:
-            self._save_replica_set(rs, ns_obj)    
+        self._disc_loop(replica_sets.items, self._save_replica_set, __name__.split(".")[-1]+f"-{ns_obj.ns_name}", **{"orig": ns_obj})
 
-    def _save_replica_set(self, rs, orig, **kwargs):
+    def _save_replica_set(self, rs, **kwargs):
         """Given K8s replica set information, save it"""
         
+        orig = kwargs["orig"]
         if type(orig) is K8sNamespace:
             ns_obj = orig
         else:
@@ -64,7 +64,7 @@ class DiscReplicaSets(K8sDisc):
         
         rs_obj.save()
 
-        self._save_pod(rs.spec.template, rs_obj, ns_name=ns_obj.ns_name)
+        self._save_pod(rs.spec.template, orig=rs_obj, ns_name=ns_obj.ns_name)
 
         # TODO: Consider ds.spec.selector.match_expressions
         if rs.spec.selector:

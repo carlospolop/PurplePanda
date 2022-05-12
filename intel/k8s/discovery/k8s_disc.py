@@ -1,5 +1,6 @@
 import logging
 import json
+from time import sleep
 from intel.k8s.models import K8sPod, K8sContainer, K8sVol, K8sEnvVar, K8sSecret, K8sNamespace, K8sNode, K8sServiceAccount, K8sPodTemplate, K8sContainerPort, K8sBasicModel
 from intel.k8s.discovery.k8s_disc_client import K8sDiscClient
 from core.models.models import ContainerImage
@@ -27,8 +28,32 @@ class K8sDisc(K8sDiscClient):
     def call_k8s_api(self, f, **kwargs):
         """Handle the error when calling K8s APIs"""
 
+        # Get counter and remove it from the kwargs to not cause problems
+        cont = 0
+        if kwargs.get("cont"):
+            cont = kwargs["cont"]
+            del kwargs["cont"]
+        
         try:
             return f(**kwargs)
+        
+        except client.exceptions.ApiException as e:
+            if e.status == 401 and cont < 2:
+                self.logger.warning("401 in K8s request, sleeping 20s an retrying")
+                sleep(20)
+                if not self.reload_api(): 
+                    return None
+                
+                else:
+                    f.__self__.api_client = self.cred #Update to new client
+                    cont += 1
+                    kwargs["cont"] = cont
+                    return self.call_k8s_api(f, **kwargs)
+
+            elif e.status == 401:
+                self.logger.warning("The solution didn't work")
+                return None
+
         except:
             return None
     
@@ -149,9 +174,12 @@ class K8sDisc(K8sDiscClient):
         pod_obj.containers.update(container_obj)
 
 
-    def _save_pod(self, pod, orig: K8sPodTemplate, ns_name, **kwargs):
+    def _save_pod(self, pod, **kwargs):
         """Give K8s pod details, save it"""
         
+        orig: K8sPodTemplate = kwargs["orig"]
+        ns_name = kwargs["ns_name"]
+
         if type(orig) is K8sNamespace:
             ns_obj = orig
         else:
@@ -201,6 +229,11 @@ class K8sDisc(K8sDiscClient):
         ).save()
         pod_obj.namespaces.update(ns_obj)
 
+        # If namespaces, origin already saved
+        if type(orig) is not K8sNamespace:
+            orig.pods.update(pod_obj)
+            orig.save()
+
         # Save volumes and volumes secrets
         if pod.spec.volumes:
             for volume in pod.spec.volumes:
@@ -245,5 +278,3 @@ class K8sDisc(K8sDiscClient):
                     self._save_container(pod_obj, container, ns_name)
 
         pod_obj.save()
-        orig.pods.update(pod_obj)
-        orig.save()

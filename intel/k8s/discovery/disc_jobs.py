@@ -14,25 +14,25 @@ class DiscJobs(K8sDisc):
         """
 
         if not self.reload_api(): return
-        client_cred = client.BatchV1Api(self.cred)
         namespaces:List[K8sNamespace] = K8sNamespace.get_all_by_kwargs(f'_.name =~ "{str(self.cluster_id)}-.*"')
-        self._disc_loop(namespaces, self._disc_jobs, __name__.split(".")[-1], **{"client_cred": client_cred})
+        self._disc_loop(namespaces, self._disc_jobs, __name__.split(".")[-1])
 
     
     def _disc_jobs(self, ns_obj:K8sNamespace, **kwargs):
         """Discover all the jobs of a namespace"""
 
-        client_cred = kwargs["client_cred"]
+        client_cred = client.BatchV1Api(self.cred)
         jobs = self.call_k8s_api(f=client_cred.list_namespaced_job, namespace=ns_obj.ns_name)
         if not jobs or not jobs.items:
             return
 
-        for jb in jobs.items:
-            self._save_job(jb, ns_obj)    
+        self._disc_loop(jobs.items, self._save_job, __name__.split(".")[-1]+f"-{ns_obj.ns_name}", **{"orig": ns_obj})
 
-    def _save_job(self, jb, orig, **kwargs):
+
+    def _save_job(self, jb, **kwargs):
         """Given K8s job information, save it"""
         
+        orig = kwargs["orig"]
         if type(orig) is K8sNamespace:
             ns_obj = orig
         else:
@@ -55,7 +55,7 @@ class DiscJobs(K8sDisc):
         jb_obj.namespaces.update(ns_obj)
         jb_obj.save()
 
-        self._save_pod(jb.spec.template, jb_obj, ns_name=ns_obj.ns_name)
+        self._save_pod(jb.spec.template, orig=jb_obj, ns_name=ns_obj.ns_name)
 
         # TODO: Consider ds.spec.selector.match_expressions
         if jb.spec.selector:

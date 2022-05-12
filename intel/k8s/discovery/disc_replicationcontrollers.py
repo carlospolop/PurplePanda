@@ -14,25 +14,25 @@ class DiscReplicationControllers(K8sDisc):
         """
 
         if not self.reload_api(): return
-        client_cred = client.CoreV1Api(self.cred)
         namespaces:List[K8sNamespace] = K8sNamespace.get_all_by_kwargs(f'_.name =~ "{str(self.cluster_id)}-.*"')
-        self._disc_loop(namespaces, self._disc_replicationcontroller, __name__.split(".")[-1], **{"client_cred": client_cred})
+        self._disc_loop(namespaces, self._disc_replicationcontroller, __name__.split(".")[-1])
 
     
     def _disc_replicationcontroller(self, ns_obj:K8sNamespace, **kwargs):
         """Discover all the replicationcontrollers of a namespace"""
 
-        client_cred = kwargs["client_cred"]
+        client_cred = client.CoreV1Api(self.cred)
         replicationcontroller = self.call_k8s_api(f=client_cred.list_namespaced_replication_controller, namespace=ns_obj.ns_name)
         if not replicationcontroller or not replicationcontroller.items:
             return
 
-        for rc in replicationcontroller.items:
-            self._save_replicationcontroller(rc, ns_obj)    
+        self._disc_loop(replicationcontroller.items, self._save_replicationcontroller, __name__.split(".")[-1]+f"-{ns_obj.ns_name}", **{"orig": ns_obj})
+ 
 
-    def _save_replicationcontroller(self, rc, orig, **kwargs):
+    def _save_replicationcontroller(self, rc, **kwargs):
         """Given K8s replicationcontroller information, save it"""
         
+        orig = kwargs["orig"]
         if type(orig) is K8sNamespace:
             ns_obj = orig
         else:
@@ -64,7 +64,7 @@ class DiscReplicationControllers(K8sDisc):
         
         rc_obj.save()
 
-        self._save_pod(rc.spec.template, rc_obj, ns_name=ns_obj.ns_name)
+        self._save_pod(rc.spec.template, orig=rc_obj, ns_name=ns_obj.ns_name)
 
         # TODO: Consider ds.spec.selector.match_expressions
         if rc.spec.selector:

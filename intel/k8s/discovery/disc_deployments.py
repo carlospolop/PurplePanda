@@ -14,25 +14,25 @@ class DiscDeployments(K8sDisc):
         """
 
         if not self.reload_api(): return
-        client_cred = client.AppsV1Api(self.cred)
         namespaces:List[K8sNamespace] = K8sNamespace.get_all_by_kwargs(f'_.name =~ "{str(self.cluster_id)}-.*"')
-        self._disc_loop(namespaces, self._disc_deployments, __name__.split(".")[-1], **{"client_cred": client_cred})
+        self._disc_loop(namespaces, self._disc_deployments, __name__.split(".")[-1])
 
     
     def _disc_deployments(self, ns_obj:K8sNamespace, **kwargs):
         """Discover all the deployments of a namespace"""
 
-        client_cred = kwargs["client_cred"]
+        client_cred = client.AppsV1Api(self.cred)
         deployments = self.call_k8s_api(f=client_cred.list_namespaced_deployment, namespace=ns_obj.ns_name)
         if not deployments or not deployments.items:
             return
 
-        for ds in deployments.items:
-            self._save_deployment(ds, ns_obj)    
+        self._disc_loop(deployments.items, self._save_deployment, __name__.split(".")[-1]+f"-{ns_obj.ns_name}", **{"orig": ns_obj})
+  
 
-    def _save_deployment(self, dp, orig, **kwargs):
+    def _save_deployment(self, dp, **kwargs):
         """Given K8s deployment information, save it"""
         
+        orig = kwargs["orig"]
         if type(orig) is K8sNamespace:
             ns_obj = orig
         else:
@@ -53,7 +53,7 @@ class DiscDeployments(K8sDisc):
         dp_obj.namespaces.update(ns_obj)
         dp_obj.save()
 
-        self._save_pod(dp.spec.template, dp_obj, ns_name=ns_obj.ns_name)
+        self._save_pod(dp.spec.template, orig=dp_obj, ns_name=ns_obj.ns_name)
 
         # TODO: Consider ds.spec.selector.match_expressions
         if dp.spec.selector:
