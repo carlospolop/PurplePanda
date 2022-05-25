@@ -36,13 +36,13 @@ class PurplePandaGoogle():
             initial_funcs.append(
                 DiscoverSaas(
                     initial_funcs = [
-                        #DiscOrgs(cred=cred["cred"], **kwargs).discover,
-                        #DiscFolders(cred=cred["cred"], **kwargs).discover,
-                        #DiscProjects(cred=cred["cred"], **kwargs).discover,
-                        #DiscCustomRolesPermissions(cred=cred["cred"], **kwargs).discover,
-                        #DiscServiceAccounts(cred=cred["cred"], **kwargs).discover,
-                        #DiscGroupsUsers(cred=cred["cred"], **kwargs).discover,
-                        #DiscComputeSubnetworks(cred=cred["cred"], **kwargs).discover, #Needed by DiscClusters
+                        DiscOrgs(cred=cred["cred"], **kwargs).discover,
+                        DiscFolders(cred=cred["cred"], **kwargs).discover,
+                        DiscProjects(cred=cred["cred"], **kwargs).discover,
+                        DiscCustomRolesPermissions(cred=cred["cred"], **kwargs).discover,
+                        DiscServiceAccounts(cred=cred["cred"], **kwargs).discover,
+                        DiscGroupsUsers(cred=cred["cred"], **kwargs).discover,
+                        DiscComputeSubnetworks(cred=cred["cred"], **kwargs).discover, #Needed by DiscClusters
                         DiscClusters(cred=cred["cred"], **kwargs).discover,
                         DiscStorage(cred=cred["cred"], **kwargs).discover,
                         DiscSecrets(cred=cred["cred"], **kwargs).discover
