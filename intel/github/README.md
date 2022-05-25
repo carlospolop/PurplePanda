@@ -31,7 +31,10 @@ github:
 
 The **only mandatory param is `token` or `username` and `password`**. 
 
-Another **important attribute is `org_name`**, usually you will use PurplePanda to check the privileges of an organization, in that scenario it's recommended to configure the org nme in this parameter.
+Another **important attribute is `org_name`**, usually you will use PurplePanda to check the privileges of an organization, in that scenario it's recommended to configure the org name in this parameter.
+
+If you are creating a token specifically for PurplePanda give it the permissions: `repo` (`repo:status`, `repo_deployment`, `public_repo`, `repo:invite`, `repository`), `read:org`, and `read:enterprise`.
+ security_events
 
 Example:
 ```yaml
