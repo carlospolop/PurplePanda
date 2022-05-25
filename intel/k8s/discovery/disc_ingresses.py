@@ -23,7 +23,7 @@ class DiscIngresses(K8sDisc):
     def _disc_ingresses(self, ns_obj:K8sNamespace, **kwargs):
         """Discover all the ingresses of a namespace"""
 
-        client_cred = client.NetworkingV1beta1Api(self.cred)
+        client_cred = client.NetworkingV1Api(self.cred)
         ingresses = self.call_k8s_api(f=client_cred.list_namespaced_ingress, namespace=ns_obj.ns_name)
         if not ingresses or not ingresses.items:
             return
@@ -55,8 +55,8 @@ class DiscIngresses(K8sDisc):
                 for path in ingress.spec.rules[0].http.paths:
                     url_path = path.path
                     path_type = path.path_type if hasattr(path, "path_type") else ""
-                    port = path.backend.service_port
-                    service_name = path.backend.service_name
+                    port = path.backend.service.port.number
+                    service_name = path.backend.service.name
                     if service_name:
                         service_obj = K8sService(name=f"{ns_name}:{service_name}",).save()
                         ingress_obj.services.update(service_obj, url_path=url_path, path_type=path_type, port=port)
