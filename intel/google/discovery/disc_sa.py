@@ -40,7 +40,7 @@ class DiscServiceAccounts(GcpDisc):
                 name = sa_name,
                 uniqueId = sa["uniqueId"],
                 email = sa["email"],
-                displayName = sa["displayName"],
+                displayName = sa.get("displayName", ""),
                 description = sa.get("description", "")
             ).save()
             sa_obj.projects.update(p_obj)
@@ -76,7 +76,7 @@ class DiscServiceAccounts(GcpDisc):
                 self.get_iam_policy(sa_obj, self.service.projects().serviceAccounts(), sa_obj.name)
             else:
                 if not "@security-center-api.iam.gserviceaccount.com" in email:
-                    self.logger.warning(F"Unknown service account with {email} (managed by google?)")
+                    self.logger.info(F"Unknown service account with {email} (managed by google?)")
         
         elif ".svc.id.goog[" in email: # GCP-K8s SA example: name-project-1234.svc.id.goog[k8s-namespace/k8s-sa-name]
             k8s_ns_name = email.split(".svc.id.goog[")[1].split("/")[0]

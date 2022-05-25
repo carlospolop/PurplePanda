@@ -28,14 +28,6 @@ scope:
 
 privesc:
 
-  - title: "Pod execution with 'container.pods.exec', privesc to k8s"
-    summary: "You have permission to exec into pods. You can abuse it to access any k8s cluster SA. More information: https://book.hacktricks.xyz/cloud-security/gcp-security/gcp-interesting-permissions/gcp-privesc-to-other-principals"
-    limitations: "You need to be able to contact the Kube-API (by default it's public, but if private, you need to find your way into the subnetwork)"
-    relation: PRIVESC
-    permissions: [container.pods.exec]
-    only_to_classes: [K8sServiceAccount, GcpOrganization, GcpFolder, GcpProject]
-    extra_privesc_to: K8S_CLUSTER_SAS
-
   # resourcemanager
   - title: "SA impersonation via 'resourcemanager.organizations.setIamPolicy'"
     summary: "Bind a role to you giving you extra permissions to impersonate any Service Account (or access anything)in the Organization. More information: https://book.hacktricks.xyz/cloud-security/gcp-security/gcp-interesting-permissions/gcp-privesc-to-other-principals"
@@ -110,7 +102,7 @@ privesc:
     extra_privesc_to: NONE
     
   - title: "SA impersonation via 'iam.serviceAccounts.actAs'"
-    summary: "You can act as the Service Account but you will need permissions to create/update a resource to attach the Sservice Account and then steal the token from there. More information: https://book.hacktricks.xyz/cloud-security/gcp-security/gcp-interesting-permissions/gcp-privesc-to-other-principals"
+    summary: "You can act as the Service Account but you will need permissions to create/update a resource to attach the Service Account and then steal the token from there. More information: https://book.hacktricks.xyz/cloud-security/gcp-security/gcp-interesting-permissions/gcp-privesc-to-other-principals"
     relation: PRIVESC
     permissions: ["iam.serviceAccounts.actAs"]
     only_to_classes: [GcpServiceAccount, GcpOrganization, GcpFolder, GcpProject]
@@ -199,6 +191,15 @@ privesc:
     only_to_classes: [GcpServiceAccount, GcpOrganization, GcpFolder, GcpProject]
     extra_privesc_to: RUNNING_SA
     running_in: [GcpComputeInstance]
+  
+  # composer
+  - title: "Arbitrary SA attach to composer via 'composer.environments.create'"
+    summary: "You can create a composer env and attach any SA in the project to it, execute custom DAG code instance with that SA and steal the token. More information: https://book.hacktricks.xyz/cloud-security/gcp-security/gcp-interesting-permissions/gcp-privesc-to-other-principals"
+    relation: PRIVESC
+    permissions: ['composer.environments.create']
+    only_to_classes: [GcpServiceAccount, GcpOrganization, GcpFolder, GcpProject]
+    extra_privesc_to: RUNNING_SA
+    running_in: [GcpComposerEnv]
   
   # container
   - title: "Pod creation 'container.cronJobs.create'"
@@ -440,7 +441,7 @@ privesc:
     summary: "You have permission to specify a pod via a job. You can abuse it to access any k8s cluster SA. More information: https://book.hacktricks.xyz/cloud-security/gcp-security/gcp-interesting-permissions/gcp-privesc-to-other-principals"
     limitations: "You need to be able to contact the Kube-API (by default it's public, but if private, you need to find your way into the subnetwork)"
     relation: PRIVESC
-    permissions: [container.jobs.create]
+    permissions: [container.jobs.update]
     only_to_classes: [K8sServiceAccount, GcpOrganization, GcpFolder, GcpProject]
     extra_privesc_to: K8S_CLUSTER_SAS
   
@@ -452,7 +453,7 @@ privesc:
     only_to_classes: [K8sServiceAccount, GcpOrganization, GcpFolder, GcpProject]
     extra_privesc_to: K8S_CLUSTER_SAS
   
-  - title: "Pod creation 'container.pods.create', privesc to k8s"
+  - title: "Pod creation 'container.pods.update', privesc to k8s"
     summary: "You have permission to specify a pod. You can abuse it to access any k8s cluster SA. More information: https://book.hacktricks.xyz/cloud-security/gcp-security/gcp-interesting-permissions/gcp-privesc-to-other-principals"
     limitations: "You need to be able to contact the Kube-API (by default it's public, but if private, you need to find your way into the subnetwork)"
     relation: PRIVESC
@@ -641,7 +642,22 @@ privesc:
     permissions: [container.clusters.getCredentials]
     only_to_classes: [GcpCluster, GcpOrganization, GcpFolder, GcpProject]
     extra_privesc_to: NONE
-    summary: "Youaccess K8s credentials. More information: https://book.hacktricks.xyz/cloud-security/gcp-security/gcp-interesting-permissions/gcp-privesc-to-resources"
+    summary: "You can access K8s credentials. More information: https://book.hacktricks.xyz/cloud-security/gcp-security/gcp-interesting-permissions/gcp-privesc-to-resources"
+  
+  - title: "Create malicious backdoor with 'container.mutatingWebhookConfigurations.create'"
+    relation: NO_RELATION
+    permissions: [container.mutatingWebhookConfigurations.create]
+    only_to_classes: [GcpCluster, GcpOrganization, GcpFolder, GcpProject]
+    extra_privesc_to: NONE
+    summary: "You can create a malicious backdoor. More information: https://book.hacktricks.xyz/cloud-security/gcp-security/gcp-interesting-permissions/gcp-privesc-to-resources"
+
+  - title: "Create malicious backdoor with 'container.mutatingWebhookConfigurations.up'"
+    relation: NO_RELATION
+    permissions: [container.mutatingWebhookConfigurations.up]
+    only_to_classes: [GcpCluster, GcpOrganization, GcpFolder, GcpProject]
+    extra_privesc_to: NONE
+    summary: "You can create a malicious backdoor. More information: https://book.hacktricks.xyz/cloud-security/gcp-security/gcp-interesting-permissions/gcp-privesc-to-resources"
+
 
 
   # storage
@@ -661,10 +677,29 @@ privesc:
     second_order_relations: ["HAS_CODE"]
     running_in: [GcpComposerEnv]
   
-  - title: "Modification of Docker image used in K8s"
+  - title: "Airflow DAG creation with 'storage.objects.setIamPolicy'"
+    summary: "You have permission to give you permissions to create/exec a DAG inside Airflow. You can abuse it to steal Composer's SA. More information: https://book.hacktricks.xyz/cloud-security/gcp-security/gcp-interesting-permissions/gcp-privesc-to-other-principals"
+    relation: PRIVESC
+    permissions: [storage.objects.setIamPolicy]
+    only_to_classes: [GcpServiceAccount, GcpStorage, GcpOrganization, GcpFolder, GcpProject]
+    extra_privesc_to: RUNNING_SA
+    second_order_relations: ["HAS_CODE"]
+    running_in: [GcpComposerEnv]
+  
+  - title: "Modification of Docker image used in K8s via 'storage.objects.create' and 'storage.objects.delete'"
     summary: "You have permission to modify a docker image inside GCR taht is run in K8s. You can abuse it to privesc to the KSA run in that image. More information: https://book.hacktricks.xyz/cloud-security/gcp-security/gcp-interesting-permissions/gcp-privesc-to-other-principals"
     relation: PRIVESC
     permissions: [storage.objects.create, storage.objects.delete]
+    only_to_classes: [K8sServiceAccount, GcpStorage, GcpOrganization, GcpFolder, GcpProject]
+    extra_privesc_to: RUNNING_SA
+    # Bucket -STORES_IMAGE-> ContainerImage <-RUN_IMAGE- RunsContainerImage -PART_OF-> K8sPod <-RUN_IN- K8sServiceAccount
+    second_order_relations: ["STORES_IMAGE", "RUN_IMAGE", "PART_OF"] # "RUN_IN" not necesary as we are already using RUNNING_SA in extra_privesc_to
+    running_in: [K8sPod]
+  
+  - title: "Modification of Docker image used in K8s via 'storage.objects.setIamPolicy'"
+    summary: "You have permission to modify a docker image inside GCR taht is run in K8s. You can abuse it to privesc to the KSA run in that image. More information: https://book.hacktricks.xyz/cloud-security/gcp-security/gcp-interesting-permissions/gcp-privesc-to-other-principals"
+    relation: PRIVESC
+    permissions: [storage.objects.setIamPolicy]
     only_to_classes: [K8sServiceAccount, GcpStorage, GcpOrganization, GcpFolder, GcpProject]
     extra_privesc_to: RUNNING_SA
     # Bucket -STORES_IMAGE-> ContainerImage <-RUN_IMAGE- RunsContainerImage -PART_OF-> K8sPod <-RUN_IN- K8sServiceAccount

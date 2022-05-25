@@ -116,3 +116,5 @@ bin/*
 *.vsix
 
 .dccache
+.kube
+.kube/*

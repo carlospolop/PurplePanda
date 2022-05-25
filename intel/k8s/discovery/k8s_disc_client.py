@@ -2,7 +2,9 @@ import logging
 import os
 import yaml
 import requests
+import subprocess
 from os.path import exists
+from shutil import which
 
 from kubernetes import client, config
 from base64 import b64decode
@@ -55,6 +57,16 @@ class K8sDiscClient(PurplePanda):
     def _get_cred(self, entry):
         if entry.get("file_path"):
             assert exists(entry.get("file_path")), "Indicated file path to config doesn't exist"
+
+            if which("kubectl") is None:
+                self.logger.error("Kubectl not found, it won't be possible to refresh the kubernetes token")
+            
+            else: # Call kubectl to reload the token to use (I could't find any other way to do this through python)
+                env = {"KUBECONFIG": entry.get("file_path"), "PATH": os.getenv("PATH")}
+                subprocess.Popen(['kubectl', '--request-timeout', '5s', 'get', 'namespaces'], env=env, 
+                    stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL).communicate()
+            
+
             api_client = config.kube_config.new_client_from_config(config_file=entry.get("file_path"))
 
         else:
@@ -74,7 +86,7 @@ class K8sDiscClient(PurplePanda):
         
         try:
             # Test that the Kube-API is accessible
-            requests.get(api_client.configuration.host, verify=False)
+            requests.get(api_client.configuration.host, verify=False, timeout=10)
             return {"cred": api_client, "cluster_id": entry.get("cluster_id", ""), "config": entry}
         
         except:

@@ -27,36 +27,59 @@ from intel.k8s.discovery.analyze_results import AnalyzeResults
 class PurplePandaK8s():
     def discover(self, **kwargs):
         config = kwargs.get("config", "")
+        if config:
+            del kwargs["config"]
+        
         k8sdc : K8sDiscClient = K8sDiscClient(config=config)
         initial_funcs = []
         for cred in k8sdc.creds:
             kwargs["cluster_id"] = kwargs.get("cluster_id", "")
             kwargs["cluster_id"] = cred.get("cluster_id", "") if not kwargs["cluster_id"] else kwargs["cluster_id"]
             kwargs["cluster_id"] = str(random.randint(0,9999)) if not kwargs["cluster_id"] else kwargs["cluster_id"]
+
             initial_funcs.append(
                 DiscoverSaas(
                     initial_funcs = [
-                        DiscNamespaces(cred["cred"], cred["config"], **kwargs).discover,
-                        DiscNodes(cred["cred"], cred["config"], **kwargs).discover,
-                        DiscMutatingWebhookConfigurations(cred["cred"], cred["config"], **kwargs).discover,
-                        DiscServiceAccounts(cred["cred"], cred["config"], **kwargs).discover,
-                        DiscPods(cred["cred"], cred["config"], **kwargs).discover,
-                        DiscSecrets(cred["cred"], cred["config"], **kwargs).discover,
-                        DiscDeployments(cred["cred"], cred["config"], **kwargs).discover,
-                        DiscJobs(cred["cred"], cred["config"], **kwargs).discover,
-                        DiscCronjobs(cred["cred"], cred["config"], **kwargs).discover,
-                        DiscDaemonsets(cred["cred"], cred["config"], **kwargs).discover,
-                        DiscReplicaSets(cred["cred"], cred["config"], **kwargs).discover,
-                        DiscReplicationControllers(cred["cred"], cred["config"], **kwargs).discover,
-                        DiscServices(cred["cred"], cred["config"], **kwargs).discover,
-                        DiscIngresses(cred["cred"], cred["config"], **kwargs).discover,
-                        DiscCurrentPerms(cred["cred"], cred["config"], **kwargs).discover, 
-                        DiscRoles(cred["cred"], cred["config"], **kwargs).discover
+                        #DiscNamespaces(cred["cred"], cred["config"], **kwargs).discover,
+                        #DiscNodes(cred["cred"], cred["config"], **kwargs).discover,
+                        #DiscMutatingWebhookConfigurations(cred["cred"], cred["config"], **kwargs).discover,
+                        #DiscServiceAccounts(cred["cred"], cred["config"], **kwargs).discover,
+                        #DiscPods(cred["cred"], cred["config"], **kwargs).discover,
+                        
                     ],
                     parallel_funcs = [
+                        #[
+                        #    DiscSecrets(cred["cred"], cred["config"], **kwargs).discover,
+                        #],
+                        #[
+                        #    DiscDeployments(cred["cred"], cred["config"], **kwargs).discover,
+                        #],
+                        #[
+                        #    DiscJobs(cred["cred"], cred["config"], **kwargs).discover,
+                        #],
+                        #[
+                        #    DiscCronjobs(cred["cred"], cred["config"], **kwargs).discover,
+                        #],
+                        #[
+                        #    DiscDaemonsets(cred["cred"], cred["config"], **kwargs).discover,
+                        #],
+                        #[
+                        #    DiscReplicaSets(cred["cred"], cred["config"], **kwargs).discover,
+                        #],
+                        #[
+                        #    DiscReplicationControllers(cred["cred"], cred["config"], **kwargs).discover,
+                        #],
+                        #[
+                        #    DiscCurrentPerms(cred["cred"], cred["config"], **kwargs).discover, 
+                        #    DiscRoles(cred["cred"], cred["config"], **kwargs).discover
+                        #]
                     ],
                     # In K8s launch an analysis per cred
-                    final_funcs=[AnalyzeResults(cred["cred"], cred["config"], **kwargs).discover]
+                    final_funcs=[
+                        DiscServices(cred["cred"], cred["config"], **kwargs).discover,
+                        DiscIngresses(cred["cred"], cred["config"], **kwargs).discover,
+                        AnalyzeResults(cred["cred"], cred["config"], **kwargs).discover
+                    ]
                 ).do_discovery
             )
         

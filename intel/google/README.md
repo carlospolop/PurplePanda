@@ -54,6 +54,8 @@ google:
 ```
 Just encode in base64 that file and export it in the `GOOGLE_DISCOVERY` env var and you will be ready to **use the google module**:
 ```bash
+gcloud auth login
+gcloud auth application-default login
 export GOOGLE_DISCOVERY="Z29vZ2xlOgotIGZpbGVfcGF0aDogIiIKCi0gZmlsZV9wYXRoOiAiIgogIHNlcnZpY2VfYWNjb3VudF9pZDogInNvbWUtc2EtZW1haWxAc2lkZW50aWZpZXIuaWFtLmdzZXJ2aWNlYWNjb3VudC5jb20iCg=="
 python3 main.py -p google --gcp-get-secret-values -e
 ```

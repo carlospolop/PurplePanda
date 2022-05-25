@@ -17,6 +17,11 @@ RUN cd /tmp/gl; tar -xvzf gitleaks_8.8.4_linux_x64.tar.gz
 RUN chmod +x /tmp/gl/gitleaks
 RUN mv /tmp/gl/gitleaks /usr/local/bin/gitleaks
 
+# Install kubectl
+RUN curl -LO https://storage.googleapis.com/kubernetes-release/release/$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt)/bin/linux/amd64/kubectl
+RUN chmod +x ./kubectl
+RUN mv ./kubectl /usr/local/bin
+
 # Install purplepanda
 RUN cd /purplepanda; python3 -m pip install -r requirements.txt
 
