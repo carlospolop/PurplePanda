@@ -52,8 +52,8 @@ def main():
     parser.add_argument('-v', '--verbose', action='store_true', default=False, required=False, help=f'Do not remove the progress bar when the task is done')
     parser.add_argument('-d', '--directory', type=str, required=False, help=f'Path to the directory to save an initial analysis of the results in CVS (separator="|") format. If you don\'t indicate any, no analysis will be written to disk')
     
-    parser.add_argument('--github-only-org', action='store_true', default=False, required=False, help=f'Only get information of the specified github orgs (no personal repos info')
-    parser.add_argument('--github-only-org-and-org-users', action='store_true', default=False, required=False, help=f'Only get information of the specified github orgs and users of the specified orgs')
+    parser.add_argument('--github-only-org', action='store_true', default=False, required=False, help=f'Only get information of the specified github orgs in the env var (no personal repos info will be saved)')
+    parser.add_argument('--github-only-org-and-org-users', action='store_true', default=False, required=False, help=f'Only get information of the specified github orgs and users repos of the specified orgs (no extra orgs info will be saved)')
     parser.add_argument('--github-all-branches', action='store_true', default=False, required=False, help=f'By default data of only default branch of each repo is gathered, set this to get info from all branches of each repo')
     parser.add_argument('--github-no-leaks', action='store_true', default=False, required=False, help=f'Do not try to find leaks in repos')
     parser.add_argument('--github-get-redundant-info', action='store_true', default=False, required=False, help=f'If the passed credentials arent org admin, activating this may get you more info (and will also take more time)')
