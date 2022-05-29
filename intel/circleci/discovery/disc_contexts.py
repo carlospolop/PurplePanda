@@ -17,7 +17,7 @@ class DiscContexts(CircleCIDisc):
     def _disc_contexts(self, org, **kwargs):
         """Discover each context"""
 
-        contexts = self.call_circleci_api(self.cred.get_contexts, [], org.split("/")[-1], paginate=True)
+        contexts = self.call_circleci_api(self.cred.get_contexts, [], True, org.split("/")[-1], paginate=True)
 
         if not contexts:
             return
@@ -35,7 +35,7 @@ class DiscContexts(CircleCIDisc):
     def _disc_context_secrets(self, ctxt_obj: CircleCIContext):
         """Discover each context secret"""
 
-        secrets = self.call_circleci_api(self.cred.get_context_envvars, [], ctxt_obj.id, paginate=True)
+        secrets = self.call_circleci_api(self.cred.get_context_envvars, [], True, ctxt_obj.id, paginate=True)
 
         for secret in secrets:
             name = secret["variable"]

@@ -104,14 +104,14 @@ class CircleCIDisc(CircleCIDiscClient):
         self.task_name = "circleci"
     
 
-    def call_circleci_api(self, f, ret_val=[], *args, **kwargs):
+    def call_circleci_api(self, f, ret_val=[], show_404=True, *args, **kwargs):
         """Call the circleci api from one site to manage errors"""
         
         try:
             return f(*args, **kwargs)
         
         except requests.exceptions.HTTPError as e:
-            if "404" in str(e):
+            if "404" in str(e) and show_404:
                 self.logger.warning(f"CircleCI not found: {e}")
         
         except Exception as e:
@@ -126,8 +126,16 @@ class CircleCIDisc(CircleCIDiscClient):
         proj_info = None
         if project_slug not in KNOWN_PROJECTS:
             # Only request proj info to the api for the same project 1 time
-            proj_info = self.call_circleci_api(self.cred.get_project_settings, [], username=org.split("/")[-1], project=project_slug.split("/")[-1])
+            proj_info = self.call_circleci_api(self.cred.get_project_settings, [],
+                show_404=True, username=org.split("/")[-1], project=project_slug.split("/")[-1])
             KNOWN_PROJECTS.add(project_slug)
+        
+
+        # If not has_usable_key and (not branches or only workflows are "latest_workflows") then not a real project, so don't save it
+        if  not proj_info["has_usable_key"] and (not proj_info["branches"] or \
+            all(len(proj_info["branches"][branch]["latest_workflows"]) == 1 and "Build%20Error" in proj_info["branches"][branch]["latest_workflows"].keys() for branch in proj_info["branches"])):
+            return
+
 
         if not proj_info:
             proj_obj = CircleCIProject(name=project_slug).save()
@@ -198,16 +206,18 @@ class CircleCIDisc(CircleCIDiscClient):
             for branch in branches:
                 if branch in  proj_info["branches"] and proj_info["branches"][branch]["latest_workflows"]:
                     for workflow in list(proj_info["branches"][branch]["latest_workflows"].keys())[:2]:
-                        workflow_info = self.call_circleci_api(self.cred.get_workflow, workflow_id=proj_info["branches"][branch]["latest_workflows"][workflow]["id"])
-                        self._disc_vars(workflow_info["pipeline_id"], proj_obj)
-
-        return proj_obj
+                        workflow_info = self.call_circleci_api(self.cred.get_workflow, 
+                            workflow_id=proj_info["branches"][branch]["latest_workflows"][workflow]["id"], show_404=False) #It won't exist in most cases
+                        
+                        if workflow_info:
+                            self._disc_vars_in_pipe(workflow_info["pipeline_id"], proj_obj)
 
 
     def _disc_proj_secrets(self, proj_obj: CircleCIProject, org: str) -> CircleCIProject:
         """Given a project get the project secrets"""
 
-        proj_env_vars = self.call_circleci_api(self.cred.list_envvars, [], username=org.split("/")[-1], project=proj_obj.name.split("/")[-1])
+        proj_env_vars = self.call_circleci_api(self.cred.list_envvars, [], show_404=True, 
+            username=org.split("/")[-1], project=proj_obj.name.split("/")[-1])
 
         for env_var in proj_env_vars:
             secret_obj = CircleCISecret(
@@ -222,7 +232,7 @@ class CircleCIDisc(CircleCIDiscClient):
     def _disc_vars_in_pipe(self, pipe_id, proj_obj: CircleCIProject):
         """Given a pipeline discover the variables in the configuration"""
 
-        config = self.call_circleci_api(self.cred.get_pipeline_config, [], pipeline_id=pipe_id)
+        config = self.call_circleci_api(self.cred.get_pipeline_config, [], show_404=True, pipeline_id=pipe_id)
 
         if not config:
             return
