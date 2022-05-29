@@ -267,7 +267,7 @@ Show all the potential privileged pods:
     MATCH(p:K8sContainer)
     WHERE p.sc_privileged = True OR
     size(p.sc_capabilities_add) > 0 OR
-    .sc_runAsUser = 0 OR 
+    p.sc_runAsUser = 0 OR 
     p.sc_runAsNonRoot <> True AND (p.sc_runAsUser = "" OR p.sc_runAsUser = 0) OR
     p.sc_runAsGroup < 50 OR
     p.sc_allowPrivilegeEscalation = True
