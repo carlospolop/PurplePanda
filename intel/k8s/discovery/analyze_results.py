@@ -38,11 +38,13 @@ class AnalyzeResults(K8sDisc):
         """Check each privesc check"""
 
         for ppal_obj in K8sUser.get_all_by_kwargs(f'_.name =~ "{str(self.cluster_id)}-.*"') + K8sGroup.get_all_by_kwargs(f'_.name =~ "{str(self.cluster_id)}-.*"') + K8sServiceAccount.get_all_by_kwargs(f'_.name =~ "{str(self.cluster_id)}-.*"'):
-            objs_to_privesc = self._get_ppal_privesc(privesc_tech, ppal_obj)
             title = privesc_tech["title"]
             summary = privesc_tech["summary"]
             limitations = privesc_tech.get("limitations", "")
             relation = privesc_tech["relation"]
+            self.logger.info(f"Checking privesc: {title}")
+            
+            objs_to_privesc = self._get_ppal_privesc(privesc_tech, ppal_obj)
             
             for _, obj_to_privesc in objs_to_privesc.items():
                 to_privesc_ppal_obj = obj_to_privesc["ppal_obj"].save()

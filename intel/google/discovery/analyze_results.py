@@ -46,6 +46,7 @@ class AnalyzeResults(GcpDisc):
         summary = prives_def["summary"]
         relation = prives_def["relation"]
         limitations = prives_def.get("limitations", "")
+        self.logger.info(f"Checking privesc: {title}")
 
         # Remove this when we create anothe DB to store interesting permissions
         if relation != "PRIVESC":

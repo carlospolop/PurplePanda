@@ -117,6 +117,14 @@ class CustomOGM(GraphObject):
             full_module_name = "intel.k8s.models"
             label_prefixes = ["K8s"]
         
+        elif "Concourse" in labels:
+            full_module_name = "intel.concourse.models"
+            label_prefixes = ["Concourse"]
+        
+        elif "CircleCI" in labels:
+            full_module_name = "intel.circleci.models"
+            label_prefixes = ["CircleCI"]
+        
         else:
             full_module_name = "core.models"
             label_prefixes = [""]

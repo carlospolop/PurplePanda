@@ -15,7 +15,7 @@ class K8sDisc(K8sDiscClient):
         self.config = config
         self.k8s_get_secret_values = kwargs.get("k8s_get_secret_values", False)
         self.task_name = "K8s"
-        self.cluster_id = cluster_id
+        self.cluster_id = str(cluster_id)
         self.belongs_to = kwargs.get("belongs_to")
     
     def rel_to_cloud_cluster(self, k8s_obj):

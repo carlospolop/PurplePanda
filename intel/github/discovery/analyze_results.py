@@ -23,16 +23,16 @@ class AnalyzeResults(GithubDisc):
         """
 
         # Set as repos admin all the org admin
-        #self._disc_loop(GithubOrganization.get_all(), self._set_repo_admins, __name__.split(".")[-1]+"._set_repo_admins")
+        self._disc_loop(GithubOrganization.get_all(), self._set_repo_admins, __name__.split(".")[-1]+"._set_repo_admins")
 
         # Roles write, maintain and admin --> steal repo secrets and org secrets
-        #self._disc_loop(GithubOrganization.get_all(), self._steal_repo_secrets, __name__.split(".")[-1]+"._steal_repo_secrets")
+        self._disc_loop(GithubOrganization.get_all(), self._steal_repo_secrets, __name__.split(".")[-1]+"._steal_repo_secrets")
 
         # orgs.members_can_create_repositories --> Any user can steal org secrets
-        #self._disc_loop(GithubOrganization.get_all(), self._steal_org_secrets_with_generic_write_permission, __name__.split(".")[-1]+"._steal_org_secrets_with_generic_write_permission")
+        self._disc_loop(GithubOrganization.get_all(), self._steal_org_secrets_with_generic_write_permission, __name__.split(".")[-1]+"._steal_org_secrets_with_generic_write_permission")
 
         # Find users that can write in repos with self-hosted runners
-        #self._disc_loop(GithubOrganization.get_all(), self._run_selfhosted_runner, __name__.split(".")[-1]+"._run_selfhosted_runner")
+        self._disc_loop(GithubOrganization.get_all(), self._run_selfhosted_runner, __name__.split(".")[-1]+"._run_selfhosted_runner")
 
         # Find users that can write to the default branch
         self._disc_loop(GithubOrganization.get_all(), self._write_to_default_branch, __name__.split(".")[-1]+"._write_to_default_branch")
