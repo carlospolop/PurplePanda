@@ -78,4 +78,19 @@ Moreover, checking who has **access as member, owner or admin** is also very imp
     RETURN s,r,ppal</pre>
   </details>
 </details>
+
+### Projects
+
+<details>
+<summary><b>Show queries to search for projects with some special characteristic</b></summary>
+
+#### Circleci - active projects
+`Show projects with some worflow in the last 3 months.`
+  <details>
+  <summary>e.g.: <i>Circleci - active projects</i></summary>
+    <pre>
+    MATCH(project:CircleCIProject{is_active:True})
+    RETURN project</pre>
+  </details>
+</details>
 </details>

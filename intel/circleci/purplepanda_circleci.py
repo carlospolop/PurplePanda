@@ -17,8 +17,8 @@ class PurplePandaCircleCI():
             initial_funcs.append(
                 DiscoverSaas(
                     initial_funcs = [
-                        DiscOrgs(cred["cred"], cred["slugs"], cred["projects"], **kwargs).discover,
-                        DiscContexts(cred["cred"], cred["slugs"], cred["projects"], **kwargs).discover,
+                        #DiscOrgs(cred["cred"], cred["slugs"], cred["projects"], **kwargs).discover,
+                        #DiscContexts(cred["cred"], cred["slugs"], cred["projects"], **kwargs).discover,
                         DiscProjects(cred["cred"], cred["slugs"], cred["projects"], **kwargs).discover,
                         DiscPipelines(cred["cred"], cred["slugs"], cred["projects"], **kwargs).discover,
                     ],

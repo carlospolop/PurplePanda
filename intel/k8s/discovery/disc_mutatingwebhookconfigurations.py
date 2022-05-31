@@ -52,7 +52,7 @@ class DiscMutatingWebhookConfigurations(K8sDisc):
             if w.client_config.url:
                 uparsed = urlparse(w.client_config.url)
                 hostname = uparsed.hostname
-                if validators.domain(hostname) is True:
+                if validators.domain(hostname) is True or hostname == "localhost":
                     dom_obj = PublicDomain(name=hostname).save()
                     mwc_obj.public_domains.update(dom_obj)
                 

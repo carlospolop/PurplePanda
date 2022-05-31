@@ -43,7 +43,7 @@ class DiscWorkers(ConcourseDisc):
         if worker["addr"]:
             uparsed = urlparse("http://" + worker["addr"]) if not "://" in worker["addr"] else urlparse(worker["addr"])
             hostname = uparsed.hostname
-            if validators.domain(hostname) is True:
+            if validators.domain(hostname) is True or hostname == "localhost":
                 dom_obj = PublicDomain(name=hostname).save()
                 wrkr_obj.public_domains.update(dom_obj)
 
@@ -54,7 +54,7 @@ class DiscWorkers(ConcourseDisc):
         if worker["baggageclaim_url"]:
             uparsed = urlparse("http://" + worker["baggageclaim_url"]) if not "://" in worker["baggageclaim_url"] else urlparse(worker["baggageclaim_url"])
             hostname = uparsed.hostname
-            if validators.domain(hostname) is True:
+            if validators.domain(hostname) is True or hostname == "localhost":
                 dom_obj = PublicDomain(name=hostname).save()
                 wrkr_obj.public_domains.update(dom_obj)
 

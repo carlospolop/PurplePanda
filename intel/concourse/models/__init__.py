@@ -1,3 +1,3 @@
-from .concourse_model import ConcourseGroup, ConcourseTeam, ConcourseUser, ConcourseResource
+from .concourse_model import ConcoursePrincipal, ConcourseUser, ConcourseGroup, ConcourseTeam, ConcourseWorker, ConcourseResource, ConcoursePipeline, ConcoursePipelineGroup, ConcourseSecret, ConcourseJob, ConcoursePlan
 
-__all__ = ["ConcourseGroup", "ConcourseTeam", "ConcourseUser", "ConcourseResource"]
+__all__ = ["ConcoursePrincipal", "ConcourseUser", "ConcourseGroup", "ConcourseTeam", "ConcourseWorker", "ConcourseResource", "ConcoursePipeline", "ConcoursePipelineGroup", "ConcourseSecret", "ConcourseJob", "ConcoursePlan"]

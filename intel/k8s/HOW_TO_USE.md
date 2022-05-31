@@ -133,7 +133,7 @@ Searching for **sensitive information in secrets and environment variables** is 
 #### K8s - authenticated ppals with privesc
 `Show default SAs that can escalate privileges`
   <details>
-  <summary>e.g.: <i>K8s - privesc to sa gcp</i></summary>
+  <summary>e.g.: <i>K8s - authenticated ppals with privesc</i></summary>
     <pre>
     MATCH (ppal:K8sPrincipal)-[r:PRIVESC]->(u)
     WHERE ppal.name CONTAINS "system:authenticated"
@@ -143,7 +143,7 @@ Searching for **sensitive information in secrets and environment variables** is 
 #### K8s - unauthenticated ppals with privesc
 `Show default SAs that can escalate privileges`
   <details>
-  <summary>e.g.: <i>K8s - privesc to sa gcp</i></summary>
+  <summary>e.g.: <i>K8s - unauthenticated ppals with privesc</i></summary>
     <pre>
     MATCH (ppal:K8sPrincipal)-[r:PRIVESC]->(u) WHERE ppal.name CONTAINS "system:unauthenticated" OR ppal.name CONTAINS "system:anonymous"
     RETURN ppal,r,u</pre>

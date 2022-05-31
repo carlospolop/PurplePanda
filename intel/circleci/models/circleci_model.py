@@ -82,6 +82,7 @@ class CircleCIProject(CustomOGM):
     __primarykey__ = "name"
 
     name = Property()
+    is_active = Property()
     irc_server = Property()
     irc_keyword = Property()
     irc_password = Property()

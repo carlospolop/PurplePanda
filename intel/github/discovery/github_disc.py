@@ -446,7 +446,7 @@ class GithubDisc(GithubDiscClient):
 
                 uparsed = urlparse(url)
                 hostname = uparsed.hostname
-                if validators.domain(hostname) is True:
+                if validators.domain(hostname) is True or hostname == "localhost":
                     dom_obj = PublicDomain(name=hostname).save()
                     dom_obj.gh_webhooks.update(wh_obj)
                     dom_obj.save()

@@ -6,6 +6,9 @@ import logging
 import requests
 import re
 
+from dateutil.relativedelta import relativedelta
+from datetime import datetime
+from dateutil import parser
 from base64 import b64decode
 from core.utils.purplepanda_config import PurplePandaConfig
 from core.utils.purplepanda import PurplePanda
@@ -123,94 +126,95 @@ class CircleCIDisc(CircleCIDiscClient):
     def _disc_project(self, project_slug: str, org: str) -> CircleCIProject:
         """Given a project slug get the project info"""
 
-        proj_info = None
-        if project_slug not in KNOWN_PROJECTS:
-            # Only request proj info to the api for the same project 1 time
-            proj_info = self.call_circleci_api(self.cred.get_project_settings, [],
-                show_404=True, username=org.split("/")[-1], project=project_slug.split("/")[-1])
-            KNOWN_PROJECTS.add(project_slug)
+        if project_slug in KNOWN_PROJECTS:
+            return
         
+        # Only request proj info to the api for the same project 1 time
+        proj_info = self.call_circleci_api(self.cred.get_project_settings, [],
+            show_404=True, username=org.split("/")[-1], project=project_slug.split("/")[-1])
+        KNOWN_PROJECTS.add(project_slug)
 
         # If not has_usable_key and (not branches or only workflows are "latest_workflows") then not a real project, so don't save it
-        if  not proj_info["has_usable_key"] and (not proj_info["branches"] or \
-            all(len(proj_info["branches"][branch]["latest_workflows"]) == 1 and "Build%20Error" in proj_info["branches"][branch]["latest_workflows"].keys() for branch in proj_info["branches"])):
+        if not proj_info or (not proj_info["has_usable_key"] and (not proj_info["branches"] or \
+            all(len(proj_info["branches"][branch]["latest_workflows"]) == 0 or (len(proj_info["branches"][branch]["latest_workflows"]) == 1 and "Build%20Error" in proj_info["branches"][branch]["latest_workflows"].keys()) for branch in proj_info["branches"]))):
             return
+        
+        # get the date of the latest workflow
+        latest_workflow = max(parser.parse(info["created_at"]) for _,branch in proj_info["branches"].items() if branch["latest_workflows"] for _,info in branch["latest_workflows"].items())
+        # If latest workflow less than 3 months, it'a still active
+        is_active = latest_workflow.replace(tzinfo=None) > (datetime.now() - relativedelta(months=3))
 
+        proj_obj = CircleCIProject(
+            name = project_slug,
+            is_active = is_active,
+            irc_server = proj_info.get("irc_server", ""),
+            irc_keyword = proj_info.get("irc_keyword", ""),
+            irc_password = proj_info.get("irc_password", ""),
+            irc_username = proj_info.get("irc_username", ""),
+            irc_notify_prefs = proj_info.get("irc_notify_prefs", ""),
 
-        if not proj_info:
-            proj_obj = CircleCIProject(name=project_slug).save()
+            slack_integration_channel = proj_info.get("slack_integration_channel", ""),
+            slack_integration_team_id = proj_info.get("slack_integration_team_id", ""),
+            slack_integration_team = proj_info.get("slack_integration_team", ""),
+            slack_integration_notify_prefs = proj_info.get("slack_integration_notify_prefs", ""),
+            slack_integration_webhook_url = proj_info.get("slack_integration_webhook_url", ""),
+            slack_subdomain = proj_info.get("slack_subdomain", ""),
+            slack_notify_prefs = proj_info.get("slack_notify_prefs", ""),
+            slack_channel_override = proj_info.get("slack_channel_override", ""),
+            slack_api_token = proj_info.get("slack_api_token", ""),
+            slack_channel = proj_info.get("slack_channel", ""),
+            slack_integration_channel_id = proj_info.get("slack_integration_channel_id", ""),
+            slack_integration_access_token = proj_info.get("slack_integration_access_token", ""),
+
+            vcs_type = proj_info.get("vcs-type", ""),
+            vcs_url = proj_info.get("vcs_url", ""),
+            
+            aws = json.dumps(proj_info.get("aws", "")),
+            default_branch = proj_info.get("default_branch", ""),
+            flowdock_api_token = proj_info.get("flowdock_api_token", ""),
+            has_usable_key = proj_info.get("has_usable_key", False),
+            oss = proj_info.get("oss", False),
+            jira = json.dumps(proj_info.get("jira", "")),
+            ssh_keys = json.dumps(proj_info.get("ssh_keys", "")),
+            feature_flags = json.dumps(proj_info.get("feature_flags", ""))
+        ).save()
+        org_obj = CircleCIOrganization(name=org).save()
+        proj_obj.orgs.update(org_obj)
+
+        if proj_info["vcs-type"].lower() == "github":
+            repo_full_name = "/".join(project_slug.split("/")[1:])
+            ghrepo_obj = GithubRepo(
+                full_name=repo_full_name,
+                name = repo_full_name.split("/")[-1]
+                ).save()
+            proj_obj.gh_repos.update(ghrepo_obj)
+            proj_obj.save()
+        
+        elif proj_info["vcs-type"].lower() == "bitbucket":
+            repo_full_name = "/".join(project_slug.split("/")[1:])
+            bkrepo_obj = BitbucketRepo(
+                full_name=repo_full_name,
+                name = repo_full_name.split("/")[-1]
+                ).save()
+            proj_obj.bk_repos.update(bkrepo_obj)
+            proj_obj.save()
         
         else:
-            proj_obj = CircleCIProject(
-                name = project_slug,
-                irc_server = proj_info.get("irc_server", ""),
-                irc_keyword = proj_info.get("irc_keyword", ""),
-                irc_password = proj_info.get("irc_password", ""),
-                irc_username = proj_info.get("irc_username", ""),
-                irc_notify_prefs = proj_info.get("irc_notify_prefs", ""),
+            self.logger.error(f"I don't know if {proj_info.get('vcs-type')} is github or bitbucket, please create an issue in purplepana's github with this info")
+        
+        self._disc_proj_secrets(proj_obj, org)
 
-                slack_integration_channel = proj_info.get("slack_integration_channel", ""),
-                slack_integration_team_id = proj_info.get("slack_integration_team_id", ""),
-                slack_integration_team = proj_info.get("slack_integration_team", ""),
-                slack_integration_notify_prefs = proj_info.get("slack_integration_notify_prefs", ""),
-                slack_integration_webhook_url = proj_info.get("slack_integration_webhook_url", ""),
-                slack_subdomain = proj_info.get("slack_subdomain", ""),
-                slack_notify_prefs = proj_info.get("slack_notify_prefs", ""),
-                slack_channel_override = proj_info.get("slack_channel_override", ""),
-                slack_api_token = proj_info.get("slack_api_token", ""),
-                slack_channel = proj_info.get("slack_channel", ""),
-                slack_integration_channel_id = proj_info.get("slack_integration_channel_id", ""),
-                slack_integration_access_token = proj_info.get("slack_integration_access_token", ""),
-
-                vcs_type = proj_info.get("vcs-type", ""),
-                vcs_url = proj_info.get("vcs_url", ""),
-                
-                aws = json.dumps(proj_info.get("aws", "")),
-                default_branch = proj_info.get("default_branch", ""),
-                flowdock_api_token = proj_info.get("flowdock_api_token", ""),
-                has_usable_key = proj_info.get("has_usable_key", False),
-                oss = proj_info.get("oss", False),
-                jira = json.dumps(proj_info.get("jira", "")),
-                ssh_keys = json.dumps(proj_info.get("ssh_keys", "")),
-                feature_flags = json.dumps(proj_info.get("feature_flags", ""))
-            ).save()
-            org_obj = CircleCIOrganization(name=org).save()
-            proj_obj.orgs.update(org_obj)
-
-            if proj_info["vcs-type"].lower() == "github":
-                repo_full_name = "/".join(project_slug.split("/")[1:])
-                ghrepo_obj = GithubRepo(
-                    full_name=repo_full_name,
-                    name = repo_full_name.split("/")[-1]
-                    ).save()
-                proj_obj.gh_repos.update(ghrepo_obj)
-                proj_obj.save()
-            
-            elif proj_info["vcs-type"].lower() == "bitbucket":
-                repo_full_name = "/".join(project_slug.split("/")[1:])
-                bkrepo_obj = BitbucketRepo(
-                    full_name=repo_full_name,
-                    name = repo_full_name.split("/")[-1]
-                    ).save()
-                proj_obj.bk_repos.update(bkrepo_obj)
-                proj_obj.save()
-            
-            else:
-                self.logger.error(f"I don't know if {proj_info.get('vcs-type')} is github or bitbucket, please create an issue in purplepana's github with this info")
-            
-            self._disc_proj_secrets(proj_obj, org)
-
-            # Get some pipelines vars related to the project
-            branches = set(list(proj_info["branches"].keys())[:5])
-            branches.add(proj_info["default_branch"])
-            for branch in branches:
-                if branch in  proj_info["branches"] and proj_info["branches"][branch]["latest_workflows"]:
-                    for workflow in list(proj_info["branches"][branch]["latest_workflows"].keys())[:2]:
-                        workflow_info = self.call_circleci_api(self.cred.get_workflow, 
-                            workflow_id=proj_info["branches"][branch]["latest_workflows"][workflow]["id"], show_404=False) #It won't exist in most cases
-                        
-                        if workflow_info:
-                            self._disc_vars_in_pipe(workflow_info["pipeline_id"], proj_obj)
+        # Get some pipelines vars related to the project
+        branches = set(list(proj_info["branches"].keys())[:5])
+        branches.add(proj_info["default_branch"])
+        for branch in branches:
+            if branch in  proj_info["branches"] and proj_info["branches"][branch]["latest_workflows"]:
+                for workflow in list(proj_info["branches"][branch]["latest_workflows"].keys())[:2]:
+                    workflow_info = self.call_circleci_api(self.cred.get_workflow, 
+                        workflow_id=proj_info["branches"][branch]["latest_workflows"][workflow]["id"], show_404=False) #It won't exist in most cases
+                    
+                    if workflow_info:
+                        self._disc_vars_in_pipe(workflow_info["pipeline_id"], proj_obj)
 
 
     def _disc_proj_secrets(self, proj_obj: CircleCIProject, org: str) -> CircleCIProject:

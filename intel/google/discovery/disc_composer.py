@@ -112,7 +112,7 @@ class DiscComposer(GcpDisc):
                 if config.get("airflowUri"):
                     uparsed = urlparse(config.get("airflowUri"))
                     hostname = uparsed.hostname
-                    if validators.domain(hostname) is True:
+                    if validators.domain(hostname) is True or hostname == "localhost":
                         dom_obj = PublicDomain(name=hostname).save()
                         composerenv_obj.public_domains.update(dom_obj)
                     
