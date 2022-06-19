@@ -1,1 +1,0 @@
-- The CircleCI API doesn't give the teams that has access to the context, it would be nice to have that info to indicate who can steal the secrets of the context (at the moment all the users with write access to a project repo are supposed to be able to stel them, as those are the default permissions)
