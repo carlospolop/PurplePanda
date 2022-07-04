@@ -147,7 +147,7 @@ class DiscClusters(GcpDisc):
             cluster_obj.save()
         
         sa_email = cluster_nodeConfig.get("serviceAccount", f"{p_obj.projectNumber}-compute@developer.gserviceaccount.com")
-        cluster_obj.relate_sa(sa_email, cluster_nodeConfig["oauthScopes"])
+        cluster_obj.relate_sa(sa_email, cluster_nodeConfig.get("oauthScopes", []))
 
         # Relate with running nodepools
         if cluster.get("nodePools"):

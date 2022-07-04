@@ -37,12 +37,12 @@ class AnalyzeResults(K8sDisc):
     def _check_privesc_tech(self, privesc_tech):
         """Check each privesc check"""
 
+        title = privesc_tech["title"]
+        summary = privesc_tech["summary"]
+        limitations = privesc_tech.get("limitations", "")
+        relation = privesc_tech["relation"]
+        self.logger.info(f"Checking privesc: {title}")
         for ppal_obj in K8sUser.get_all_by_kwargs(f'_.name =~ "{str(self.cluster_id)}-.*"') + K8sGroup.get_all_by_kwargs(f'_.name =~ "{str(self.cluster_id)}-.*"') + K8sServiceAccount.get_all_by_kwargs(f'_.name =~ "{str(self.cluster_id)}-.*"'):
-            title = privesc_tech["title"]
-            summary = privesc_tech["summary"]
-            limitations = privesc_tech.get("limitations", "")
-            relation = privesc_tech["relation"]
-            self.logger.info(f"Checking privesc: {title}")
             
             objs_to_privesc = self._get_ppal_privesc(privesc_tech, ppal_obj)
             

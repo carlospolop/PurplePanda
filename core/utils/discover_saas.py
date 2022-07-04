@@ -19,7 +19,12 @@ class DiscoverSaas(PurplePanda):
         # Then run in parallel the functions that can be parallelized (following the desired order inside each parallelism)
         threads = []
         for fs in self.parallel_funcs:
-            threads.append(core.utils.purplepanda.POOL.submit(self._do_parallel, fs))
+            future = core.utils.purplepanda.POOL.submit(self._do_parallel, fs)
+            threads.append(future)
+        
+        # Show errors inside the threads
+        for t in threads:
+            t.result()
         
         while any(not t.done() for t in threads):
             time.sleep(5)

@@ -25,8 +25,8 @@ class DiscCloudbuild(GcpDisc):
         """
 
         projects: List[GcpProject] = GcpProject.get_all()
-        self._disc_loop(projects, self._disc_builds, __name__.split(".")[-1])
-        self._disc_loop(projects, self._disc_triggers, __name__.split(".")[-1])
+        self._disc_loop(projects, self._disc_builds, __name__.split(".")[-1]+"._disc_builds")
+        self._disc_loop(projects, self._disc_triggers, __name__.split(".")[-1]+"._disc_triggers")
 
 
     def _disc_builds(self, p_obj):
@@ -51,16 +51,18 @@ class DiscCloudbuild(GcpDisc):
             if repoSource:
                 repoProjectId = repoSource.get("projectId", project_id)
                 repoName = repoSource["repoName"]
-                repoDir = repoSource["dir"]
-                branchName = repoSource["branchName"]
-                tagName = repoSource["tagName"]
-                commitSha = repoSource["commitSha"]
+                repoDir = repoSource.get("dir", "")
+                branchName = repoSource.get("branchName", "")
+                tagName = repoSource.get("tagName", "")
+                commitSha = repoSource.get("commitSha", "")
 
             build_obj = GcpCloudbuildBuild(
-                name = build["name"],
+                name = build.get("name", ""),
                 id = build["id"],
                 images = build.get("images", []),
                 logsBucket = build.get("logsBucket", ""),
+                logUrl = build.get("logUrl", ""),
+                status = build.get("status", ""),
                 tags = build.get("tags", []),
                 bucket = bucket,
                 bucketObject = bucketObject,

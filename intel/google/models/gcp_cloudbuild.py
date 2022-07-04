@@ -20,6 +20,8 @@ class GcpCloudbuildBuild(CustomOGM, GcpRunningSA):
     images = Property()
     logsBucket = Property() # gs://541234567077.cloudbuild-logs.googleusercontent.com
     tags = Property()
+    logUrl = Property()
+    status = Property()
     
     #bucket source
     bucket = Property() #Bucket name
