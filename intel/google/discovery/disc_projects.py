@@ -41,20 +41,21 @@ class DiscProjects(GcpDisc):
             lifecycleState=p.get("lifecycleState", "")
         ).save()
     
-        parent: dict = p["parent"]
-        if parent["type"] == "folder":
-            f: GcpFolder = GcpFolder(name=f"folders/{parent['id']}").save()
-            f.projects.update(p_obj)
-            f.save()
-        
-        elif parent["type"] == "organization":
-            name=f"organizations/{parent['id']}"
-            o: GcpOrganization = GcpOrganization.get_by_name(name=name)
-            o.projects.update(p_obj)
-            o.save()
-        
-        else:
-            self.logger.error(f"Project {p['name']} with unexpected parent type {p['parent']}")
+        parent: dict = p.get("parent", {})
+        if parent:
+            if parent["type"] == "folder":
+                f: GcpFolder = GcpFolder(name=f"folders/{parent['id']}").save()
+                f.projects.update(p_obj)
+                f.save()
+            
+            elif parent["type"] == "organization":
+                name=f"organizations/{parent['id']}"
+                o: GcpOrganization = GcpOrganization.get_by_name(name=name)
+                o.projects.update(p_obj)
+                o.save()
+            
+            else:
+                self.logger.error(f"Project {p['name']} with unexpected parent type {p['parent']}")
         
         self._list_enabled_svcs(p_obj)
         
