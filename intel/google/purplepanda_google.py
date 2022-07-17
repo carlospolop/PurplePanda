@@ -23,6 +23,9 @@ from intel.google.discovery.disc_secrets import DiscSecrets
 from intel.google.discovery.disc_cloudbuild import DiscCloudbuild
 from intel.google.discovery.disc_sourcerepo import DiscSourceRepos
 from intel.google.discovery.disc_kms import DiscKMS
+from intel.google.discovery.disc_dns import DiscDns
+from intel.google.discovery.disc_sql import DiscSql
+from intel.google.discovery.disc_org_policies import DiscOrgPolicies
 from intel.google.discovery.analyze_results import AnalyzeResults
 
 
@@ -36,33 +39,36 @@ class PurplePandaGoogle():
             initial_funcs.append(
                 DiscoverSaas(
                     initial_funcs = [
-                        DiscOrgs(cred=cred["cred"], **kwargs).discover,
-                        DiscFolders(cred=cred["cred"], **kwargs).discover,
-                        DiscProjects(cred=cred["cred"], **kwargs).discover,
-                        DiscCustomRolesPermissions(cred=cred["cred"], **kwargs).discover,
-                        DiscServiceAccounts(cred=cred["cred"], **kwargs).discover,
-                        DiscGroupsUsers(cred=cred["cred"], **kwargs).discover,
-                        DiscComputeSubnetworks(cred=cred["cred"], **kwargs).discover, #Needed by DiscClusters
-                        DiscClusters(cred=cred["cred"], **kwargs).discover,
-                        DiscStorage(cred=cred["cred"], **kwargs).discover,
-                        DiscSecrets(cred=cred["cred"], **kwargs).discover
+                        #DiscOrgs(cred=cred["cred"], **kwargs).discover,
+                        #DiscFolders(cred=cred["cred"], **kwargs).discover,
+                        #DiscProjects(cred=cred["cred"], **kwargs).discover,
+                        #DiscOrgPolicies(cred=cred["cred"], **kwargs).discover,
+                        #DiscCustomRolesPermissions(cred=cred["cred"], **kwargs).discover,
+                        #DiscServiceAccounts(cred=cred["cred"], **kwargs).discover,
+                        #DiscGroupsUsers(cred=cred["cred"], **kwargs).discover,
+                        #DiscStorage(cred=cred["cred"], **kwargs).discover,
+                        #DiscComputeSubnetworks(cred=cred["cred"], **kwargs).discover, #Needed by DiscClusters
+                        #DiscClusters(cred=cred["cred"], **kwargs).discover,
+                        #DiscSecrets(cred=cred["cred"], **kwargs).discover
                     ],
 
                     parallel_funcs = [
-                        [DiscKMS(cred=cred["cred"], **kwargs).discover],    
-                        [DiscComposer(cred=cred["cred"], **kwargs).discover],
-                        [DiscBigquery(cred=cred["cred"], **kwargs).discover],
-                        [
-                            DiscComputeInstances(cred=cred["cred"], **kwargs).discover,
-                            DiscComputeNetworks(cred=cred["cred"], **kwargs).discover,
-                        ],
-                        [DiscPubSub(cred=cred["cred"], **kwargs).discover],
-                        [DiscCloudRun(cred=cred["cred"], **kwargs).discover],
-                        [DiscCloudFunctions(cred=cred["cred"], **kwargs).discover],
-                        [DiscCloudbuild(cred=cred["cred"], **kwargs).discover],
-                        [DiscSourceRepos(cred=cred["cred"], **kwargs).discover],
+                        #[DiscKMS(cred=cred["cred"], **kwargs).discover],    
+                        #[DiscComposer(cred=cred["cred"], **kwargs).discover],
+                        #[DiscBigquery(cred=cred["cred"], **kwargs).discover],
+                        #[
+                        #    DiscComputeInstances(cred=cred["cred"], **kwargs).discover,
+                        #    DiscComputeNetworks(cred=cred["cred"], **kwargs).discover,
+                        #],
+                        #[DiscPubSub(cred=cred["cred"], **kwargs).discover],
+                        #[DiscCloudRun(cred=cred["cred"], **kwargs).discover],
+                        #[DiscCloudFunctions(cred=cred["cred"], **kwargs).discover],
+                        #[DiscCloudbuild(cred=cred["cred"], **kwargs).discover],
+                        #[DiscSourceRepos(cred=cred["cred"], **kwargs).discover],
+                        #[DiscDns(cred=cred["cred"], **kwargs).discover],
+                        #[DiscSql(cred=cred["cred"], **kwargs).discover]
                     ],
-                    final_funcs=[DiscServiceAccounts(cred=cred["cred"], **kwargs).discover] #Re-discover and re-relate possible missing SAs with projects
+                    final_funcs=[]#[DiscServiceAccounts(cred=cred["cred"], **kwargs).discover] #Re-discover and re-relate possible missing SAs with projects
                 ).do_discovery
             )
         

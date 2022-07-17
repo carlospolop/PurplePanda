@@ -92,13 +92,15 @@ class GcpCloudbuildTrigger(CustomOGM, GcpRunningSA):
     gitFileUri = Property()
     gitFileRevision = Property()
 
+    repoType = Property()
+
     projects = RelatedTo(GcpProject, "PART_OF")
     pubsubSubscriptions_trigger = RelatedTo(GcpPubSubSubscription, "TRIGGER")
     pubsubTopics_trigger = RelatedTo(GcpPubSubTopic, "TRIGGER")
     secrets_trigger = RelatedTo(GcpSecretVersion, "WEBHOOK")
     sourcerepos_trigger = RelatedTo(GcpSourceRepo, "TRIGGER")
     cloudbuildBuilds = RelatedTo(GcpCloudbuildBuild, "BUILDS")    
-    github_repos = RelatedTo(GithubRepo, "IS_MIRROR")
+    github_repos = RelatedTo(GithubRepo, "TRIGGER")
 
     gcp = Label(name="Gcp")
 

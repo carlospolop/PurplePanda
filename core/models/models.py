@@ -2,6 +2,7 @@ from py2neo.ogm import Property, RelatedTo, RelatedFrom, Label
 
 from core.db.customogm import CustomOGM
 from intel.github.models.github_model import GithubPrincipal, GithubRepo, GithubWebhook
+from intel.bitbucket.models.bitbucket_model import BitbucketRepo
 
 
 ########################
@@ -19,6 +20,8 @@ class PublicIP(CustomOGM):
     gcp_compute_instances = RelatedFrom("GcpComputeInstance", "HAS_IP")
     gcp_clusters = RelatedFrom("GcpCluster", "HAS_IP")
     gcp_composerenvs = RelatedFrom("GcpComposerEnv", "HAS_IP")
+    gcp_resourcerecords = RelatedFrom("GcpResourceRecord", "HAS_IP")
+    gcp_sqlinstances = RelatedFrom("GcpSqlInstance", "HAS_IP")
     k8s_service = RelatedFrom("K8sService", "HAS_IP")
     public_domains = RelatedFrom("PublicDomain", "HAS_IP")
     k8s_mutatingwebhookconfigs = RelatedFrom("K8sMutatingWebhookConfig", "HAS_IP")
@@ -43,6 +46,8 @@ class PublicDomain(CustomOGM):
 
     gcp_orgs = RelatedFrom("GcpOrganization", "HAS_DOMAIN")
     gcp_composerenvs = RelatedFrom("GcpComposerEnv", "HAS_IP")
+    gcp_managedzones = RelatedFrom("GcpManagedZone", "HAS_DOMAIN")
+    gcp_resourcerecords = RelatedFrom("GcpResourceRecord", "HAS_DOMAIN")
     k8s_service = RelatedFrom("K8sService", "HAS_DOMAIN")
     k8s_ingress = RelatedFrom("K8sIngress", "HAS_DOMAIN")
     public_ips = RelatedTo(PublicIP, "HAS_IP")
@@ -84,12 +89,12 @@ class ContainerImage(CustomOGM):
     def save(self, *args, **kwargs):
         ret = super().save(*args, **kwargs)
         
-        if "gcr.io/" in self.name and not "k8s.gcr.io/" in self.name:
+        if "gcr.io/" in self.name and not "k8s.gcr.io/" in self.name and not "gke.gcr.io/" in self.name:
             from intel.google.models import GcpStorage
             zone_subdomain = self.name.split(".gcr.io/")[0] + "." if ".gcr.io/" in self.name else "" # Get "eu." in "eu.gcr.io/..."
             project_name = self.name.split("gcr.io/")[1].split("/")[0]
             bucket_name = f"{zone_subdomain}artifacts.{project_name}.appspot.com"
-            storage_obj = GcpStorage(name=bucket_name).save()
+            storage_obj = GcpStorage(name=bucket_name, contains_images=True).save()
             self.image_containers.update(storage_obj)
             return super().save(*args, **kwargs)
         
@@ -122,12 +127,13 @@ class RunsContainerImage(CustomOGM):
 ###### CODE REPOS ######
 ########################
 
-class GithubMirror(CustomOGM):
-    __primarylabel__ = "GithubMirror"
+class CodeMirror(CustomOGM):
+    __primarylabel__ = "CodeMirror"
 
     github_repos = RelatedTo(GithubRepo, "IS_MIRROR")
+    bitbucket_repos = RelatedTo(BitbucketRepo, "IS_MIRROR")
 
-    label = Label(name="GithubMirror")
+    label = Label(name="CodeMirror")
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

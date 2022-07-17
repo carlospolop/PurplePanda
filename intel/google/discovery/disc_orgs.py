@@ -1,7 +1,7 @@
 import logging
 from .gcp_disc_client import GcpDisc
 from intel.google.models.gcp_organization import GcpOrganization
-from intel.google.models.google_workspace import GoogleWorkspace
+from intel.google.models.gcp_workspace import GcpWorkspace
 from core.models.models import PublicDomain
 
 
@@ -40,7 +40,7 @@ class DiscOrgs(GcpDisc):
             o_obj.save()
 
         directoryCustomerId: str = o["owner"]["directoryCustomerId"]
-        w_obj: GoogleWorkspace = GoogleWorkspace(name=directoryCustomerId).save()
+        w_obj: GcpWorkspace = GcpWorkspace(name=directoryCustomerId).save()
         w_obj.organisations.update(o_obj)
         w_obj.save()
 

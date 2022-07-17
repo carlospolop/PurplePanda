@@ -27,7 +27,7 @@ class GcpResource(RepoPpalPrivesc):
     def get_by_role(self, role):
         from intel.google.models.gcp_user_account import GcpUserAccount
         from intel.google.models.gcp_organization import GcpOrganization
-        from intel.google.models.google_group import GoogleGroup
+        from intel.google.models.gcp_group import GcpGroup
         from intel.google.models.gcp_service_account import GcpServiceAccount
         objs = self.get_by_relation("HAS_ROLE", where=f'"{role}" in _.roles')
         return objs
@@ -52,7 +52,7 @@ class GcpPrincipal(CustomOGM):
     def get_all_principals_with_role(cls, role):
         from intel.google.models.gcp_user_account import GcpUserAccount
         from intel.google.models.gcp_organization import GcpOrganization
-        from intel.google.models.google_group import GoogleGroup
+        from intel.google.models.gcp_group import GcpGroup
         from intel.google.models.gcp_service_account import GcpServiceAccount
         objs = cls.get_all_with_relation("HAS_ROLE", where=f'"{role}" in _.roles', get_only_start=True)
         return objs

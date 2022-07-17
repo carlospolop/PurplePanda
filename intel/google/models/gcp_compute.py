@@ -23,6 +23,7 @@ class GcpComputeInstance(GcpResource, GcpRunningSA):
     enableIntegrityMonitoring = Property()
     updateAutoLearnPolicy = Property()
     metadata = Property()
+    tags = Property()
 
     projects = RelatedTo(GcpProject, "PART_OF")
     subnetworks = RelatedTo("GcpSubnetwork", "CONNECTED")
@@ -64,10 +65,11 @@ class GcpComputeDisk(GcpResource):
 
 class GcpNetwork(CustomOGM):
     __primarylabel__ = "GcpNetwork"
-    __primarykey__ = "source"
+    __primarykey__ = "name"
 
     name = Property()
-    source = Property()
+    description = Property()
+    selfLink = Property()
     autoCreateSubnetworks = Property()
     routingMode = Property()
 
@@ -75,6 +77,7 @@ class GcpNetwork(CustomOGM):
     networks = Related("GcpNetwork", "PEERING")
     subnetworks = RelatedFrom("GcpSubnetwork", "PART_OF")
     firewall_rules = RelatedFrom("GcpFirewallRule", "PROTECT")
+    sqlinstances = RelatedFrom("GcpSqlInstance", "CONNECTED")
 
     gcp = Label(name="Gcp")
     
@@ -85,10 +88,10 @@ class GcpNetwork(CustomOGM):
 
 class GcpSubnetwork(GcpResource):
     __primarylabel__ = "GcpSubnetwork"
-    __primarykey__ = "source"
+    __primarykey__ = "name"
 
     name = Property()
-    source = Property()
+    selfLink = Property()
     ipCidrRange = Property()
     gatewayAddress = Property()
     privateIpGoogleAccess = Property()
@@ -111,7 +114,7 @@ class GcpSubnetwork(GcpResource):
 
 class GcpFirewallRule(CustomOGM):
     __primarylabel__ = "GcpFirewallRule"
-    __primarykey__ = "source"
+    __primarykey__ = "name"
 
     name = Property()
     description = Property()
@@ -119,10 +122,11 @@ class GcpFirewallRule(CustomOGM):
     disabled = Property()
     logEnabled = Property()
     priority = Property()
-    source = Property()
+    selfLink = Property()
     sourceRanges = Property()
     targetTags = Property()
     allowed = Property()
+    denied = Property()
 
     networks = RelatedTo(GcpNetwork, "PROTECT")
 

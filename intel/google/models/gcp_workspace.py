@@ -4,14 +4,14 @@ from core.db.customogm import CustomOGM
 from intel.google.models.gcp_organization import GcpOrganization
 
 
-class GoogleWorkspace(CustomOGM):
-    __primarylabel__ = "GoogleWorkspace"
+class GcpWorkspace(CustomOGM):
+    __primarylabel__ = "GcpWorkspace"
     __primarykey__ = "name"
 
     name = Property()
 
     organisations = RelatedFrom(GcpOrganization, "PART_OF")
-    groups = RelatedFrom("GoogleGroup", "PART_OF")
+    groups = RelatedFrom("GcpGroup", "PART_OF")
     users = RelatedFrom("GcpUser", "PART_OF")
 
     gcp = Label(name="Gcp")

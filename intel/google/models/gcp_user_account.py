@@ -1,8 +1,8 @@
 from py2neo.ogm import Property, Label, RelatedTo
 
-from intel.google.models.google_workspace import GoogleWorkspace
+from intel.google.models.gcp_workspace import GcpWorkspace
 from intel.google.models.gcp_perm_models import GcpPrincipal
-from intel.google.models.google_group import GoogleGroup
+from intel.google.models.gcp_group import GcpGroup
 
 
 class GcpUserAccount(GcpPrincipal):
@@ -12,8 +12,8 @@ class GcpUserAccount(GcpPrincipal):
     name = Property()
     email = Property()
 
-    groups = RelatedTo(GoogleGroup, "MEMBER_OF")
-    workspaces = RelatedTo(GoogleWorkspace, "PART_OF")
+    groups = RelatedTo(GcpGroup, "MEMBER_OF")
+    workspaces = RelatedTo(GcpWorkspace, "PART_OF")
 
     gcp = Label(name="Gcp")
 

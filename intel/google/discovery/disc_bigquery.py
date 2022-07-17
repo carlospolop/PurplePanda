@@ -16,8 +16,7 @@ class DiscBigquery(GcpDisc):
         This module will create the bigqeury datasets and table objects and relate them with the parent project and get the IAM privileges.
         """
 
-        http_prep = self.service.projects()#.list()
-        projects: List[dict] = self.execute_http_req(http_prep, "projects")
+        projects: List[GcpProject] = GcpProject.get_all()
         self._disc_loop(projects, self._disc_datasets, __name__.split(".")[-1])
 
     

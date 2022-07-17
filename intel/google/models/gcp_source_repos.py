@@ -3,9 +3,9 @@ from intel.google.models.gcp_project import GcpProject
 from intel.google.models.gcp_perm_models import GcpRunningSA
 from intel.google.models.gcp_pubsub import GcpPubSubTopic
 from intel.google.models.gcp_service_account import GcpServiceAccount
-from core.models import GithubMirror
+from core.models import CodeMirror
 
-class GcpSourceRepo(GithubMirror, GcpRunningSA):
+class GcpSourceRepo(CodeMirror, GcpRunningSA):
     __primarylabel__ = "GcpSourceRepo"
     __primarykey__ = "name"
 

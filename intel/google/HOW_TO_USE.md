@@ -48,7 +48,7 @@
 <details>
     <summary>e.g.: <i>Gcp - full privesc path to organization/12323423423</i></summary>
     <pre>
-    MATCH (res:GcpResource) WHERE res.email = $res OR ppal.domain = $res OR res.name = $res
+    MATCH (res:GcpResource) WHERE res.email = $res OR res.domain = $res OR res.name = $res
     WITH res
     MATCH (res)<-[r1:PRIVESC]-(ppal1)
     OPTIONAL MATCH r = (ppal1)<-[:MEMBER_OF*..]-(ppal2)
@@ -139,8 +139,8 @@
 <details>
     <summary>e.g.: <i>Gcp - Get Users and Groups not from Workspace</i></summary>
     <pre>
-    OPTIONAL MATCH (g:GoogleGroup) WHERE NOT EXISTS((g)-[:PART_OF]->(:GoogleWorkspace))
-    OPTIONAL MATCH (u:GcpUserAccount) WHERE NOT EXISTS((u)-[:PART_OF]->(:GoogleWorkspace))
+    OPTIONAL MATCH (g:GcpGroup) WHERE NOT EXISTS((g)-[:PART_OF]->(:GcpWorkspace))
+    OPTIONAL MATCH (u:GcpUserAccount) WHERE NOT EXISTS((u)-[:PART_OF]->(:GcpWorkspace))
     RETURN g,u</pre>
 </details>
 
@@ -151,7 +151,7 @@
 <details>
     <summary>e.g.: <i>Gcp - Privileged groups</i></summary>
     <pre>
-    MATCH (g:GoogleGroup)-[r:PRIVESC]->(b)
+    MATCH (g:GcpGroup)-[r:PRIVESC]->(b)
     RETURN g,r,b</pre>
 </details>
 
@@ -162,7 +162,7 @@
 <details>
     <summary>e.g.: <i>Gcp - roles of groups bigger than 250</i></summary>
     <pre>
-    MATCH (grp:GoogleGroup)<-[:MEMBER_OF*0..]-(mem:GcpPrincipal)
+    MATCH (grp:GcpGroup)<-[:MEMBER_OF*0..]-(mem:GcpPrincipal)
     WITH grp, count(mem) as mem_count
     WHERE mem_count > $number
     OPTIONAL MATCH(grp)-[r:HAS_ROLE]-(res)
@@ -201,6 +201,18 @@
     MATCH (sa:GcpServiceAccount)-[rel:HAS_ROLE]->(res:Gcp) 
     WHERE EXISTS((sa)-[:PART_OF]->(:GcpProject)) AND NOT EXISTS((sa)-[:PART_OF]->(res)) AND NOT EXISTS((sa)-[:PART_OF]->(:GcpProject)<-[:PART_OF]-(res))
     RETURN sa, rel, res</pre>
+</details>
+
+
+### Gcp - VMs running in other project networks
+`Show all the VMs that are running in networks that belong to other projects.`
+
+<details>
+    <summary>e.g.: <i>Gcp - VMs running in other project networks</i></summary>
+    <pre>
+    MATCH (orig_project:GcpProject)<-[p1:PART_OF]-(subn:GcpSubnetwork)-[c:CONNECTED]-(comp)-[p2:PART_OF]->(dest_project:GcpProject)
+    WHERE orig_project.name <> dest_project.name
+    RETURN orig_project,p1,subn,c,comp,p2,dest_project</pre>
 </details>
 </details>
 
@@ -302,6 +314,34 @@
     RETURN fw, fw_r, fw_n, c, c_r, sn, pn, n, composer, p_o, cluster</pre>
 </details>
 
+### Gcp - open FW rules and public VMs with privileged sas
+`Show all the firewall rules open to the internet and all the machines with public IPs with privileged sas`
+
+<details>
+    <summary>e.g.: <i>Gcp - open FW rules and public VMs 2</i></summary>
+    <pre>
+    OPTIONAL MATCH (fw:GcpFirewallRule)-[fw_r:PROTECT]-(fw_n:GcpNetwork)
+    WHERE fw.direction = "INGRESS" AND
+    ( 
+        any(iprange in fw.sourceRanges WHERE iprange CONTAINS "0.0.0.0" OR iprange CONTAINS "::/0")
+        OR
+        (
+            any(iprange in fw.sourceRanges WHERE 
+                NOT any(priv_reg in ["^127\..*","^10\..*", "^172\.1[6-9]\..*", "^172\.2[0-9]\..*", "^172\.3[0-1]\..*", "^192\.168\..*"] WHERE iprange =~ priv_reg)
+            )
+        )
+    )
+    OPTIONAL MATCH (n:GcpNetwork)<-[pn:PART_OF]-(sn:GcpSubnetwork)<-[c_r:CONNECTED]-(c:GcpResource)<-[ri1:RUN_IN]-(sa:GcpServiceAccount)-[priv1:PRIVESC]->(topriv1)
+    WHERE 
+    any(ip_addr IN c_r.accessConfigs_natIPs WHERE NOT 		any(priv_reg in ["^127\..*","^10\..*", "^172\.1[6-9]\..*", "^172\.2[0-9]\..*", "^172\.3[0-1]\..*", "^192\.168\..*"] WHERE ip_addr =~ priv_reg)
+    )
+    OPTIONAL MATCH (cluster:GcpCluster)-[p_o:PART_OF]->(composer:GcpComposerEnv)<-[ri2:RUN_IN]-(sa:GcpServiceAccount)-[priv2:PRIVESC]->(topriv2) 
+    WHERE 
+    any(iprange IN composer.allowedIpRanges WHERE NOT 		any(priv_reg in ["^127\..*","^10\..*", "^172\.1[6-9]\..*", "^172\.2[0-9]\..*", "^172\.3[0-1]\..*", "^192\.168\..*"] WHERE iprange =~ priv_reg)
+    )
+    RETURN fw, fw_r, fw_n, c, c_r, sn, pn, n, composer, p_o, cluster, ri1, priv1, topriv1, ri2, priv2, topriv2</pre>
+</details>
+
 ### Gcp - SA with API keys
 `Show all the SAs with API keys generated.`
 
@@ -332,7 +372,7 @@
     OPTIONAL MATCH (orgs:GcpOrganization) WHERE NOT EXISTS((orgs)<-[:PART_OF]-())
     OPTIONAL MATCH (folders:GcpFolder) WHERE NOT EXISTS((folders)<-[:PART_OF]-())
     OPTIONAL MATCH (projects:GcpProject) WHERE NOT EXISTS((projects)<-[:PART_OF]-())
-    OPTIONAL MATCH (groups:GoogleGroup) WHERE NOT EXISTS((groups)<-[:MEMBER_OF]-())
+    OPTIONAL MATCH (groups:GcpGroup) WHERE NOT EXISTS((groups)<-[:MEMBER_OF]-())
     OPTIONAL MATCH (sn:GcpSubnetwork) WHERE NOT EXISTS((sn)<-[:CONNECTED]-())
     OPTIONAL MATCH (user:GcpUserAccount) WHERE NOT EXISTS((user)-[:MEMBER_OF]->()) AND NOT EXISTS((user)-[:HAS_ROLE]->())
     RETURN isolated, disabled, orgs, folders, projects, groups, sn, user</pre>

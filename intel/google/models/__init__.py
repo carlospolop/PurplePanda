@@ -8,9 +8,11 @@ from .gcp_cloudbuild import GcpCloudbuildBuild, GcpCloudbuildTrigger
 from .gcp_cluster import GcpCluster, GcpNodePool
 from .gcp_composer import GcpComposerEnv, GcpOperation
 from .gcp_compute import GcpComputeInstance, GcpComputeDisk, GcpFirewallRule, GcpNetwork, GcpSubnetwork
+from .gcp_dns import GcpManagedZone, GcpResourceRecord
 from .gcp_folder import GcpFolder
 from .gcp_kms import GcpKMSKey, GcpKMSKeyRing, GcpKMSKeyVersion
 from .gcp_organization import GcpOrganization
+from .gcp_org_policy import GcpOrgPolicy
 from .gcp_permission import GcpPermission, GcpRole
 from .gcp_project import GcpProject
 from .gcp_pubsub import GcpPubSubSchema, GcpPubSubTopic, GcpPubSubSubscription
@@ -18,11 +20,12 @@ from .gcp_secrets import GcpSecret, GcpSecretVersion
 from .gcp_service_account import GcpServiceAccount
 from .gcp_service import GcpService
 from .gcp_source_repos import GcpSourceRepo
-from .gcp_storage import GcpStorage
+from .gcp_sql import GcpSqlInstance, GcpSqlDB
+from .gcp_storage import GcpStorage, GcpFile
 from .gcp_user_account import GcpUserAccount
 from .gcp_workload_identity_pool import GcpWorkloadIdentityPool
-from .google_group import GoogleGroup
-from .google_workspace import GoogleWorkspace
+from .gcp_group import GcpGroup
+from .gcp_workspace import GcpWorkspace
 
 __all__ = [
     "GcpApiKey",
@@ -33,9 +36,11 @@ __all__ = [
     "GcpCluster", "GcpNodePool",
     "GcpComposerEnv", "GcpOperation",
     "GcpComputeInstance", "GcpComputeDisk", "GcpFirewallRule", "GcpNetwork", "GcpSubnetwork",
+    "GcpManagedZone", "GcpResourceRecord",
     "GcpFolder",
     "GcpKMSKey", "GcpKMSKeyRing", "GcpKMSKeyVersion",
     "GcpOrganization",
+    "GcpOrgPolicy",
     "GcpPermission",
     "GcpProject",
     "GcpPubSubSchema", "GcpPubSubTopic", "GcpPubSubSubscription",
@@ -44,11 +49,12 @@ __all__ = [
     "GcpServiceAccount",
     "GcpService",
     "GcpSourceRepo",
-    "GcpStorage",
+    "GcpSqlInstance", "GcpSqlDB",
+    "GcpStorage", "GcpFile",
     "GcpUserAccount",
     "GcpWorkloadIdentityPool",
-    "GoogleGroup",
-    "GoogleWorkspace",
+    "GcpGroup",
+    "GcpWorkspace",
 ]
 
 

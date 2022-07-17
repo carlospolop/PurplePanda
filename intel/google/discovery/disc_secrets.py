@@ -43,6 +43,7 @@ class DiscSecrets(GcpDisc):
             versions: List[str] = self.execute_http_req(http_prep, "versions", list_kwargs={"parent": secret["name"]})
             for version in versions:
                 sv_obj = GcpSecretVersion(name=version["name"]).save()
+                # Read secrets if configured to do so
                 if self.gcp_get_secret_values:
                     client = secretmanager.SecretManagerServiceClient()
                     try:

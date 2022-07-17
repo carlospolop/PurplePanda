@@ -29,8 +29,9 @@ class DiscComputeNetworks(GcpDisc):
         
         for network in networks:
             network_obj = GcpNetwork(
-                name = network["name"],
-                source = network["selfLink"],
+                name = f'{p_obj.name}/global/networks/{network["name"]}',
+                description = network.get("description", ""),
+                selfLink = network["selfLink"],
                 autoCreateSubnetworks = network.get("autoCreateSubnetworks", False),
                 routingMode = network["routingConfig"].get("routingMode", "") if "routingConfig" in network else ""
             ).save()
@@ -41,7 +42,11 @@ class DiscComputeNetworks(GcpDisc):
 
             if network.get("peerings"):
                 for peering in network.get("peerings"):
-                    network2_obj: GcpNetwork = GcpNetwork(source=peering["network"]).save()
+                    network2_obj: GcpNetwork = GcpNetwork(
+                        name = "projects/" + peering["network"].split("projects/")[-1],
+                        selfLink = peering["network"]
+                    ).save()
+                    
                     network2_obj.networks.update(network_obj, 
                         name = peering["name"],
                         state = peering.get("state", ""),
@@ -57,27 +62,31 @@ class DiscComputeNetworks(GcpDisc):
             
             if network.get("subnetworks"):
                 for subnet in network.get("subnetworks"):
-                    subnet_obj: GcpSubnetwork = GcpSubnetwork(source=subnet).save()
+                    subnet_obj: GcpSubnetwork = GcpSubnetwork(
+                        name = "projects/" + subnet.split("projects/")[-1],
+                        selfLink = subnet
+                    ).save()
                     subnet_obj.parent_network.update(network_obj)
                     subnet_obj.save()
                     
     
     def _get_firewall(self, network_obj, project_id):
-        http_prep = self.service.networks().getEffectiveFirewalls(network=network_obj.name, project=project_id)
+        http_prep = self.service.networks().getEffectiveFirewalls(network=network_obj.name.split("/")[-1], project=project_id)
         firewalls: List[str] = self.execute_http_req(http_prep, "firewalls", disable_warn=True)
 
         for fw in firewalls:
             fw_obj: GcpFirewallRule = GcpFirewallRule(
-                name = fw["name"],
+                name = "projects/" + fw["selfLink"].split("projects/")[-1],
                 description = fw.get("description", ""),
                 direction = fw.get("direction", ""),
                 disabled = fw.get("disabled", False),
                 logEnabled = fw["logConfig"].get("enabled", False) if "logConfig" in fw else False,
                 priority = fw.get("priority", ""),
-                source = fw.get("selfLink", ""),
-                sourceRanges = fw.get("sourceRanges", ""),
-                targetTags = fw.get("targetTags", ""),
+                selfLink = fw.get("selfLink", ""),
+                sourceRanges = fw.get("sourceRanges", []),
+                targetTags = fw.get("targetTags", []),
                 allowed = [ f"{proto['IPProtocol']}:" + (",".join(proto['ports']) if 'ports' in proto else "*" ) for proto in fw.get("allowed", [])],
+                denied = [ f"{proto['IPProtocol']}:" + (",".join(proto['ports']) if 'ports' in proto else "*" ) for proto in fw.get("denied", [])],
             ).save()
             fw_obj.networks.update(network_obj)
             fw_obj.save()

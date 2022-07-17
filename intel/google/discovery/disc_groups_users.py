@@ -1,9 +1,9 @@
 import logging
 from typing import List
 from .gcp_disc_client import GcpDisc
-from intel.google.models.google_group import GoogleGroup
+from intel.google.models.gcp_group import GcpGroup
 from intel.google.models.gcp_user_account import GcpUserAccount
-from intel.google.models.google_workspace import GoogleWorkspace
+from intel.google.models.gcp_workspace import GcpWorkspace
 
 class DiscGroupsUsers(GcpDisc):
     resource = 'cloudidentity'
@@ -22,7 +22,7 @@ class DiscGroupsUsers(GcpDisc):
         page_size: int = 500
         view: str = "FULL"
 
-        workspaces: List[GoogleWorkspace] = GoogleWorkspace.get_all()
+        workspaces: List[GcpWorkspace] = GcpWorkspace.get_all()
 
         for w_obj in workspaces:
             customer_id: str = w_obj.name
@@ -36,8 +36,8 @@ class DiscGroupsUsers(GcpDisc):
     def _disc_group(self, g, **kwargs):
         """Discover each group of the workspace"""
         
-        w_obj: GoogleWorkspace = kwargs["w_obj"]
-        g_obj: GoogleGroup = GoogleGroup(
+        w_obj: GcpWorkspace = kwargs["w_obj"]
+        g_obj: GcpGroup = GcpGroup(
             name = g["name"],
             displayName = g.get("displayName", ""),
             email = g["groupKey"]["id"],
@@ -46,7 +46,7 @@ class DiscGroupsUsers(GcpDisc):
         self._proc_group(g_obj, w_obj)
                 
     
-    def _proc_group(self, g_obj: GoogleGroup, w_obj: GoogleWorkspace):
+    def _proc_group(self, g_obj: GcpGroup, w_obj: GcpWorkspace):
         #groups_to_ignore = ['abuse@', 'postmaster@'] # these are hidden groups on all Google Workspaces that you can't edit
         #if any(g_obj.email.startswith(ignore) for ignore in groups_to_ignore):
         #    return
@@ -64,7 +64,7 @@ class DiscGroupsUsers(GcpDisc):
             self._proc_member(m, g_obj, w_obj)
             
     
-    def _proc_member(self, member: dict, g_obj: GoogleGroup, w_obj: GoogleWorkspace):
+    def _proc_member(self, member: dict, g_obj: GcpGroup, w_obj: GcpWorkspace):
         name: str = member["member"]
         try:
             email: str = member["preferredMemberKey"][0]["id"]
@@ -84,7 +84,7 @@ class DiscGroupsUsers(GcpDisc):
             u_obj.save()
         
         elif name.startswith("groups/"):
-            g2_obj: GoogleGroup = GoogleGroup(
+            g2_obj: GcpGroup = GcpGroup(
                 name = name,
                 email = email
             ).save()

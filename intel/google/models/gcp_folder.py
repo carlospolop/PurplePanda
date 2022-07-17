@@ -2,6 +2,7 @@ from py2neo.ogm import Property, Label, RelatedFrom, RelatedTo
 
 from intel.google.models.gcp_perm_models import GcpResource
 from intel.google.models.gcp_project import GcpProject
+from intel.google.models.gcp_org_policy import GcpOrgPolicy
 
 
 class GcpFolder(GcpResource):
@@ -15,6 +16,7 @@ class GcpFolder(GcpResource):
     organizations = RelatedTo("GcpOrganization", "PART_OF")
     folders = RelatedFrom("GcpFolder", "PART_OF")
     projects = RelatedFrom(GcpProject, "PART_OF")
+    policies = RelatedTo(GcpOrgPolicy, "HAS_POLICY")
 
     gcp = Label(name="Gcp")
 

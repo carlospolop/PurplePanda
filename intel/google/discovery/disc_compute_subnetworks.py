@@ -36,8 +36,8 @@ class DiscComputeSubnetworks(GcpDisc):
             
             for subnet in subnetworks:
                 subnet_obj = GcpSubnetwork(
-                    name = subnet["name"],
-                    source = subnet["selfLink"],
+                    name = "projects/" + subnet["selfLink"].split("projects/")[-1],
+                    selfLink = subnet["selfLink"],
                     ipCidrRange = subnet.get("ipCidrRange", ""),
                     gatewayAddress = subnet.get("gatewayAddress", ""),
                     privateIpGoogleAccess = subnet.get("privateIpGoogleAccess", False),
@@ -53,6 +53,9 @@ class DiscComputeSubnetworks(GcpDisc):
                 self.get_iam_policy(subnet_obj, self.service.subnetworks(), subnet_obj.name, project=project_id, region=location)
 
                 if subnet.get("network"):
-                    network_obj: GcpNetwork = GcpNetwork(source=subnet["network"]).save()
+                    network_obj: GcpNetwork = GcpNetwork(
+                        name = "projects/" + subnet["network"].split("projects/")[-1],
+                        selfLink = subnet["network"]
+                    ).save()
                     network_obj.subnetworks.update(subnet_obj)
                     network_obj.save()

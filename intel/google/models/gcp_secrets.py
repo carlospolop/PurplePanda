@@ -11,7 +11,7 @@ class GcpSecret(GcpResource):
     name = Property()
     createTime = Property()
 
-    projects = RelatedFrom(GcpProject, "PART_OF")
+    projects = RelatedTo(GcpProject, "PART_OF")
     versions = RelatedTo("GcpSecretVersion", "HAS_VERSION")
 
     gcp = Label(name="Gcp")

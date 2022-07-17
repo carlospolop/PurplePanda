@@ -37,7 +37,8 @@ class DiscComputeInstances(GcpDisc):
             
             for inst in instances:
                 inst_obj = GcpComputeInstance(
-                    name = inst["selfLink"],
+                    name = "projects/" + inst["selfLink"].split("projects/")[1],
+                    selfLink = inst["selfLink"],
                     displayName = inst["name"],
                     machineType = inst.get("machineType", ""),
                     status = inst.get("status", ""),
@@ -48,7 +49,8 @@ class DiscComputeInstances(GcpDisc):
                     enableVtpm = inst["shieldedInstanceConfig"].get("enableVtpm", False) if "enableVtpm" in inst else "",
                     enableIntegrityMonitoring = inst["shieldedInstanceConfig"].get("enableIntegrityMonitoring", False) if "enableIntegrityMonitoring" in inst else False,
                     updateAutoLearnPolicy = inst["shieldedInstanceIntegrityPolicy"].get("updateAutoLearnPolicy", False) if "shieldedInstanceIntegrityPolicy" in inst else False,
-                    metadata = json.dumps(inst.get("metadata", {}).get("items"))
+                    metadata = json.dumps(inst.get("metadata", {}).get("items")),
+                    tags = inst.get("tags", {}).get("items", [])
                 ).save()
                 inst_obj.projects.update(p_obj, zone=location)
                 inst_obj.save()
@@ -99,7 +101,10 @@ class DiscComputeInstances(GcpDisc):
                         natIps = [elem["natIP"] for elem in accessConfigs if "natIP" in elem]
                         natIps += [elem["externalIpv6"] for elem in accessConfigs if "externalIpv6" in elem and not elem["externalIpv6"] in natIps]
 
-                        subnet_obj: GcpSubnetwork = GcpSubnetwork(source=nic["subnetwork"]).save()
+                        subnet_obj: GcpSubnetwork = GcpSubnetwork(
+                            name = "projects/" + nic["subnetwork"].split("projects/")[1],
+                            selfLink = nic["subnetwork"]
+                        ).save()
 
                         accessConfigsv6 = nic.get("accessConfigs", [])
                         natIpsv6 = [elem["natIP"] for elem in accessConfigsv6 if "natIP" in elem]

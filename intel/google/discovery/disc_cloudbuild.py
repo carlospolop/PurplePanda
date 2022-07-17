@@ -10,6 +10,7 @@ from intel.google.models.gcp_secrets import GcpSecret, GcpSecretVersion
 from intel.google.models.gcp_source_repos import GcpSourceRepo
 from intel.google.models.gcp_service_account import GcpServiceAccount
 from intel.github.models.github_model import GithubRepo
+from intel.bitbucket.models.bitbucket_model import BitbucketRepo
 
 
 class DiscCloudbuild(GcpDisc):
@@ -130,6 +131,8 @@ class DiscCloudbuild(GcpDisc):
             gitFileUri = gitFileSource.get("uri", "")
             gitFileRevision = gitFileSource.get("revision", "")
 
+            sourceToBuild = trigger.get("sourceToBuild", {})
+
             trigger_obj = GcpCloudbuildTrigger(
                 name = trigger["name"],
                 id = trigger["id"],
@@ -167,12 +170,14 @@ class DiscCloudbuild(GcpDisc):
 
                 gitFilePath = gitFilePath,
                 gitFileUri = gitFileUri,
-                gitFileRevision = gitFileRevision
+                gitFileRevision = gitFileRevision,
+
+                repoType = sourceToBuild.get("repoType", "")
             ).save()
             trigger_obj.projects.update(p_obj)
 
             # Relate with source
-            sourceToBuild = trigger.get("sourceToBuild", {})
+            
             if sourceToBuild.get("repoType", "").upper() == "GITHUB":
                 gh_repo_obj = GithubRepo(full_name=GithubRepo.get_full_name_from_url(sourceToBuild["uri"])).save()
                 trigger_obj.github_repos.update(gh_repo_obj)
@@ -180,6 +185,9 @@ class DiscCloudbuild(GcpDisc):
             elif len(gh_repo_full_name) > 3:
                 gh_repo_obj = GithubRepo(full_name=gh_repo_full_name).save()
                 trigger_obj.github_repos.update(gh_repo_obj)
+            
+            elif sourceToBuild.get("repoType", ""):
+                self.logger.error("Unknown repo type, probably bitbucket with isn't implemented: %s", sourceToBuild["repoType"])
 
             # relate with possible pub/sub trigger
             pubsubinfo = trigger.get("pubsubConfig", {})
@@ -214,6 +222,9 @@ class DiscCloudbuild(GcpDisc):
             trigger_obj.save()
             
             # According to https://cloud.google.com/build/docs/api/reference/rest/v1/projects.locations.triggers#BuildTrigger.GitFileSource
-            sa_email = trigger.get("serviceAccount", f"{p_obj.projectNumber}@system.gserviceaccount.com")
+            ## Even if the link says that the email is "@system.gserviceaccount.com" it doesn't make any sense because it also sais
+            ## taht is uses the defaul cloudbuild service account, and that mail never have any kind of permissions
+            ## so we are going to set here the default service account email fro cloudbuild
+            sa_email = trigger.get("serviceAccount", f"{p_obj.projectNumber}@cloudbuild.gserviceaccount.com")
             sa_email = sa_email if not "/" in sa_email else sa_email.split("/")[-1]
             trigger_obj.relate_sa(sa_email, [])

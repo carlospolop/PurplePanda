@@ -67,6 +67,8 @@ class AnalyzeResults(GcpDisc):
             
             for ppal_rsc in ppals_rscs:
                 ppal: GcpPrincipal = ppal_rsc[0]
+                ppal_name = ppal.__primaryvalue__
+
                 resources_and_reasons = ppal_rsc[1]
                 can_escalate = None # Must be None at begginig to check if the ppal can escalate
                 more_reasons = [] # If more than 1 permissions is needed this will host the reasons of the other permissions
@@ -74,6 +76,7 @@ class AnalyzeResults(GcpDisc):
                 # Get each resource and reason the ppal is related with the first permission needed
                 for rsc_reasons in resources_and_reasons:
                     res = rsc_reasons[0] # Can be GcpResource, K8sServiceAccount...
+                    res_name = res.__primaryvalue__
                     
                     # Update permissions
                     # Too many results
@@ -84,8 +87,8 @@ class AnalyzeResults(GcpDisc):
                     #if relation != "PRIVESC":
                     #    continue
                     
+                    
                     # Check in the cache if this was already analyzed
-                    ppal_name, res_name = ppal.__primaryvalue__, res.__primaryvalue__
                     uniq_name = f"{ppal_name}-{res_name}-{relation}-{title}"
                     if uniq_name in self.known_ppal_res:
                         continue
@@ -101,7 +104,7 @@ class AnalyzeResults(GcpDisc):
                     projectNumber = self._get_project_number_from_res(res)
                     
                     # Check if the ppal has each required permission inside the project
-                    ## If it was already checked and the answere was false, just leave
+                    ## If it was already checked and the answer was false, just leave
                     if can_escalate is None:
                         can_escalate, more_reasons, _ = self._has_other_perms_to_escalate(permissions, projectNumber, 
                             ppal, summary, only_to_classes, extra_privesc_to, running_in, is_second_order_relations=bool(second_order_relations))
@@ -122,7 +125,7 @@ class AnalyzeResults(GcpDisc):
                         resources_to_relate = self.known_2order_res[res.__primaryvalue__][2]
                     
                     # If can escalate, create relation
-                    if can_escalate and resources_to_relate and ppal:
+                    if can_escalate and resources_to_relate:
 
                         # Create the relations
                         for rsc in resources_to_relate:
@@ -344,10 +347,16 @@ class AnalyzeResults(GcpDisc):
                 class_name = scope["initial_class_name"]
                 relation_name = scope["relation"]
                 if res.__class__.__name__ == class_name:
-                    objs = res.get_by_relation(relation_name, where=f"EXISTS ((a)<-[:{relation_name}]-(b))")
-
+                    from_obj += [res]
+                    
+                    # Only search for the relation_name (PART_OF) of the type of objects taht can be interesting
+                    ## Those are all the defined in self.analysis_data["scope"] (org, folders and projects)
+                    ## and running_in if exists or only_to_classes if it doesn't
+                    privesc_to_types = list(set( [s["initial_class_name"] for s in self.analysis_data["scope"]] + (running_in if running_in else only_to_classes) ))
+                    cypher_labels = '"' + '", "'.join(privesc_to_types) + '"'
+                    objs = res.get_by_relation(relation_name, where=f"EXISTS ((a)<-[:{relation_name}]-(b)) AND any(l in labels(b) WHERE l in [{cypher_labels}])")
+                    
                     for obj in objs:
-                        from_obj += [res]
                         more_resources += self._get_recursive_resources(obj, resources_already, only_to_classes, extra_privesc_to, 
                             role, running_in, second_order_relations, from_obj=from_obj)
 

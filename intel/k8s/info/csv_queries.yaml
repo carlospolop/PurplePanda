@@ -163,3 +163,14 @@ queries:
     query: |
       MATCH (g:K8sGroup)-[perms:HAS_PERMS]->(victim) WHERE g.name CONTAINS "system:unauthenticated" OR g.name CONTAINS "system:anonymous"
       RETURN victim.name, perms.verbs
+  
+  - name: Unauthenticated ppals permissions
+    query: |
+      MATCH (g:K8sGroup)-[perms:HAS_PERMS]->(victim) WHERE g.name CONTAINS "system:unauthenticated" OR g.name CONTAINS "system:anonymous"
+      RETURN victim.name, perms.verbs
+
+  - name: Clusters with public API
+    query: |
+      MATCH(cluster:GcpCluster)-[r:PART_OF]->(proj:GcpProject)
+      WHERE cluster.publicEndpoint <> ""
+      RETURN proj.name, cluster.name, cluster.publicEndpoint

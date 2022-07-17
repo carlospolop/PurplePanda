@@ -3,7 +3,7 @@ from py2neo.ogm import Property, Label, RelatedTo, RelatedFrom
 from intel.google.models.gcp_perm_models import GcpPrincipal, GcpResource
 from intel.google.models.gcp_project import GcpProject
 from intel.google.models.gcp_organization import GcpOrganization
-from intel.google.models.google_group import GoogleGroup
+from intel.google.models.gcp_group import GcpGroup
 
 class GcpServiceAccount(GcpPrincipal, GcpResource):
     __primarylabel__ = "GcpServiceAccount"
@@ -16,7 +16,7 @@ class GcpServiceAccount(GcpPrincipal, GcpResource):
     uniqueId = Property()
     default_sa = Property()
 
-    groups = RelatedTo(GoogleGroup, "MEMBER_OF")
+    groups = RelatedTo(GcpGroup, "MEMBER_OF")
     projects = RelatedTo(GcpProject, "PART_OF")
     organizations = RelatedTo(GcpOrganization, "PART_OF")
     cloud_functions = RelatedTo("GcpCloudFunction", "RUN_IN")

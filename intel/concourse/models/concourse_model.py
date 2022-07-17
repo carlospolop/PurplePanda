@@ -1,7 +1,7 @@
 from py2neo.ogm import Property, Label, RelatedTo, RelatedFrom
 
 from core.db.customogm import CustomOGM
-from core.models import PublicIP, PublicDomain, RunsContainerImage, GithubMirror
+from core.models import PublicIP, PublicDomain, RunsContainerImage, CodeMirror
 
 
 class ConcoursePrincipal(CustomOGM):
@@ -86,7 +86,7 @@ class ConcourseWorker(CustomOGM):
         super().__init__(*args, **kwargs)
         self.concourse = True
 
-class ConcourseResource(RunsContainerImage, GithubMirror):
+class ConcourseResource(RunsContainerImage, CodeMirror):
     __primarylabel__ = "ConcourseResource"
     __primarykey__ = "name"
 

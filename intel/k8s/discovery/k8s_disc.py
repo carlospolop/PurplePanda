@@ -99,6 +99,20 @@ class K8sDisc(K8sDiscClient):
         """
 
         sc = container.security_context
+
+        post_start = container.lifecycle.post_start if container.lifecycle else {}
+        lifecycle_post_start = {
+            "exec": post_start.exec.command if post_start.exec else "",
+            "tcpSocket": f"{post_start.tcpSocket.host}:{post_start.tcpSocket.port}" if post_start.tcpSocket else "",
+            "httpGet": f"{post_start.httpGet.scheme}://{post_start.httpGet.host}:{post_start.httpGet.port}/{post_start.httpGet.path}" if post_start.httpGet else "",
+        } if post_start else {}
+
+        pre_stop = container.lifecycle.pre_stop if container.lifecycle else {}
+        lifecycle_pre_stop = {
+            "exec": pre_stop.exec.command if pre_stop.exec else "",
+            "tcpSocket": f"{pre_stop.tcpSocket.host}:{pre_stop.tcpSocket.port}" if pre_stop.tcpSocket else "",
+            "httpGet": f"{pre_stop.httpGet.scheme}://{pre_stop.httpGet.host}:{pre_stop.httpGet.port}/{pre_stop.httpGet.path}" if pre_stop.httpGet else "",
+        } if pre_stop else {}
         
         container_obj = K8sContainer(
             command = container.command,
@@ -106,8 +120,8 @@ class K8sDisc(K8sDiscClient):
             working_dir = container.working_dir,
             image = container.image,
             image_pull_policy = container.image_pull_policy,
-            lifecycle_post_start = json.dumps(container.lifecycle.post_start) if container.lifecycle else "",
-            lifecycle_pre_stop = json.dumps(container.lifecycle.post_start) if container.lifecycle else "",
+            lifecycle_post_start = json.dumps(lifecycle_post_start) if lifecycle_post_start else "",
+            lifecycle_pre_stop = json.dumps(lifecycle_pre_stop) if lifecycle_pre_stop else "",
             name = container.name,
             exist_limit_resources = bool(container.resources.limits),
             

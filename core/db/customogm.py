@@ -9,6 +9,7 @@ neo4j_url = os.getenv("PURPLEPANDA_NEO4J_URL")
 neo4j_pwd = os.getenv("PURPLEPANDA_PWD")
 logger = logging.getLogger(__name__)
 repo, graph = None, None
+ALREADY_PRIVESCSC = {}
 
 if not neo4j_url:
     print("Error: no env variable PURPLEPANDA_NEO4J_URL witht he neo4j url (e.g.: bolt://neo4j@localhost:7687)")
@@ -78,8 +79,12 @@ class CustomOGM(GraphObject):
         return obj
     
     @classmethod
-    def get_by_name(cls, name: str, or_create=False):
-        obj = cls.match(repo).where(name=name).first()
+    def get_by_name(cls, name: str, or_create=False, contains=False):
+        if not contains:
+            obj = cls.match(repo).where(name=name).first()
+        else:
+            obj = cls.match(repo).where(f"_.name CONTAINS \"{name}\"").first()
+            
         if not obj and or_create:
             obj = cls(name=name).save()
         return obj
@@ -222,6 +227,19 @@ class CustomOGM(GraphObject):
         self is the origin and "rsc" is the final node
         """
 
+        global ALREADY_PRIVESCSC
+
+        # Do not allow more than 10 privesc relationships between two nodes
+        uniq_name = f"{self.__primaryvalue__}-{self.__primarylabel__}-{rsc.__primaryvalue__}-{rsc.__primarylabel__}"
+        if uniq_name in ALREADY_PRIVESCSC:
+            if ALREADY_PRIVESCSC[uniq_name] >= 10:
+                return self
+            else:
+                ALREADY_PRIVESCSC[uniq_name] += 1
+        else:
+            ALREADY_PRIVESCSC[uniq_name] = 1
+
+        # Create the relationship
         query = 'MATCH (a:'+self.__primarylabel__+' {'+self.__primarykey__+':"'+self.__primaryvalue__+'"})\n'
         query += 'MATCH (b:'+rsc.__primarylabel__+' {'+rsc.__primarykey__+':"'+rsc.__primaryvalue__+'"})\n'
         query += 'MERGE (a)-[r:PRIVESC {title:"'+title+'", reasons:'+str(reasons)+', summary:"'+summary+'", limitations: "'+limitations+'"}]->(b)\n'

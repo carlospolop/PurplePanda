@@ -210,7 +210,7 @@ class GithubRepo(CustomOGM):
     self_hosted_runners = RelatedFrom(GithubSelfHostedRunner, "RUNNER")
     webhooks = RelatedTo("GithubWebhook", "HAS_WEBHOOK")
     gcp_source_repos = RelatedFrom("GcpSourceRepo", "IS_MIRROR")
-    gcp_cloudbuild_trigger = RelatedFrom("GcpCloudbuildTrigger", "IS_MIRROR")
+    gcp_cloudbuild_trigger = RelatedFrom("GcpCloudbuildTrigger", "TRIGEGR")
     circleci_projects = RelatedTo("CircleCIProject", "IN_CIRCLECI")
 
 

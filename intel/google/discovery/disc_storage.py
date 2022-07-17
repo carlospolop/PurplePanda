@@ -2,7 +2,7 @@ import logging
 from typing import List
 from .gcp_disc_client import GcpDisc
 from intel.google.models.gcp_project import GcpProject
-from intel.google.models.gcp_storage import GcpStorage
+from intel.google.models.gcp_storage import GcpStorage, GcpFile
 
 class DiscStorage(GcpDisc):
     resource = 'storage'
@@ -29,7 +29,7 @@ class DiscStorage(GcpDisc):
         for storage in storages:
             storage_obj: GcpStorage = GcpStorage(
                 name = storage["name"],
-                selflink = storage.get("selfLink", ""),
+                selfLink = storage.get("selfLink", ""),
                 storageClass = storage.get("storageClass", ""),
                 rpo = storage.get("rpo", ""),
                 location = storage.get("location", ""),
@@ -41,3 +41,39 @@ class DiscStorage(GcpDisc):
             storage_obj.save()
 
             self.get_iam_policy(storage_obj, self.service.buckets(), storage_obj.name)
+
+            self._disc_files(p_obj, storage_obj)
+
+    def _disc_files(self, p_obj:GcpProject, storage_obj:GcpStorage):
+        """Discover all the files of a storage bucket"""
+
+        updated_contains_images = False
+        updated_contains_tfstates = False
+
+        http_prep = self.service.objects()
+        files: List[dict] = self.execute_http_req(http_prep, "items", disable_warn=True, list_kwargs={"bucket": storage_obj.name})
+        for file in files:
+            file_obj = GcpFile(
+                name = file["id"],
+                selfLink = file.get("selfLink", ""),
+                contentType = file.get("contentType", ""),
+                storageClass = file.get("storageClass", ""),
+                size = file.get("size", ""),
+                md5Hash = file.get("md5Hash", ""),
+                timeCreated = file.get("timeCreated", ""),
+                updated = file.get("updated", ""),
+            ).save()
+            file_obj.storages.update(p_obj)
+            file_obj.save()
+
+            if file["name"].startswith("containers/images/") and not updated_contains_images:
+                storage_obj.contains_images = True
+                storage_obj.save()
+                updated_contains_images = True
+            
+            if ".tfstate" in file["name"] and not updated_contains_tfstates:
+                storage_obj.contains_tfstates = True
+                storage_obj.save()
+                updated_contains_tfstates = True
+            
+

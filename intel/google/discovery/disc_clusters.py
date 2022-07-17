@@ -119,7 +119,7 @@ class DiscClusters(GcpDisc):
 
         # Relate with subnetwork
         if cluster.get("subnetwork"):
-            subnet_obj: GcpSubnetwork = GcpSubnetwork.get_by_name(name=cluster["subnetwork"]).save()
+            subnet_obj: GcpSubnetwork = GcpSubnetwork.get_by_name(name=cluster["subnetwork"], contains=True).save()
             subnet_obj.clusters.update(cluster_obj)
             subnet_obj.save()
         else:
@@ -146,7 +146,10 @@ class DiscClusters(GcpDisc):
             cluster_obj.kmskeys.update(kmskey_obj)
             cluster_obj.save()
         
-        sa_email = cluster_nodeConfig.get("serviceAccount", f"{p_obj.projectNumber}-compute@developer.gserviceaccount.com")
+        default_svc_acc = f"{p_obj.projectNumber}-compute@developer.gserviceaccount.com"
+        sa_email = cluster_nodeConfig.get("serviceAccount", default_svc_acc)
+        if sa_email == "default": 
+            sa_email = default_svc_acc
         cluster_obj.relate_sa(sa_email, cluster_nodeConfig.get("oauthScopes", []))
 
         # Relate with running nodepools
@@ -186,7 +189,7 @@ class DiscClusters(GcpDisc):
         npool_obj.clusters.update(cluster_obj)
         npool_obj.save()
 
-        cluster_obj.relate_sa(sa_email, oauthScopes)
+        npool_obj.relate_sa(sa_email, oauthScopes)
     
     def analyze_cluster(self, cluster_obj: GcpCluster, p_obj:GcpProject):
         """Having found a cluster, try to analyze it"""

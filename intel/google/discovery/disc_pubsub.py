@@ -18,8 +18,8 @@ class DiscPubSub(GcpDisc):
 
         projects: List[GcpProject] = GcpProject.get_all()
         self._disc_loop(projects, self._disc_topics, __name__.split(".")[-1])
-        self._disc_loop(projects, self._disc_pubsub_subscriptions, __name__.split(".")[-1])
-        self._disc_loop(projects, self._disc_pubsub_schemas, __name__.split(".")[-1])
+        self._disc_loop(projects, self._disc_pubsub_subscriptions, __name__.split(".")[-1]+".subscriptions")
+        self._disc_loop(projects, self._disc_pubsub_schemas, __name__.split(".")[-1]+".schemas")
 
 
     def _disc_topics(self, p_obj:GcpProject):

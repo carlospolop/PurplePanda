@@ -12,7 +12,7 @@ import googleapiclient.discovery
 from google_auth_httplib2 import AuthorizedHttp
 from intel.google.models.gcp_service_account import GcpServiceAccount
 from intel.google.models.gcp_user_account import GcpUserAccount
-from intel.google.models.google_group import GoogleGroup
+from intel.google.models.gcp_group import GcpGroup
 from intel.google.models.gcp_permission import GcpRole
 from intel.google.models.gcp_permission import GcpPermission
 from intel.google.models.gcp_organization import GcpOrganization
@@ -174,7 +174,8 @@ class GcpDiscClient(PurplePanda):
             return ret_values
         
         except googleapiclient.discovery.HttpError as e:
-            if "403" in str(e) and ("or it is disabled" in str(e) or "or a custom role" in str(e)):
+            str_errors = ["or it is disabled", "recommend configuring the billing", "or a custom role"]
+            if "403" in str(e) and any(msg in str(e) for msg in str_errors):
                 # If first time and something in _quota_project_id, try without it
                 if status_dis == "" and final_prep_http.http.credentials._quota_project_id:
                     if type(prep_http) is googleapiclient.discovery.Resource:
@@ -197,8 +198,13 @@ class GcpDiscClient(PurplePanda):
             
             if not disable_warn and not "The caller does not have permission" in str(e) and not "403" in str(e) and not "has not been used in project" in str(e):
                 self.logger.warning(f"HttpError occurred in {final_prep_http.uri}. Details: %r", e)
+            
+            if "Invalid value for field" in str(e):
+                self.logger.error(f"Invalid value for field in {final_prep_http.uri}. Details: {e}")
+            
             if ret_err:
                 return str(e)
+            
             return []            
         
         except Exception as e:
@@ -221,7 +227,10 @@ class GcpDiscClient(PurplePanda):
         if str(type(obj)) == "<class 'intel.google.models.gcp_storage.GcpStorage'>":
             prep_http = resource_service.getIamPolicy(bucket=resource_name)
         else:
-            prep_http = resource_service.getIamPolicy(resource=resource_name, **kwargs)
+            try:
+                prep_http = resource_service.getIamPolicy(resource=resource_name.split("/")[-1], **kwargs)
+            except TypeError:
+                prep_http = resource_service.getIamPolicy(resource=resource_name, **kwargs)
 
         # Make user v3 is used to not get "_withcond_" permissions: https://cloud.google.com/iam/docs/troubleshooting-withcond
         #prep_http.uri = prep_http.uri.replace(".com/v1/", ".com/v3/")
@@ -254,7 +263,7 @@ class GcpDiscClient(PurplePanda):
                 
                 elif member.startswith("group:"):
                     g_email = member.replace("group:", "")
-                    m_obj: GoogleGroup = GoogleGroup(
+                    m_obj: GcpGroup = GcpGroup(
                         email = g_email
                     ).save()
                     m_objs = [m_obj]
@@ -320,12 +329,10 @@ class GcpDiscClient(PurplePanda):
                         accs_to_roles[m_obj.__primaryvalue__]["roles"].append(role_name)
         
         for k,v in accs_to_roles.items():
-            # Not interested in roles over itself
-            if m_obj.__primaryvalue__ != obj.__primaryvalue__ or type(m_obj) != type(obj):
-                roles = v["roles"]
-                m_obj = v["object"]
-                m_obj.has_perm.update(obj, roles=roles)
-                m_obj.save()
+            roles = v["roles"]
+            m_obj = v["object"]
+            m_obj.has_perm.update(obj, roles=roles)
+            m_obj.save()
         
     def _get_role_perms(self, role_name: str, parent_obj, create_parent_rel = False):
         """Gets a role permissions"""

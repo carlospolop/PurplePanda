@@ -1,6 +1,7 @@
 from py2neo.ogm import Property, Label, RelatedFrom, RelatedTo
 
 from intel.google.models.gcp_perm_models import GcpResource
+from intel.google.models.gcp_org_policy import GcpOrgPolicy
 
 
 class GcpProject(GcpResource):
@@ -24,6 +25,7 @@ class GcpProject(GcpResource):
     bqdatasets = RelatedFrom("GcpBqDataset", "PART_OF")
     kmskeyrings = RelatedFrom("GcpKMSKeyRing", "PART_OF")
     kmskeys = RelatedFrom("GcpKMSKey", "PART_OF")
+    policies = RelatedTo(GcpOrgPolicy, "HAS_POLICY")
 
     gcp = Label(name="Gcp")
 
