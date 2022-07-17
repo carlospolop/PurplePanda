@@ -29,350 +29,350 @@ scope:
 privesc:
 
   # resourcemanager
-  #- title: "SA impersonation via 'resourcemanager.organizations.setIamPolicy'"
-  #  summary: "Bind a role to you giving you extra permissions to impersonate any Service Account (or access anything)in the Organization. More information: https://book.hacktricks.xyz/cloud-security/gcp-security/gcp-interesting-permissions/gcp-privesc-to-other-principals"
-  #  relation: PRIVESC
-  #  permissions: ["resourcemanager.organizations.setIamPolicy"]
-  #  only_to_classes: [GcpServiceAccount, GcpOrganization, GcpFolder, GcpProject]
-  #  extra_privesc_to: NONE
+  - title: "SA impersonation via 'resourcemanager.organizations.setIamPolicy'"
+    summary: "Bind a role to you giving you extra permissions to impersonate any Service Account (or access anything)in the Organization. More information: https://book.hacktricks.xyz/cloud-security/gcp-security/gcp-interesting-permissions/gcp-privesc-to-other-principals"
+    relation: PRIVESC
+    permissions: ["resourcemanager.organizations.setIamPolicy"]
+    only_to_classes: [GcpServiceAccount, GcpOrganization, GcpFolder, GcpProject]
+    extra_privesc_to: NONE
 
-  #- title: "SA impersonation via 'resourcemanager.folders.setIamPolicy'"
-  #  summary: "Bind a role to you giving you extra permissions to impersonate any Service Account (or access anything) in the Folder. More information: https://book.hacktricks.xyz/cloud-security/gcp-security/gcp-interesting-permissions/gcp-privesc-to-other-principals"
-  #  relation: PRIVESC
-  #  permissions: ["resourcemanager.folders.setIamPolicy"]
-  #  only_to_classes: [GcpServiceAccount, GcpOrganization, GcpFolder, GcpProject]
-  #  extra_privesc_to: NONE
+  - title: "SA impersonation via 'resourcemanager.folders.setIamPolicy'"
+    summary: "Bind a role to you giving you extra permissions to impersonate any Service Account (or access anything) in the Folder. More information: https://book.hacktricks.xyz/cloud-security/gcp-security/gcp-interesting-permissions/gcp-privesc-to-other-principals"
+    relation: PRIVESC
+    permissions: ["resourcemanager.folders.setIamPolicy"]
+    only_to_classes: [GcpServiceAccount, GcpOrganization, GcpFolder, GcpProject]
+    extra_privesc_to: NONE
     
-  #- title: "SA impersonation via 'resourcemanager.projects.setIamPolicy'"
-  #  summary: "Bind a role to you giving you extra permissions to impersonate any Service Account (or access anything) in the Project. More information: https://book.hacktricks.xyz/cloud-security/gcp-security/gcp-interesting-permissions/gcp-privesc-to-other-principals"
-  #  relation: PRIVESC
-  #  permissions: ["resourcemanager.projects.setIamPolicy"]
-  #  only_to_classes: [GcpServiceAccount, GcpOrganization, GcpFolder, GcpProject]
-  #  extra_privesc_to: NONE
+  - title: "SA impersonation via 'resourcemanager.projects.setIamPolicy'"
+    summary: "Bind a role to you giving you extra permissions to impersonate any Service Account (or access anything) in the Project. More information: https://book.hacktricks.xyz/cloud-security/gcp-security/gcp-interesting-permissions/gcp-privesc-to-other-principals"
+    relation: PRIVESC
+    permissions: ["resourcemanager.projects.setIamPolicy"]
+    only_to_classes: [GcpServiceAccount, GcpOrganization, GcpFolder, GcpProject]
+    extra_privesc_to: NONE
     
   # IAM
-  #- title: "SA impersonation via 'iam.serviceAccounts.setIamPolicy'"
-  #  summary: "Bind a role to you giving you extra permissions to impersonate the Service Account. More information: https://book.hacktricks.xyz/cloud-security/gcp-security/gcp-interesting-permissions/gcp-privesc-to-other-principals"
-  #  relation: PRIVESC
-  #  permissions: ["iam.serviceAccounts.setIamPolicy"]
-  #  only_to_classes: [GcpServiceAccount, GcpOrganization, GcpFolder, GcpProject]
-  #  extra_privesc_to: NONE
+  - title: "SA impersonation via 'iam.serviceAccounts.setIamPolicy'"
+    summary: "Bind a role to you giving you extra permissions to impersonate the Service Account. More information: https://book.hacktricks.xyz/cloud-security/gcp-security/gcp-interesting-permissions/gcp-privesc-to-other-principals"
+    relation: PRIVESC
+    permissions: ["iam.serviceAccounts.setIamPolicy"]
+    only_to_classes: [GcpServiceAccount, GcpOrganization, GcpFolder, GcpProject]
+    extra_privesc_to: NONE
     
-  #- title: "SA impersonation via 'iam.roles.update'"
-  #  summary: "You can create a update a role assigned to you and giving you extra permissions. More information: https://book.hacktricks.xyz/cloud-security/gcp-security/gcp-interesting-permissions/gcp-privesc-to-other-principals"
-  #  relation: PRIVESC
-  #  permissions: ["iam.roles.update"]
-  #  only_to_classes: [GcpServiceAccount, GcpOrganization, GcpFolder, GcpProject]
-  #  extra_privesc_to: NONE
+  - title: "SA impersonation via 'iam.roles.update'"
+    summary: "You can create a update a role assigned to you and giving you extra permissions. More information: https://book.hacktricks.xyz/cloud-security/gcp-security/gcp-interesting-permissions/gcp-privesc-to-other-principals"
+    relation: PRIVESC
+    permissions: ["iam.roles.update"]
+    only_to_classes: [GcpServiceAccount, GcpOrganization, GcpFolder, GcpProject]
+    extra_privesc_to: NONE
     
-  #- title: "SA impersonation via 'iam.serviceAccountKeys.create'"
-  #  summary: "You can create a user-managed key for the Service Account to impersonate it. More information: https://book.hacktricks.xyz/cloud-security/gcp-security/gcp-interesting-permissions/gcp-privesc-to-other-principals"
-  #  relation: PRIVESC
-  #  permissions: ["iam.serviceAccountKeys.create"]
-  #  only_to_classes: [GcpServiceAccount, GcpOrganization, GcpFolder, GcpProject]
-  #  extra_privesc_to: NONE
+  - title: "SA impersonation via 'iam.serviceAccountKeys.create'"
+    summary: "You can create a user-managed key for the Service Account to impersonate it. More information: https://book.hacktricks.xyz/cloud-security/gcp-security/gcp-interesting-permissions/gcp-privesc-to-other-principals"
+    relation: PRIVESC
+    permissions: ["iam.serviceAccountKeys.create"]
+    only_to_classes: [GcpServiceAccount, GcpOrganization, GcpFolder, GcpProject]
+    extra_privesc_to: NONE
     
-  #- title: "SA impersonation via 'iam.serviceAccounts.getAccessToken'"
-  #  summary: "You can create a token to impersonate the Service Account. More information: https://book.hacktricks.xyz/cloud-security/gcp-security/gcp-interesting-permissions/gcp-privesc-to-other-principals"
-  #  relation: PRIVESC
-  #  permissions: ["iam.serviceAccounts.getAccessToken"]
-  #  only_to_classes: [GcpServiceAccount, GcpOrganization, GcpFolder, GcpProject]
-  #  extra_privesc_to: NONE
+  - title: "SA impersonation via 'iam.serviceAccounts.getAccessToken'"
+    summary: "You can create a token to impersonate the Service Account. More information: https://book.hacktricks.xyz/cloud-security/gcp-security/gcp-interesting-permissions/gcp-privesc-to-other-principals"
+    relation: PRIVESC
+    permissions: ["iam.serviceAccounts.getAccessToken"]
+    only_to_classes: [GcpServiceAccount, GcpOrganization, GcpFolder, GcpProject]
+    extra_privesc_to: NONE
     
-  #- title: "SA impersonation via 'iam.serviceAccounts.signBlob'"
-  #  summary: "You can make google to sign a JWT (as the service account) to impersonate the service account. More information: https://book.hacktricks.xyz/cloud-security/gcp-security/gcp-interesting-permissions/gcp-privesc-to-other-principals"
-  #  relation: PRIVESC
-  #  permissions: ["iam.serviceAccounts.signBlob"]
-  #  only_to_classes: [GcpServiceAccount, GcpOrganization, GcpFolder, GcpProject]
-  #  extra_privesc_to: NONE
+  - title: "SA impersonation via 'iam.serviceAccounts.signBlob'"
+    summary: "You can make google to sign a JWT (as the service account) to impersonate the service account. More information: https://book.hacktricks.xyz/cloud-security/gcp-security/gcp-interesting-permissions/gcp-privesc-to-other-principals"
+    relation: PRIVESC
+    permissions: ["iam.serviceAccounts.signBlob"]
+    only_to_classes: [GcpServiceAccount, GcpOrganization, GcpFolder, GcpProject]
+    extra_privesc_to: NONE
     
-  #- title: "SA impersonation via 'iam.serviceAccounts.signJwt'"
-  #  summary: "You can make google to sign a JWT (as the service account) to impersonate the service account. More information: https://book.hacktricks.xyz/cloud-security/gcp-security/gcp-interesting-permissions/gcp-privesc-to-other-principals"
-  #  relation: PRIVESC
-  #  permissions: ["iam.serviceAccounts.signJwt"]
-  #  only_to_classes: [GcpServiceAccount, GcpOrganization, GcpFolder, GcpProject]
-  #  extra_privesc_to: NONE
+  - title: "SA impersonation via 'iam.serviceAccounts.signJwt'"
+    summary: "You can make google to sign a JWT (as the service account) to impersonate the service account. More information: https://book.hacktricks.xyz/cloud-security/gcp-security/gcp-interesting-permissions/gcp-privesc-to-other-principals"
+    relation: PRIVESC
+    permissions: ["iam.serviceAccounts.signJwt"]
+    only_to_classes: [GcpServiceAccount, GcpOrganization, GcpFolder, GcpProject]
+    extra_privesc_to: NONE
     
-  #- title: "SA impersonation via 'iam.serviceAccounts.implicitDelegation'"
-  #  summary: "You can abuse an intermediary service account to generate a token of the Service Account. More information: https://book.hacktricks.xyz/cloud-security/gcp-security/gcp-interesting-permissions/gcp-privesc-to-other-principals"
-  #  relation: PRIVESC
-  #  permissions: [iam.serviceAccounts.implicitDelegation]
-  #  second_order_permissions: [iam.serviceAccounts.getAccessToken]
-  #  only_to_classes: [GcpServiceAccount, GcpOrganization, GcpFolder, GcpProject]
-  #  extra_privesc_to: NONE
+  - title: "SA impersonation via 'iam.serviceAccounts.implicitDelegation'"
+    summary: "You can abuse an intermediary service account to generate a token of the Service Account. More information: https://book.hacktricks.xyz/cloud-security/gcp-security/gcp-interesting-permissions/gcp-privesc-to-other-principals"
+    relation: PRIVESC
+    permissions: [iam.serviceAccounts.implicitDelegation]
+    second_order_permissions: [iam.serviceAccounts.getAccessToken]
+    only_to_classes: [GcpServiceAccount, GcpOrganization, GcpFolder, GcpProject]
+    extra_privesc_to: NONE
     
-  #- title: "SA impersonation via 'iam.serviceAccounts.actAs'"
-  #  summary: "You can act as the Service Account but you will need permissions to create/update a resource to attach the Service Account and then steal the token from there. More information: https://book.hacktricks.xyz/cloud-security/gcp-security/gcp-interesting-permissions/gcp-privesc-to-other-principals"
-  #  relation: PRIVESC
-  #  permissions: ["iam.serviceAccounts.actAs"]
-  #  only_to_classes: [GcpServiceAccount, GcpOrganization, GcpFolder, GcpProject]
-  #  extra_privesc_to: NONE
+  - title: "SA impersonation via 'iam.serviceAccounts.actAs'"
+    summary: "You can act as the Service Account but you will need permissions to create/update a resource to attach the Service Account and then steal the token from there. More information: https://book.hacktricks.xyz/cloud-security/gcp-security/gcp-interesting-permissions/gcp-privesc-to-other-principals"
+    relation: PRIVESC
+    permissions: ["iam.serviceAccounts.actAs"]
+    only_to_classes: [GcpServiceAccount, GcpOrganization, GcpFolder, GcpProject]
+    extra_privesc_to: NONE
     
   # deploymentmanager
-  #- title: "Arbitrary SA attach to deployment via 'deploymentmanager.deployments.create'"
-  #  summary: "You can create a deployment and attach any SA in the project to it, execute a compute instance with that SA and steal the token from that instance. More information: https://book.hacktricks.xyz/cloud-security/gcp-security/gcp-interesting-permissions/gcp-privesc-to-other-principals"
-  #  relation: PRIVESC
-  #  permissions: [deploymentmanager.deployments.create]
-  #  only_to_classes: [GcpServiceAccount, GcpOrganization, GcpFolder, GcpProject]
-  #  extra_privesc_to: ALL_PROJECT_SAS
+  - title: "Arbitrary SA attach to deployment via 'deploymentmanager.deployments.create'"
+    summary: "You can create a deployment and attach any SA in the project to it, execute a compute instance with that SA and steal the token from that instance. More information: https://book.hacktricks.xyz/cloud-security/gcp-security/gcp-interesting-permissions/gcp-privesc-to-other-principals"
+    relation: PRIVESC
+    permissions: [deploymentmanager.deployments.create]
+    only_to_classes: [GcpServiceAccount, GcpOrganization, GcpFolder, GcpProject]
+    extra_privesc_to: ALL_PROJECT_SAS
     
-  #- title: "Arbitrary SA attach to deployment via 'deploymentmanager.deployments.update'"
-  #  summary: "You can modify a deployment and attach any SA in the project to it, execute a compute instance with that SA and steal the token from that instance. More information: https://book.hacktricks.xyz/cloud-security/gcp-security/gcp-interesting-permissions/gcp-privesc-to-other-principals"
-  #  relation: PRIVESC
-  #  permissions: [deploymentmanager.deployments.update]
-  #  only_to_classes: [GcpServiceAccount, GcpOrganization, GcpFolder, GcpProject]
-  #  extra_privesc_to: ALL_PROJECT_SAS
+  - title: "Arbitrary SA attach to deployment via 'deploymentmanager.deployments.update'"
+    summary: "You can modify a deployment and attach any SA in the project to it, execute a compute instance with that SA and steal the token from that instance. More information: https://book.hacktricks.xyz/cloud-security/gcp-security/gcp-interesting-permissions/gcp-privesc-to-other-principals"
+    relation: PRIVESC
+    permissions: [deploymentmanager.deployments.update]
+    only_to_classes: [GcpServiceAccount, GcpOrganization, GcpFolder, GcpProject]
+    extra_privesc_to: ALL_PROJECT_SAS
     
-  #- title: "Arbitrary SA attach to deployment via 'deploymentmanager.deployments.setIamPolicy'"
-  #  summary: "You can give yourself permission to create a deployment and attach any SA in the project to it, execute a compute instance with that SA and steal the token from that instance. More information: https://book.hacktricks.xyz/cloud-security/gcp-security/gcp-interesting-permissions/gcp-privesc-to-other-principals"
-  #  relation: PRIVESC
-  #  permissions: [deploymentmanager.deployments.setIamPolicy]
-  #  only_to_classes: [GcpServiceAccount, GcpOrganization, GcpFolder, GcpProject]
-  #  extra_privesc_to: ALL_PROJECT_SAS
+  - title: "Arbitrary SA attach to deployment via 'deploymentmanager.deployments.setIamPolicy'"
+    summary: "You can give yourself permission to create a deployment and attach any SA in the project to it, execute a compute instance with that SA and steal the token from that instance. More information: https://book.hacktricks.xyz/cloud-security/gcp-security/gcp-interesting-permissions/gcp-privesc-to-other-principals"
+    relation: PRIVESC
+    permissions: [deploymentmanager.deployments.setIamPolicy]
+    only_to_classes: [GcpServiceAccount, GcpOrganization, GcpFolder, GcpProject]
+    extra_privesc_to: ALL_PROJECT_SAS
     
   # cloudbuild
-  #- title: "Arbitrary SA attach to build via 'cloudbuild.builds.create'"
-  #  summary: "You can create a build and attach any SA in the project to it, execute a compute instance with that SA and steal the token from that instance. More information: https://book.hacktricks.xyz/cloud-security/gcp-security/gcp-interesting-permissions/gcp-privesc-to-other-principals"
-  #  relation: PRIVESC
-  #  permissions: [cloudbuild.builds.create]
-  #  only_to_classes: [GcpServiceAccount, GcpOrganization, GcpFolder, GcpProject]
-  #  extra_privesc_to: ALL_PROJECT_SAS
+  - title: "Arbitrary SA attach to build via 'cloudbuild.builds.create'"
+    summary: "You can create a build and attach any SA in the project to it, execute a compute instance with that SA and steal the token from that instance. More information: https://book.hacktricks.xyz/cloud-security/gcp-security/gcp-interesting-permissions/gcp-privesc-to-other-principals"
+    relation: PRIVESC
+    permissions: [cloudbuild.builds.create]
+    only_to_classes: [GcpServiceAccount, GcpOrganization, GcpFolder, GcpProject]
+    extra_privesc_to: ALL_PROJECT_SAS
     
-  #- title: "Arbitrary SA attach to build via 'cloudbuild.builds.update'"
-  #  summary: "You can create a build and attach any SA in the project to it, execute a compute instance with that SA and steal the token from that instance. More information: https://book.hacktricks.xyz/cloud-security/gcp-security/gcp-interesting-permissions/gcp-privesc-to-other-principals"
-  #  relation: PRIVESC
-  #  permissions: [cloudbuild.builds.update]
-  #  only_to_classes: [GcpServiceAccount, GcpOrganization, GcpFolder, GcpProject]
-  #  extra_privesc_to: ALL_PROJECT_SAS
+  - title: "Arbitrary SA attach to build via 'cloudbuild.builds.update'"
+    summary: "You can create a build and attach any SA in the project to it, execute a compute instance with that SA and steal the token from that instance. More information: https://book.hacktricks.xyz/cloud-security/gcp-security/gcp-interesting-permissions/gcp-privesc-to-other-principals"
+    relation: PRIVESC
+    permissions: [cloudbuild.builds.update]
+    only_to_classes: [GcpServiceAccount, GcpOrganization, GcpFolder, GcpProject]
+    extra_privesc_to: ALL_PROJECT_SAS
     
 
   # compute
-  #- title: "SSH exec in VM via 'compute.projects.setCommonInstanceMetadata'"
-  #  summary: "You can modify the metadata of the instances and set a new authorized SSH key for an existent user or for a new one. Then, access via SSH and steal the running SA token. More information: https://book.hacktricks.xyz/cloud-security/gcp-security/gcp-interesting-permissions/gcp-privesc-to-other-principals"
-  #  limitations: "You need to be able to access the VM via SSH and the SA will be potentially restricted by restrictive scopes"
-  #  relation: PRIVESC
-  #  permissions: [compute.projects.setCommonInstanceMetadata]
-  #  only_to_classes: [GcpServiceAccount, GcpOrganization, GcpFolder, GcpProject]
-  #  extra_privesc_to: RUNNING_SA
-  #  running_in: [GcpComputeInstance]
+  - title: "SSH exec in VM via 'compute.projects.setCommonInstanceMetadata'"
+    summary: "You can modify the metadata of the instances and set a new authorized SSH key for an existent user or for a new one. Then, access via SSH and steal the running SA token. More information: https://book.hacktricks.xyz/cloud-security/gcp-security/gcp-interesting-permissions/gcp-privesc-to-other-principals"
+    limitations: "You need to be able to access the VM via SSH and the SA will be potentially restricted by restrictive scopes"
+    relation: PRIVESC
+    permissions: [compute.projects.setCommonInstanceMetadata]
+    only_to_classes: [GcpServiceAccount, GcpOrganization, GcpFolder, GcpProject]
+    extra_privesc_to: RUNNING_SA
+    running_in: [GcpComputeInstance]
     
-  #- title: "SSH exec in VM via 'compute.instances.setMetadata'"
-  #  summary: "You can modify the metadata of the instances and set a new authorized SSH key for an existent user or for a new one. Then, access via SSH and steal the running SA token. More information: https://book.hacktricks.xyz/cloud-security/gcp-security/gcp-interesting-permissions/gcp-privesc-to-other-principals"
-  #  limitations: "You need to be able to access the VM via SSH and the SA will be potentially restricted by restrictive scopes"
-  #  relation: PRIVESC
-  #  permissions: [compute.instances.setMetadata]
-  #  only_to_classes: [GcpServiceAccount, GcpOrganization, GcpFolder, GcpProject]
-  #  extra_privesc_to: RUNNING_SA
-  #  running_in: [GcpComputeInstance]
+  - title: "SSH exec in VM via 'compute.instances.setMetadata'"
+    summary: "You can modify the metadata of the instances and set a new authorized SSH key for an existent user or for a new one. Then, access via SSH and steal the running SA token. More information: https://book.hacktricks.xyz/cloud-security/gcp-security/gcp-interesting-permissions/gcp-privesc-to-other-principals"
+    limitations: "You need to be able to access the VM via SSH and the SA will be potentially restricted by restrictive scopes"
+    relation: PRIVESC
+    permissions: [compute.instances.setMetadata]
+    only_to_classes: [GcpServiceAccount, GcpOrganization, GcpFolder, GcpProject]
+    extra_privesc_to: RUNNING_SA
+    running_in: [GcpComputeInstance]
     
-  #- title: "SSH exec in VM via 'compute.instances.setIamPolicy'"
-  #  summary: "You can give you permission to modify the metadata of the instances and set a new authorized SSH key for an existent user or for a new one. Then, access via SSH and steal the running SA token. More information: https://book.hacktricks.xyz/cloud-security/gcp-security/gcp-interesting-permissions/gcp-privesc-to-other-principals"
-  #  limitations: "You need to be able to access the VM via SSH and the SA will be potentially restricted by restrictive scopes"
-  #  relation: PRIVESC
-  #  permissions: [compute.instances.setIamPolicy]
-  #  only_to_classes: [GcpServiceAccount, GcpOrganization, GcpFolder, GcpProject]
-  #  extra_privesc_to: RUNNING_SA
-  #  running_in: [GcpComputeInstance]
+  - title: "SSH exec in VM via 'compute.instances.setIamPolicy'"
+    summary: "You can give you permission to modify the metadata of the instances and set a new authorized SSH key for an existent user or for a new one. Then, access via SSH and steal the running SA token. More information: https://book.hacktricks.xyz/cloud-security/gcp-security/gcp-interesting-permissions/gcp-privesc-to-other-principals"
+    limitations: "You need to be able to access the VM via SSH and the SA will be potentially restricted by restrictive scopes"
+    relation: PRIVESC
+    permissions: [compute.instances.setIamPolicy]
+    only_to_classes: [GcpServiceAccount, GcpOrganization, GcpFolder, GcpProject]
+    extra_privesc_to: RUNNING_SA
+    running_in: [GcpComputeInstance]
     
-  #- title: "SSH exec in VM via 'compute.instances.osLogin'"
-  #  summary: "You have permission to login via SSH key into instances with OSLogin enabled. Access via SSH and steal the running SA token. More information: https://book.hacktricks.xyz/cloud-security/gcp-security/gcp-interesting-permissions/gcp-privesc-to-other-principals"
-  #  limitations: "You need to be able to access the VM via SSH and the SA will be potentially restricted by restrictive scopes"
-  #  relation: PRIVESC
-  #  permissions: [compute.instances.osLogin]
-  #  only_to_classes: [GcpServiceAccount, GcpOrganization, GcpFolder, GcpProject]
-  #  extra_privesc_to: RUNNING_SA
-  #  running_in: [GcpComputeInstance]
+  - title: "SSH exec in VM via 'compute.instances.osLogin'"
+    summary: "You have permission to login via SSH key into instances with OSLogin enabled. Access via SSH and steal the running SA token. More information: https://book.hacktricks.xyz/cloud-security/gcp-security/gcp-interesting-permissions/gcp-privesc-to-other-principals"
+    limitations: "You need to be able to access the VM via SSH and the SA will be potentially restricted by restrictive scopes"
+    relation: PRIVESC
+    permissions: [compute.instances.osLogin]
+    only_to_classes: [GcpServiceAccount, GcpOrganization, GcpFolder, GcpProject]
+    extra_privesc_to: RUNNING_SA
+    running_in: [GcpComputeInstance]
     
-  #- title: "SSH exec in VM via 'compute.instances.osAdminLogin'"
-  #  summary: "You have permission to login via SSH key into instances with OSLogin enabled. Access via SSH and steal the running SA token. More information: https://book.hacktricks.xyz/cloud-security/gcp-security/gcp-interesting-permissions/gcp-privesc-to-other-principals"
-  #  limitations: "You need to be able to access the VM via SSH and the SA will be potentially restricted by restrictive scopes"
-  #  relation: PRIVESC
-  #  permissions: [compute.instances.osAdminLogin]
-  #  only_to_classes: [GcpServiceAccount, GcpOrganization, GcpFolder, GcpProject]
-  #  extra_privesc_to: RUNNING_SA
-  #  running_in: [GcpComputeInstance]
+  - title: "SSH exec in VM via 'compute.instances.osAdminLogin'"
+    summary: "You have permission to login via SSH key into instances with OSLogin enabled. Access via SSH and steal the running SA token. More information: https://book.hacktricks.xyz/cloud-security/gcp-security/gcp-interesting-permissions/gcp-privesc-to-other-principals"
+    limitations: "You need to be able to access the VM via SSH and the SA will be potentially restricted by restrictive scopes"
+    relation: PRIVESC
+    permissions: [compute.instances.osAdminLogin]
+    only_to_classes: [GcpServiceAccount, GcpOrganization, GcpFolder, GcpProject]
+    extra_privesc_to: RUNNING_SA
+    running_in: [GcpComputeInstance]
   
   # composer
-  #- title: "Arbitrary SA attach to composer via 'composer.environments.create'"
-  #  summary: "You can create a composer env and attach any SA in the project to it, execute custom DAG code instance with that SA and steal the token. More information: https://book.hacktricks.xyz/cloud-security/gcp-security/gcp-interesting-permissions/gcp-privesc-to-other-principals"
-  #  relation: PRIVESC
-  #  permissions: ['composer.environments.create']
-  #  only_to_classes: [GcpServiceAccount, GcpOrganization, GcpFolder, GcpProject]
-  #  extra_privesc_to: RUNNING_SA
-  #  running_in: [GcpComposerEnv]
+  - title: "Arbitrary SA attach to composer via 'composer.environments.create'"
+    summary: "You can create a composer env and attach any SA in the project to it, execute custom DAG code instance with that SA and steal the token. More information: https://book.hacktricks.xyz/cloud-security/gcp-security/gcp-interesting-permissions/gcp-privesc-to-other-principals"
+    relation: PRIVESC
+    permissions: ['composer.environments.create']
+    only_to_classes: [GcpServiceAccount, GcpOrganization, GcpFolder, GcpProject]
+    extra_privesc_to: RUNNING_SA
+    running_in: [GcpComposerEnv]
   
   # container
   ## These privescs are to compromise the service account used by the GCP cluster, not the K8s service accounts of the cluster
-  #- title: "Pod creation 'container.cronJobs.create'"
-  #  summary: "You have permission to specify a pod via a cronJob. You can abuse it to access the cluster SA. More information: https://book.hacktricks.xyz/cloud-security/gcp-security/gcp-interesting-permissions/gcp-privesc-to-other-principals"
-  #  limitations: "You need to be able to contact the Kube-API (by default it's public, but if private, you need to find your way into the subnetwork)"
-  #  relation: PRIVESC
-  #  permissions: [container.cronJobs.create]
-  #  only_to_classes: [GcpServiceAccount, GcpOrganization, GcpFolder, GcpProject]
-  #  extra_privesc_to: RUNNING_SA
-  #  running_in: [GcpCluster, GcpNodePool]
+  - title: "Pod creation 'container.cronJobs.create'"
+    summary: "You have permission to specify a pod via a cronJob. You can abuse it to access the cluster SA. More information: https://book.hacktricks.xyz/cloud-security/gcp-security/gcp-interesting-permissions/gcp-privesc-to-other-principals"
+    limitations: "You need to be able to contact the Kube-API (by default it's public, but if private, you need to find your way into the subnetwork)"
+    relation: PRIVESC
+    permissions: [container.cronJobs.create]
+    only_to_classes: [GcpServiceAccount, GcpOrganization, GcpFolder, GcpProject]
+    extra_privesc_to: RUNNING_SA
+    running_in: [GcpCluster, GcpNodePool]
   
-  #- title: "Pod creation 'container.cronJobs.update'"
-  #  summary: "You have permission to specify a pod via a cronJob. You can abuse it to access the cluster SA. More information: https://book.hacktricks.xyz/cloud-security/gcp-security/gcp-interesting-permissions/gcp-privesc-to-other-principals"
-  #  limitations: "You need to be able to contact the Kube-API (by default it's public, but if private, you need to find your way into the subnetwork)"
-  #  relation: PRIVESC
-  #  permissions: [container.cronJobs.update]
-  #  only_to_classes: [GcpServiceAccount, GcpOrganization, GcpFolder, GcpProject]
-  #  extra_privesc_to: RUNNING_SA
-  #  running_in: [GcpCluster, GcpNodePool]
+  - title: "Pod creation 'container.cronJobs.update'"
+    summary: "You have permission to specify a pod via a cronJob. You can abuse it to access the cluster SA. More information: https://book.hacktricks.xyz/cloud-security/gcp-security/gcp-interesting-permissions/gcp-privesc-to-other-principals"
+    limitations: "You need to be able to contact the Kube-API (by default it's public, but if private, you need to find your way into the subnetwork)"
+    relation: PRIVESC
+    permissions: [container.cronJobs.update]
+    only_to_classes: [GcpServiceAccount, GcpOrganization, GcpFolder, GcpProject]
+    extra_privesc_to: RUNNING_SA
+    running_in: [GcpCluster, GcpNodePool]
   
-  #- title: "Pod creation 'container.daemonSets.create'"
-  #  summary: "You have permission to specify a pod via a daemonSets. You can abuse it to access the cluster SA. More information: https://book.hacktricks.xyz/cloud-security/gcp-security/gcp-interesting-permissions/gcp-privesc-to-other-principals"
-  #  limitations: "You need to be able to contact the Kube-API (by default it's public, but if private, you need to find your way into the subnetwork)"
-  #  relation: PRIVESC
-  #  permissions: [container.daemonSets.create]
-  #  only_to_classes: [GcpServiceAccount, GcpOrganization, GcpFolder, GcpProject]
-  #  extra_privesc_to: RUNNING_SA
-  #  running_in: [GcpCluster, GcpNodePool]
+  - title: "Pod creation 'container.daemonSets.create'"
+    summary: "You have permission to specify a pod via a daemonSets. You can abuse it to access the cluster SA. More information: https://book.hacktricks.xyz/cloud-security/gcp-security/gcp-interesting-permissions/gcp-privesc-to-other-principals"
+    limitations: "You need to be able to contact the Kube-API (by default it's public, but if private, you need to find your way into the subnetwork)"
+    relation: PRIVESC
+    permissions: [container.daemonSets.create]
+    only_to_classes: [GcpServiceAccount, GcpOrganization, GcpFolder, GcpProject]
+    extra_privesc_to: RUNNING_SA
+    running_in: [GcpCluster, GcpNodePool]
   
-  #- title: "Pod creation 'container.daemonSets.update'"
-  #  summary: "You have permission to specify a pod via a daemonSets. You can abuse it to access the cluster SA. More information: https://book.hacktricks.xyz/cloud-security/gcp-security/gcp-interesting-permissions/gcp-privesc-to-other-principals"
-  #  limitations: "You need to be able to contact the Kube-API (by default it's public, but if private, you need to find your way into the subnetwork)"
-  #  relation: PRIVESC
-  #  permissions: [container.daemonSets.update]
-  #  only_to_classes: [GcpServiceAccount, GcpOrganization, GcpFolder, GcpProject]
-  #  extra_privesc_to: RUNNING_SA
-  #  running_in: [GcpCluster, GcpNodePool]
+  - title: "Pod creation 'container.daemonSets.update'"
+    summary: "You have permission to specify a pod via a daemonSets. You can abuse it to access the cluster SA. More information: https://book.hacktricks.xyz/cloud-security/gcp-security/gcp-interesting-permissions/gcp-privesc-to-other-principals"
+    limitations: "You need to be able to contact the Kube-API (by default it's public, but if private, you need to find your way into the subnetwork)"
+    relation: PRIVESC
+    permissions: [container.daemonSets.update]
+    only_to_classes: [GcpServiceAccount, GcpOrganization, GcpFolder, GcpProject]
+    extra_privesc_to: RUNNING_SA
+    running_in: [GcpCluster, GcpNodePool]
   
-  #- title: "Pod creation 'container.deployments.create'"
-  #  summary: "You have permission to specify a pod via a deployments. You can abuse it to access the cluster SA. More information: https://book.hacktricks.xyz/cloud-security/gcp-security/gcp-interesting-permissions/gcp-privesc-to-other-principals"
-  #  limitations: "You need to be able to contact the Kube-API (by default it's public, but if private, you need to find your way into the subnetwork)"
-  #  relation: PRIVESC
-  #  permissions: [container.deployments.create]
-  #  only_to_classes: [GcpServiceAccount, GcpOrganization, GcpFolder, GcpProject]
-  #  extra_privesc_to: RUNNING_SA
-  #  running_in: [GcpCluster, GcpNodePool]
+  - title: "Pod creation 'container.deployments.create'"
+    summary: "You have permission to specify a pod via a deployments. You can abuse it to access the cluster SA. More information: https://book.hacktricks.xyz/cloud-security/gcp-security/gcp-interesting-permissions/gcp-privesc-to-other-principals"
+    limitations: "You need to be able to contact the Kube-API (by default it's public, but if private, you need to find your way into the subnetwork)"
+    relation: PRIVESC
+    permissions: [container.deployments.create]
+    only_to_classes: [GcpServiceAccount, GcpOrganization, GcpFolder, GcpProject]
+    extra_privesc_to: RUNNING_SA
+    running_in: [GcpCluster, GcpNodePool]
   
-  #- title: "Pod creation 'container.deployments.update'"
-  #  summary: "You have permission to specify a pod via a deployments. You can abuse it to access the cluster SA. More information: https://book.hacktricks.xyz/cloud-security/gcp-security/gcp-interesting-permissions/gcp-privesc-to-other-principals"
-  #  limitations: "You need to be able to contact the Kube-API (by default it's public, but if private, you need to find your way into the subnetwork)"
-  #  relation: PRIVESC
-  #  permissions: [container.deployments.update]
-  #  only_to_classes: [GcpServiceAccount, GcpOrganization, GcpFolder, GcpProject]
-  #  extra_privesc_to: RUNNING_SA
-  #  running_in: [GcpCluster, GcpNodePool]
+  - title: "Pod creation 'container.deployments.update'"
+    summary: "You have permission to specify a pod via a deployments. You can abuse it to access the cluster SA. More information: https://book.hacktricks.xyz/cloud-security/gcp-security/gcp-interesting-permissions/gcp-privesc-to-other-principals"
+    limitations: "You need to be able to contact the Kube-API (by default it's public, but if private, you need to find your way into the subnetwork)"
+    relation: PRIVESC
+    permissions: [container.deployments.update]
+    only_to_classes: [GcpServiceAccount, GcpOrganization, GcpFolder, GcpProject]
+    extra_privesc_to: RUNNING_SA
+    running_in: [GcpCluster, GcpNodePool]
   
-  #- title: "Pod creation 'container.jobs.create'"
-  #  summary: "You have permission to specify a pod via a job. You can abuse it to access the cluster SA. More information: https://book.hacktricks.xyz/cloud-security/gcp-security/gcp-interesting-permissions/gcp-privesc-to-other-principals"
-  #  limitations: "You need to be able to contact the Kube-API (by default it's public, but if private, you need to find your way into the subnetwork)"
-  #  relation: PRIVESC
-  #  permissions: [container.jobs.create]
-  #  only_to_classes: [GcpServiceAccount, GcpOrganization, GcpFolder, GcpProject]
-  #  extra_privesc_to: RUNNING_SA
-  #  running_in: [GcpCluster, GcpNodePool]
+  - title: "Pod creation 'container.jobs.create'"
+    summary: "You have permission to specify a pod via a job. You can abuse it to access the cluster SA. More information: https://book.hacktricks.xyz/cloud-security/gcp-security/gcp-interesting-permissions/gcp-privesc-to-other-principals"
+    limitations: "You need to be able to contact the Kube-API (by default it's public, but if private, you need to find your way into the subnetwork)"
+    relation: PRIVESC
+    permissions: [container.jobs.create]
+    only_to_classes: [GcpServiceAccount, GcpOrganization, GcpFolder, GcpProject]
+    extra_privesc_to: RUNNING_SA
+    running_in: [GcpCluster, GcpNodePool]
   
-  #- title: "Pod creation 'container.jobs.update'"
-  #  summary: "You have permission to specify a pod via a job. You can abuse it to access the cluster SA. More information: https://book.hacktricks.xyz/cloud-security/gcp-security/gcp-interesting-permissions/gcp-privesc-to-other-principals"
-  #  limitations: "You need to be able to contact the Kube-API (by default it's public, but if private, you need to find your way into the subnetwork)"
-  #  relation: PRIVESC
-  #  permissions: [container.jobs.create]
-  #  only_to_classes: [GcpServiceAccount, GcpOrganization, GcpFolder, GcpProject]
-  #  extra_privesc_to: RUNNING_SA
-  #  running_in: [GcpCluster, GcpNodePool]
+  - title: "Pod creation 'container.jobs.update'"
+    summary: "You have permission to specify a pod via a job. You can abuse it to access the cluster SA. More information: https://book.hacktricks.xyz/cloud-security/gcp-security/gcp-interesting-permissions/gcp-privesc-to-other-principals"
+    limitations: "You need to be able to contact the Kube-API (by default it's public, but if private, you need to find your way into the subnetwork)"
+    relation: PRIVESC
+    permissions: [container.jobs.create]
+    only_to_classes: [GcpServiceAccount, GcpOrganization, GcpFolder, GcpProject]
+    extra_privesc_to: RUNNING_SA
+    running_in: [GcpCluster, GcpNodePool]
   
-  #- title: "Pod creation 'container.pods.create'"
-  #  summary: "You have permission to specify a pod. You can abuse it to access the cluster SA. More information: https://book.hacktricks.xyz/cloud-security/gcp-security/gcp-interesting-permissions/gcp-privesc-to-other-principals"
-  #  limitations: "You need to be able to contact the Kube-API (by default it's public, but if private, you need to find your way into the subnetwork)"
-  #  relation: PRIVESC
-  #  permissions: [container.pods.create]
-  #  only_to_classes: [GcpServiceAccount, GcpOrganization, GcpFolder, GcpProject]
-  #  extra_privesc_to: RUNNING_SA
-  #  running_in: [GcpCluster, GcpNodePool]
+  - title: "Pod creation 'container.pods.create'"
+    summary: "You have permission to specify a pod. You can abuse it to access the cluster SA. More information: https://book.hacktricks.xyz/cloud-security/gcp-security/gcp-interesting-permissions/gcp-privesc-to-other-principals"
+    limitations: "You need to be able to contact the Kube-API (by default it's public, but if private, you need to find your way into the subnetwork)"
+    relation: PRIVESC
+    permissions: [container.pods.create]
+    only_to_classes: [GcpServiceAccount, GcpOrganization, GcpFolder, GcpProject]
+    extra_privesc_to: RUNNING_SA
+    running_in: [GcpCluster, GcpNodePool]
   
-  #- title: "Pod creation 'container.pods.create'"
-  #  summary: "You have permission to specify a pod. You can abuse it to access the cluster SA. More information: https://book.hacktricks.xyz/cloud-security/gcp-security/gcp-interesting-permissions/gcp-privesc-to-other-principals"
-  #  limitations: "You need to be able to contact the Kube-API (by default it's public, but if private, you need to find your way into the subnetwork)"
-  #  relation: PRIVESC
-  #  permissions: [container.pods.update]
-  #  only_to_classes: [GcpServiceAccount, GcpOrganization, GcpFolder, GcpProject]
-  #  extra_privesc_to: RUNNING_SA
-  #  running_in: [GcpCluster, GcpNodePool]
+  - title: "Pod creation 'container.pods.create'"
+    summary: "You have permission to specify a pod. You can abuse it to access the cluster SA. More information: https://book.hacktricks.xyz/cloud-security/gcp-security/gcp-interesting-permissions/gcp-privesc-to-other-principals"
+    limitations: "You need to be able to contact the Kube-API (by default it's public, but if private, you need to find your way into the subnetwork)"
+    relation: PRIVESC
+    permissions: [container.pods.update]
+    only_to_classes: [GcpServiceAccount, GcpOrganization, GcpFolder, GcpProject]
+    extra_privesc_to: RUNNING_SA
+    running_in: [GcpCluster, GcpNodePool]
   
-  #- title: "Pod creation 'container.replicaSets.create'"
-  #  summary: "You have permission to specify a pod via a replicaSet. You can abuse it to access the cluster SA. More information: https://book.hacktricks.xyz/cloud-security/gcp-security/gcp-interesting-permissions/gcp-privesc-to-other-principals"
-  #  limitations: "You need to be able to contact the Kube-API (by default it's public, but if private, you need to find your way into the subnetwork)"
-  #  relation: PRIVESC
-  #  permissions: [container.replicaSets.create]
-  #  only_to_classes: [GcpServiceAccount, GcpOrganization, GcpFolder, GcpProject]
-  #  extra_privesc_to: RUNNING_SA
-  #  running_in: [GcpCluster, GcpNodePool]
+  - title: "Pod creation 'container.replicaSets.create'"
+    summary: "You have permission to specify a pod via a replicaSet. You can abuse it to access the cluster SA. More information: https://book.hacktricks.xyz/cloud-security/gcp-security/gcp-interesting-permissions/gcp-privesc-to-other-principals"
+    limitations: "You need to be able to contact the Kube-API (by default it's public, but if private, you need to find your way into the subnetwork)"
+    relation: PRIVESC
+    permissions: [container.replicaSets.create]
+    only_to_classes: [GcpServiceAccount, GcpOrganization, GcpFolder, GcpProject]
+    extra_privesc_to: RUNNING_SA
+    running_in: [GcpCluster, GcpNodePool]
   
-  #- title: "Pod creation 'container.replicaSets.update'"
-  #  summary: "You have permission to specify a pod via a replicaSet. You can abuse it to access the cluster SA. More information: https://book.hacktricks.xyz/cloud-security/gcp-security/gcp-interesting-permissions/gcp-privesc-to-other-principals"
-  #  limitations: "You need to be able to contact the Kube-API (by default it's public, but if private, you need to find your way into the subnetwork)"
-  #  relation: PRIVESC
-  #  permissions: [container.replicaSets.update]
-  #  only_to_classes: [GcpServiceAccount, GcpOrganization, GcpFolder, GcpProject]
-  #  extra_privesc_to: RUNNING_SA
-  #  running_in: [GcpCluster, GcpNodePool]
+  - title: "Pod creation 'container.replicaSets.update'"
+    summary: "You have permission to specify a pod via a replicaSet. You can abuse it to access the cluster SA. More information: https://book.hacktricks.xyz/cloud-security/gcp-security/gcp-interesting-permissions/gcp-privesc-to-other-principals"
+    limitations: "You need to be able to contact the Kube-API (by default it's public, but if private, you need to find your way into the subnetwork)"
+    relation: PRIVESC
+    permissions: [container.replicaSets.update]
+    only_to_classes: [GcpServiceAccount, GcpOrganization, GcpFolder, GcpProject]
+    extra_privesc_to: RUNNING_SA
+    running_in: [GcpCluster, GcpNodePool]
   
-  #- title: "Pod creation 'container.replicationControllers.create'"
-  #  summary: "You have permission to specify a pod via a replicationController. You can abuse it to access the cluster SA. More information: https://book.hacktricks.xyz/cloud-security/gcp-security/gcp-interesting-permissions/gcp-privesc-to-other-principals"
-  #  limitations: "You need to be able to contact the Kube-API (by default it's public, but if private, you need to find your way into the subnetwork)"
-  #  relation: PRIVESC
-  #  permissions: [container.replicationControllers.create]
-  #  only_to_classes: [GcpServiceAccount, GcpOrganization, GcpFolder, GcpProject]
-  #  extra_privesc_to: RUNNING_SA
-  #  running_in: [GcpCluster, GcpNodePool]
+  - title: "Pod creation 'container.replicationControllers.create'"
+    summary: "You have permission to specify a pod via a replicationController. You can abuse it to access the cluster SA. More information: https://book.hacktricks.xyz/cloud-security/gcp-security/gcp-interesting-permissions/gcp-privesc-to-other-principals"
+    limitations: "You need to be able to contact the Kube-API (by default it's public, but if private, you need to find your way into the subnetwork)"
+    relation: PRIVESC
+    permissions: [container.replicationControllers.create]
+    only_to_classes: [GcpServiceAccount, GcpOrganization, GcpFolder, GcpProject]
+    extra_privesc_to: RUNNING_SA
+    running_in: [GcpCluster, GcpNodePool]
   
-  #- title: "Pod creation 'container.replicationControllers.update'"
-  #  summary: "You have permission to specify a pod via a replicationController. You can abuse it to access the cluster SA. More information: https://book.hacktricks.xyz/cloud-security/gcp-security/gcp-interesting-permissions/gcp-privesc-to-other-principals"
-  #  limitations: "You need to be able to contact the Kube-API (by default it's public, but if private, you need to find your way into the subnetwork)"
-  #  relation: PRIVESC
-  #  permissions: [container.replicationControllers.update]
-  #  only_to_classes: [GcpServiceAccount, GcpOrganization, GcpFolder, GcpProject]
-  #  extra_privesc_to: RUNNING_SA
-  #  running_in: [GcpCluster, GcpNodePool]
+  - title: "Pod creation 'container.replicationControllers.update'"
+    summary: "You have permission to specify a pod via a replicationController. You can abuse it to access the cluster SA. More information: https://book.hacktricks.xyz/cloud-security/gcp-security/gcp-interesting-permissions/gcp-privesc-to-other-principals"
+    limitations: "You need to be able to contact the Kube-API (by default it's public, but if private, you need to find your way into the subnetwork)"
+    relation: PRIVESC
+    permissions: [container.replicationControllers.update]
+    only_to_classes: [GcpServiceAccount, GcpOrganization, GcpFolder, GcpProject]
+    extra_privesc_to: RUNNING_SA
+    running_in: [GcpCluster, GcpNodePool]
   
-  #- title: "Pod creation 'container.scheduledJobs.create'"
-  #  summary: "You have permission to specify a pod via a scheduledJob. You can abuse it to access the cluster SA. More information: https://book.hacktricks.xyz/cloud-security/gcp-security/gcp-interesting-permissions/gcp-privesc-to-other-principals"
-  #  limitations: "You need to be able to contact the Kube-API (by default it's public, but if private, you need to find your way into the subnetwork)"
-  #  relation: PRIVESC
-  #  permissions: [container.scheduledJobs.create]
-  #  only_to_classes: [GcpServiceAccount, GcpOrganization, GcpFolder, GcpProject]
-  #  extra_privesc_to: RUNNING_SA
-  #  running_in: [GcpCluster, GcpNodePool]
+  - title: "Pod creation 'container.scheduledJobs.create'"
+    summary: "You have permission to specify a pod via a scheduledJob. You can abuse it to access the cluster SA. More information: https://book.hacktricks.xyz/cloud-security/gcp-security/gcp-interesting-permissions/gcp-privesc-to-other-principals"
+    limitations: "You need to be able to contact the Kube-API (by default it's public, but if private, you need to find your way into the subnetwork)"
+    relation: PRIVESC
+    permissions: [container.scheduledJobs.create]
+    only_to_classes: [GcpServiceAccount, GcpOrganization, GcpFolder, GcpProject]
+    extra_privesc_to: RUNNING_SA
+    running_in: [GcpCluster, GcpNodePool]
   
-  #- title: "Pod creation 'container.scheduledJobs.update'"
-  #  summary: "You have permission to specify a pod via a scheduledJob. You can abuse it to access the cluster SA. More information: https://book.hacktricks.xyz/cloud-security/gcp-security/gcp-interesting-permissions/gcp-privesc-to-other-principals"
-  #  limitations: "You need to be able to contact the Kube-API (by default it's public, but if private, you need to find your way into the subnetwork)"
-  #  relation: PRIVESC
-  #  permissions: [container.scheduledJobs.update]
-  #  only_to_classes: [GcpServiceAccount, GcpOrganization, GcpFolder, GcpProject]
-  #  extra_privesc_to: RUNNING_SA
-  #  running_in: [GcpCluster, GcpNodePool]
+  - title: "Pod creation 'container.scheduledJobs.update'"
+    summary: "You have permission to specify a pod via a scheduledJob. You can abuse it to access the cluster SA. More information: https://book.hacktricks.xyz/cloud-security/gcp-security/gcp-interesting-permissions/gcp-privesc-to-other-principals"
+    limitations: "You need to be able to contact the Kube-API (by default it's public, but if private, you need to find your way into the subnetwork)"
+    relation: PRIVESC
+    permissions: [container.scheduledJobs.update]
+    only_to_classes: [GcpServiceAccount, GcpOrganization, GcpFolder, GcpProject]
+    extra_privesc_to: RUNNING_SA
+    running_in: [GcpCluster, GcpNodePool]
   
-  #- title: "Pod creation 'container.statefulSets.create'"
-  #  summary: "You have permission to specify a pod via a statefulSet. You can abuse it to access the cluster SA. More information: https://book.hacktricks.xyz/cloud-security/gcp-security/gcp-interesting-permissions/gcp-privesc-to-other-principals"
-  #  limitations: "You need to be able to contact the Kube-API (by default it's public, but if private, you need to find your way into the subnetwork)"
-  #  relation: PRIVESC
-  #  permissions: [container.statefulSets.create]
-  #  only_to_classes: [GcpServiceAccount, GcpOrganization, GcpFolder, GcpProject]
-  #  extra_privesc_to: RUNNING_SA
-  #  running_in: [GcpCluster, GcpNodePool]
+  - title: "Pod creation 'container.statefulSets.create'"
+    summary: "You have permission to specify a pod via a statefulSet. You can abuse it to access the cluster SA. More information: https://book.hacktricks.xyz/cloud-security/gcp-security/gcp-interesting-permissions/gcp-privesc-to-other-principals"
+    limitations: "You need to be able to contact the Kube-API (by default it's public, but if private, you need to find your way into the subnetwork)"
+    relation: PRIVESC
+    permissions: [container.statefulSets.create]
+    only_to_classes: [GcpServiceAccount, GcpOrganization, GcpFolder, GcpProject]
+    extra_privesc_to: RUNNING_SA
+    running_in: [GcpCluster, GcpNodePool]
   
-  #- title: "Pod creation 'container.statefulSets.update'"
-  #  summary: "You have permission to specify a pod via a statefulSet. You can abuse it to access the cluster SA. More information: https://book.hacktricks.xyz/cloud-security/gcp-security/gcp-interesting-permissions/gcp-privesc-to-other-principals"
-  #  limitations: "You need to be able to contact the Kube-API (by default it's public, but if private, you need to find your way into the subnetwork)"
-  #  relation: PRIVESC
-  #  permissions: [container.statefulSets.update]
-  #  only_to_classes: [GcpServiceAccount, GcpOrganization, GcpFolder, GcpProject]
-  #  extra_privesc_to: RUNNING_SA
-  #  running_in: [GcpCluster, GcpNodePool]
+  - title: "Pod creation 'container.statefulSets.update'"
+    summary: "You have permission to specify a pod via a statefulSet. You can abuse it to access the cluster SA. More information: https://book.hacktricks.xyz/cloud-security/gcp-security/gcp-interesting-permissions/gcp-privesc-to-other-principals"
+    limitations: "You need to be able to contact the Kube-API (by default it's public, but if private, you need to find your way into the subnetwork)"
+    relation: PRIVESC
+    permissions: [container.statefulSets.update]
+    only_to_classes: [GcpServiceAccount, GcpOrganization, GcpFolder, GcpProject]
+    extra_privesc_to: RUNNING_SA
+    running_in: [GcpCluster, GcpNodePool]
   
-  #- title: "Pod execution with 'container.pods.exec'"
-  #  summary: "You have permission to exec into pods. You can abuse it to access the cluster SA. More information: https://book.hacktricks.xyz/cloud-security/gcp-security/gcp-interesting-permissions/gcp-privesc-to-other-principals"
-  #  limitations: "You need to be able to contact the Kube-API (by default it's public, but if private, you need to find your way into the subnetwork)"
-  #  relation: PRIVESC
-  #  permissions: [container.pods.exec]
-  #  only_to_classes: [GcpServiceAccount, GcpOrganization, GcpFolder, GcpProject]
-  #  extra_privesc_to: RUNNING_SA
-  #  running_in: [GcpCluster, GcpNodePool]
+  - title: "Pod execution with 'container.pods.exec'"
+    summary: "You have permission to exec into pods. You can abuse it to access the cluster SA. More information: https://book.hacktricks.xyz/cloud-security/gcp-security/gcp-interesting-permissions/gcp-privesc-to-other-principals"
+    limitations: "You need to be able to contact the Kube-API (by default it's public, but if private, you need to find your way into the subnetwork)"
+    relation: PRIVESC
+    permissions: [container.pods.exec]
+    only_to_classes: [GcpServiceAccount, GcpOrganization, GcpFolder, GcpProject]
+    extra_privesc_to: RUNNING_SA
+    running_in: [GcpCluster, GcpNodePool]
   
 
 
@@ -382,133 +382,133 @@ privesc:
   #### K8s CLuster Privesc ####
   #############################
 
-  #- title: "Pod creation 'container.cronJobs.create', privesc to k8s"
-  #  summary: "You have permission to specify a pod via a cronJob. You can abuse it to access any k8s cluster SA. More information: https://book.hacktricks.xyz/cloud-security/gcp-security/gcp-interesting-permissions/gcp-privesc-to-other-principals"
-  #  limitations: "You need to be able to contact the Kube-API (by default it's public, but if private, you need to find your way into the subnetwork)"
-  #  relation: PRIVESC
-  #  permissions: [container.cronJobs.create]
-  #  only_to_classes: [K8sServiceAccount, GcpOrganization, GcpFolder, GcpProject, GcpCluster]
-  #  extra_privesc_to: K8S_CLUSTER_SAS
+  - title: "Pod creation 'container.cronJobs.create', privesc to k8s"
+    summary: "You have permission to specify a pod via a cronJob. You can abuse it to access any k8s cluster SA. More information: https://book.hacktricks.xyz/cloud-security/gcp-security/gcp-interesting-permissions/gcp-privesc-to-other-principals"
+    limitations: "You need to be able to contact the Kube-API (by default it's public, but if private, you need to find your way into the subnetwork)"
+    relation: PRIVESC
+    permissions: [container.cronJobs.create]
+    only_to_classes: [K8sServiceAccount, GcpOrganization, GcpFolder, GcpProject, GcpCluster]
+    extra_privesc_to: K8S_CLUSTER_SAS
   
-  #- title: "Pod creation 'container.cronJobs.update', privesc to k8s"
-  #  summary: "You have permission to specify a pod via a cronJob. You can abuse it to access any k8s cluster SA. More information: https://book.hacktricks.xyz/cloud-security/gcp-security/gcp-interesting-permissions/gcp-privesc-to-other-principals"
-  #  limitations: "You need to be able to contact the Kube-API (by default it's public, but if private, you need to find your way into the subnetwork)"
-  #  relation: PRIVESC
-  #  permissions: [container.cronJobs.update]
-  #  only_to_classes: [K8sServiceAccount, GcpOrganization, GcpFolder, GcpProject, GcpCluster]
-  #  extra_privesc_to: K8S_CLUSTER_SAS
+  - title: "Pod creation 'container.cronJobs.update', privesc to k8s"
+    summary: "You have permission to specify a pod via a cronJob. You can abuse it to access any k8s cluster SA. More information: https://book.hacktricks.xyz/cloud-security/gcp-security/gcp-interesting-permissions/gcp-privesc-to-other-principals"
+    limitations: "You need to be able to contact the Kube-API (by default it's public, but if private, you need to find your way into the subnetwork)"
+    relation: PRIVESC
+    permissions: [container.cronJobs.update]
+    only_to_classes: [K8sServiceAccount, GcpOrganization, GcpFolder, GcpProject, GcpCluster]
+    extra_privesc_to: K8S_CLUSTER_SAS
   
-  #- title: "Pod creation 'container.daemonSets.create', privesc to k8s"
-  #  summary: "You have permission to specify a pod via a daemonSets. You can abuse it to access any k8s cluster SA. More information: https://book.hacktricks.xyz/cloud-security/gcp-security/gcp-interesting-permissions/gcp-privesc-to-other-principals"
-  #  limitations: "You need to be able to contact the Kube-API (by default it's public, but if private, you need to find your way into the subnetwork)"
-  #  relation: PRIVESC
-  #  permissions: [container.daemonSets.create]
-  #  only_to_classes: [K8sServiceAccount, GcpOrganization, GcpFolder, GcpProject, GcpCluster]
-  #  extra_privesc_to: K8S_CLUSTER_SAS
+  - title: "Pod creation 'container.daemonSets.create', privesc to k8s"
+    summary: "You have permission to specify a pod via a daemonSets. You can abuse it to access any k8s cluster SA. More information: https://book.hacktricks.xyz/cloud-security/gcp-security/gcp-interesting-permissions/gcp-privesc-to-other-principals"
+    limitations: "You need to be able to contact the Kube-API (by default it's public, but if private, you need to find your way into the subnetwork)"
+    relation: PRIVESC
+    permissions: [container.daemonSets.create]
+    only_to_classes: [K8sServiceAccount, GcpOrganization, GcpFolder, GcpProject, GcpCluster]
+    extra_privesc_to: K8S_CLUSTER_SAS
   
-  #- title: "Pod creation 'container.daemonSets.update', privesc to k8s"
-  #  summary: "You have permission to specify a pod via a daemonSets. You can abuse it to access any k8s cluster SA. More information: https://book.hacktricks.xyz/cloud-security/gcp-security/gcp-interesting-permissions/gcp-privesc-to-other-principals"
-  #  limitations: "You need to be able to contact the Kube-API (by default it's public, but if private, you need to find your way into the subnetwork)"
-  #  relation: PRIVESC
-  #  permissions: [container.daemonSets.update]
-  #  only_to_classes: [K8sServiceAccount, GcpOrganization, GcpFolder, GcpProject, GcpCluster]
-  #  extra_privesc_to: K8S_CLUSTER_SAS
+  - title: "Pod creation 'container.daemonSets.update', privesc to k8s"
+    summary: "You have permission to specify a pod via a daemonSets. You can abuse it to access any k8s cluster SA. More information: https://book.hacktricks.xyz/cloud-security/gcp-security/gcp-interesting-permissions/gcp-privesc-to-other-principals"
+    limitations: "You need to be able to contact the Kube-API (by default it's public, but if private, you need to find your way into the subnetwork)"
+    relation: PRIVESC
+    permissions: [container.daemonSets.update]
+    only_to_classes: [K8sServiceAccount, GcpOrganization, GcpFolder, GcpProject, GcpCluster]
+    extra_privesc_to: K8S_CLUSTER_SAS
   
-  #- title: "Pod creation 'container.deployments.create', privesc to k8s"
-  #  summary: "You have permission to specify a pod via a deployments. You can abuse it to access any k8s cluster SA. More information: https://book.hacktricks.xyz/cloud-security/gcp-security/gcp-interesting-permissions/gcp-privesc-to-other-principals"
-  #  limitations: "You need to be able to contact the Kube-API (by default it's public, but if private, you need to find your way into the subnetwork)"
-  #  relation: PRIVESC
-  #  permissions: [container.deployments.create]
-  #  only_to_classes: [K8sServiceAccount, GcpOrganization, GcpFolder, GcpProject, GcpCluster]
-  #  extra_privesc_to: K8S_CLUSTER_SAS
+  - title: "Pod creation 'container.deployments.create', privesc to k8s"
+    summary: "You have permission to specify a pod via a deployments. You can abuse it to access any k8s cluster SA. More information: https://book.hacktricks.xyz/cloud-security/gcp-security/gcp-interesting-permissions/gcp-privesc-to-other-principals"
+    limitations: "You need to be able to contact the Kube-API (by default it's public, but if private, you need to find your way into the subnetwork)"
+    relation: PRIVESC
+    permissions: [container.deployments.create]
+    only_to_classes: [K8sServiceAccount, GcpOrganization, GcpFolder, GcpProject, GcpCluster]
+    extra_privesc_to: K8S_CLUSTER_SAS
   
-  #- title: "Pod creation 'container.deployments.update', privesc to k8s"
-  #  summary: "You have permission to specify a pod via a deployments. You can abuse it to access any k8s cluster SA. More information: https://book.hacktricks.xyz/cloud-security/gcp-security/gcp-interesting-permissions/gcp-privesc-to-other-principals"
-  #  limitations: "You need to be able to contact the Kube-API (by default it's public, but if private, you need to find your way into the subnetwork)"
-  #  relation: PRIVESC
-  #  permissions: [container.deployments.update]
-  #  only_to_classes: [K8sServiceAccount, GcpOrganization, GcpFolder, GcpProject, GcpCluster]
-  #  extra_privesc_to: K8S_CLUSTER_SAS
+  - title: "Pod creation 'container.deployments.update', privesc to k8s"
+    summary: "You have permission to specify a pod via a deployments. You can abuse it to access any k8s cluster SA. More information: https://book.hacktricks.xyz/cloud-security/gcp-security/gcp-interesting-permissions/gcp-privesc-to-other-principals"
+    limitations: "You need to be able to contact the Kube-API (by default it's public, but if private, you need to find your way into the subnetwork)"
+    relation: PRIVESC
+    permissions: [container.deployments.update]
+    only_to_classes: [K8sServiceAccount, GcpOrganization, GcpFolder, GcpProject, GcpCluster]
+    extra_privesc_to: K8S_CLUSTER_SAS
   
-  #- title: "Pod creation 'container.jobs.create', privesc to k8s"
-  #  summary: "You have permission to specify a pod via a job. You can abuse it to access any k8s cluster SA. More information: https://book.hacktricks.xyz/cloud-security/gcp-security/gcp-interesting-permissions/gcp-privesc-to-other-principals"
-  #  limitations: "You need to be able to contact the Kube-API (by default it's public, but if private, you need to find your way into the subnetwork)"
-  #  relation: PRIVESC
-  #  permissions: [container.jobs.create]
-  #  only_to_classes: [K8sServiceAccount, GcpOrganization, GcpFolder, GcpProject, GcpCluster]
-  #  extra_privesc_to: K8S_CLUSTER_SAS
+  - title: "Pod creation 'container.jobs.create', privesc to k8s"
+    summary: "You have permission to specify a pod via a job. You can abuse it to access any k8s cluster SA. More information: https://book.hacktricks.xyz/cloud-security/gcp-security/gcp-interesting-permissions/gcp-privesc-to-other-principals"
+    limitations: "You need to be able to contact the Kube-API (by default it's public, but if private, you need to find your way into the subnetwork)"
+    relation: PRIVESC
+    permissions: [container.jobs.create]
+    only_to_classes: [K8sServiceAccount, GcpOrganization, GcpFolder, GcpProject, GcpCluster]
+    extra_privesc_to: K8S_CLUSTER_SAS
   
-  #- title: "Pod creation 'container.jobs.update', privesc to k8s"
-  #  summary: "You have permission to specify a pod via a job. You can abuse it to access any k8s cluster SA. More information: https://book.hacktricks.xyz/cloud-security/gcp-security/gcp-interesting-permissions/gcp-privesc-to-other-principals"
-  #  limitations: "You need to be able to contact the Kube-API (by default it's public, but if private, you need to find your way into the subnetwork)"
-  #  relation: PRIVESC
-  #  permissions: [container.jobs.update]
-  #  only_to_classes: [K8sServiceAccount, GcpOrganization, GcpFolder, GcpProject, GcpCluster]
-  #  extra_privesc_to: K8S_CLUSTER_SAS
+  - title: "Pod creation 'container.jobs.update', privesc to k8s"
+    summary: "You have permission to specify a pod via a job. You can abuse it to access any k8s cluster SA. More information: https://book.hacktricks.xyz/cloud-security/gcp-security/gcp-interesting-permissions/gcp-privesc-to-other-principals"
+    limitations: "You need to be able to contact the Kube-API (by default it's public, but if private, you need to find your way into the subnetwork)"
+    relation: PRIVESC
+    permissions: [container.jobs.update]
+    only_to_classes: [K8sServiceAccount, GcpOrganization, GcpFolder, GcpProject, GcpCluster]
+    extra_privesc_to: K8S_CLUSTER_SAS
   
-  #- title: "Pod creation 'container.pods.create', privesc to k8s"
-  #  summary: "You have permission to specify a pod. You can abuse it to access any k8s cluster SA. More information: https://book.hacktricks.xyz/cloud-security/gcp-security/gcp-interesting-permissions/gcp-privesc-to-other-principals"
-  #  limitations: "You need to be able to contact the Kube-API (by default it's public, but if private, you need to find your way into the subnetwork)"
-  #  relation: PRIVESC
-  #  permissions: [container.pods.create]
-  #  only_to_classes: [K8sServiceAccount, GcpOrganization, GcpFolder, GcpProject, GcpCluster]
-  #  extra_privesc_to: K8S_CLUSTER_SAS
+  - title: "Pod creation 'container.pods.create', privesc to k8s"
+    summary: "You have permission to specify a pod. You can abuse it to access any k8s cluster SA. More information: https://book.hacktricks.xyz/cloud-security/gcp-security/gcp-interesting-permissions/gcp-privesc-to-other-principals"
+    limitations: "You need to be able to contact the Kube-API (by default it's public, but if private, you need to find your way into the subnetwork)"
+    relation: PRIVESC
+    permissions: [container.pods.create]
+    only_to_classes: [K8sServiceAccount, GcpOrganization, GcpFolder, GcpProject, GcpCluster]
+    extra_privesc_to: K8S_CLUSTER_SAS
   
-  #- title: "Pod creation 'container.pods.update', privesc to k8s"
-  #  summary: "You have permission to specify a pod. You can abuse it to access any k8s cluster SA. More information: https://book.hacktricks.xyz/cloud-security/gcp-security/gcp-interesting-permissions/gcp-privesc-to-other-principals"
-  #  limitations: "You need to be able to contact the Kube-API (by default it's public, but if private, you need to find your way into the subnetwork)"
-  #  relation: PRIVESC
-  #  permissions: [container.pods.update]
-  #  only_to_classes: [K8sServiceAccount, GcpOrganization, GcpFolder, GcpProject, GcpCluster]
-  #  extra_privesc_to: K8S_CLUSTER_SAS
+  - title: "Pod creation 'container.pods.update', privesc to k8s"
+    summary: "You have permission to specify a pod. You can abuse it to access any k8s cluster SA. More information: https://book.hacktricks.xyz/cloud-security/gcp-security/gcp-interesting-permissions/gcp-privesc-to-other-principals"
+    limitations: "You need to be able to contact the Kube-API (by default it's public, but if private, you need to find your way into the subnetwork)"
+    relation: PRIVESC
+    permissions: [container.pods.update]
+    only_to_classes: [K8sServiceAccount, GcpOrganization, GcpFolder, GcpProject, GcpCluster]
+    extra_privesc_to: K8S_CLUSTER_SAS
   
-  #- title: "Pod creation 'container.replicaSets.create', privesc to k8s"
-  #  summary: "You have permission to specify a pod via a replicaSet. You can abuse it to access any k8s cluster SA. More information: https://book.hacktricks.xyz/cloud-security/gcp-security/gcp-interesting-permissions/gcp-privesc-to-other-principals"
-  #  limitations: "You need to be able to contact the Kube-API (by default it's public, but if private, you need to find your way into the subnetwork)"
-  #  relation: PRIVESC
-  #  permissions: [container.replicaSets.create]
-  #  only_to_classes: [K8sServiceAccount, GcpOrganization, GcpFolder, GcpProject, GcpCluster]
-  #  extra_privesc_to: K8S_CLUSTER_SAS
+  - title: "Pod creation 'container.replicaSets.create', privesc to k8s"
+    summary: "You have permission to specify a pod via a replicaSet. You can abuse it to access any k8s cluster SA. More information: https://book.hacktricks.xyz/cloud-security/gcp-security/gcp-interesting-permissions/gcp-privesc-to-other-principals"
+    limitations: "You need to be able to contact the Kube-API (by default it's public, but if private, you need to find your way into the subnetwork)"
+    relation: PRIVESC
+    permissions: [container.replicaSets.create]
+    only_to_classes: [K8sServiceAccount, GcpOrganization, GcpFolder, GcpProject, GcpCluster]
+    extra_privesc_to: K8S_CLUSTER_SAS
   
-  #- title: "Pod creation 'container.replicaSets.update', privesc to k8s"
-  #  summary: "You have permission to specify a pod via a replicaSet. You can abuse it to access any k8s cluster SA. More information: https://book.hacktricks.xyz/cloud-security/gcp-security/gcp-interesting-permissions/gcp-privesc-to-other-principals"
-  #  limitations: "You need to be able to contact the Kube-API (by default it's public, but if private, you need to find your way into the subnetwork)"
-  #  relation: PRIVESC
-  #  permissions: [container.replicaSets.update]
-  #  only_to_classes: [K8sServiceAccount, GcpOrganization, GcpFolder, GcpProject, GcpCluster]
-  #  extra_privesc_to: K8S_CLUSTER_SAS
+  - title: "Pod creation 'container.replicaSets.update', privesc to k8s"
+    summary: "You have permission to specify a pod via a replicaSet. You can abuse it to access any k8s cluster SA. More information: https://book.hacktricks.xyz/cloud-security/gcp-security/gcp-interesting-permissions/gcp-privesc-to-other-principals"
+    limitations: "You need to be able to contact the Kube-API (by default it's public, but if private, you need to find your way into the subnetwork)"
+    relation: PRIVESC
+    permissions: [container.replicaSets.update]
+    only_to_classes: [K8sServiceAccount, GcpOrganization, GcpFolder, GcpProject, GcpCluster]
+    extra_privesc_to: K8S_CLUSTER_SAS
   
-  #- title: "Pod creation 'container.replicationControllers.create', privesc to k8s"
-  #  summary: "You have permission to specify a pod via a replicationController. You can abuse it to access any k8s cluster SA. More information: https://book.hacktricks.xyz/cloud-security/gcp-security/gcp-interesting-permissions/gcp-privesc-to-other-principals"
-  #  limitations: "You need to be able to contact the Kube-API (by default it's public, but if private, you need to find your way into the subnetwork)"
-  #  relation: PRIVESC
-  #  permissions: [container.replicationControllers.create]
-  #  only_to_classes: [K8sServiceAccount, GcpOrganization, GcpFolder, GcpProject, GcpCluster]
-  #  extra_privesc_to: K8S_CLUSTER_SAS
+  - title: "Pod creation 'container.replicationControllers.create', privesc to k8s"
+    summary: "You have permission to specify a pod via a replicationController. You can abuse it to access any k8s cluster SA. More information: https://book.hacktricks.xyz/cloud-security/gcp-security/gcp-interesting-permissions/gcp-privesc-to-other-principals"
+    limitations: "You need to be able to contact the Kube-API (by default it's public, but if private, you need to find your way into the subnetwork)"
+    relation: PRIVESC
+    permissions: [container.replicationControllers.create]
+    only_to_classes: [K8sServiceAccount, GcpOrganization, GcpFolder, GcpProject, GcpCluster]
+    extra_privesc_to: K8S_CLUSTER_SAS
   
-  #- title: "Pod creation 'container.replicationControllers.update', privesc to k8s"
-  #  summary: "You have permission to specify a pod via a replicationController. You can abuse it to access any k8s cluster SA. More information: https://book.hacktricks.xyz/cloud-security/gcp-security/gcp-interesting-permissions/gcp-privesc-to-other-principals"
-  #  limitations: "You need to be able to contact the Kube-API (by default it's public, but if private, you need to find your way into the subnetwork)"
-  #  relation: PRIVESC
-  #  permissions: [container.replicationControllers.update]
-  #  only_to_classes: [K8sServiceAccount, GcpOrganization, GcpFolder, GcpProject, GcpCluster]
-  #  extra_privesc_to: K8S_CLUSTER_SAS
+  - title: "Pod creation 'container.replicationControllers.update', privesc to k8s"
+    summary: "You have permission to specify a pod via a replicationController. You can abuse it to access any k8s cluster SA. More information: https://book.hacktricks.xyz/cloud-security/gcp-security/gcp-interesting-permissions/gcp-privesc-to-other-principals"
+    limitations: "You need to be able to contact the Kube-API (by default it's public, but if private, you need to find your way into the subnetwork)"
+    relation: PRIVESC
+    permissions: [container.replicationControllers.update]
+    only_to_classes: [K8sServiceAccount, GcpOrganization, GcpFolder, GcpProject, GcpCluster]
+    extra_privesc_to: K8S_CLUSTER_SAS
   
-  #- title: "Pod creation 'container.scheduledJobs.create', privesc to k8s"
-  #  summary: "You have permission to specify a pod via a scheduledJob. You can abuse it to access any k8s cluster SA. More information: https://book.hacktricks.xyz/cloud-security/gcp-security/gcp-interesting-permissions/gcp-privesc-to-other-principals"
-  #  limitations: "You need to be able to contact the Kube-API (by default it's public, but if private, you need to find your way into the subnetwork)"
-  #  relation: PRIVESC
-  #  permissions: [container.scheduledJobs.create]
-  #  only_to_classes: [K8sServiceAccount, GcpOrganization, GcpFolder, GcpProject, GcpCluster]
-  #  extra_privesc_to: K8S_CLUSTER_SAS
+  - title: "Pod creation 'container.scheduledJobs.create', privesc to k8s"
+    summary: "You have permission to specify a pod via a scheduledJob. You can abuse it to access any k8s cluster SA. More information: https://book.hacktricks.xyz/cloud-security/gcp-security/gcp-interesting-permissions/gcp-privesc-to-other-principals"
+    limitations: "You need to be able to contact the Kube-API (by default it's public, but if private, you need to find your way into the subnetwork)"
+    relation: PRIVESC
+    permissions: [container.scheduledJobs.create]
+    only_to_classes: [K8sServiceAccount, GcpOrganization, GcpFolder, GcpProject, GcpCluster]
+    extra_privesc_to: K8S_CLUSTER_SAS
   
-  #- title: "Pod creation 'container.scheduledJobs.update', privesc to k8s"
-  #  summary: "You have permission to specify a pod via a scheduledJob. You can abuse it to access any k8s cluster SA. More information: https://book.hacktricks.xyz/cloud-security/gcp-security/gcp-interesting-permissions/gcp-privesc-to-other-principals"
-  #  limitations: "You need to be able to contact the Kube-API (by default it's public, but if private, you need to find your way into the subnetwork)"
-  #  relation: PRIVESC
-  #  permissions: [container.scheduledJobs.update]
-  #  only_to_classes: [K8sServiceAccount, GcpOrganization, GcpFolder, GcpProject, GcpCluster]
-  #  extra_privesc_to: K8S_CLUSTER_SAS
+  - title: "Pod creation 'container.scheduledJobs.update', privesc to k8s"
+    summary: "You have permission to specify a pod via a scheduledJob. You can abuse it to access any k8s cluster SA. More information: https://book.hacktricks.xyz/cloud-security/gcp-security/gcp-interesting-permissions/gcp-privesc-to-other-principals"
+    limitations: "You need to be able to contact the Kube-API (by default it's public, but if private, you need to find your way into the subnetwork)"
+    relation: PRIVESC
+    permissions: [container.scheduledJobs.update]
+    only_to_classes: [K8sServiceAccount, GcpOrganization, GcpFolder, GcpProject, GcpCluster]
+    extra_privesc_to: K8S_CLUSTER_SAS
   
   - title: "Pod creation 'container.statefulSets.create', privesc to k8s"
     summary: "You have permission to specify a pod via a statefulSet. You can abuse it to access any k8s cluster SA. More information: https://book.hacktricks.xyz/cloud-security/gcp-security/gcp-interesting-permissions/gcp-privesc-to-other-principals"
