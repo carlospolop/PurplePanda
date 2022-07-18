@@ -104,6 +104,13 @@ class CustomOGM(GraphObject):
         return []
     
     @classmethod
+    def get_all_by_where_query(cls, query:str):
+        obj = cls.match(repo).where(query)
+        if obj.exists:
+            return obj.all()
+        return []
+    
+    @classmethod
     def node_to_obj(cls, node):
         """
         Convert a Py2Neo Node into an object

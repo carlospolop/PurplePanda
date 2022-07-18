@@ -50,7 +50,7 @@ queries:
       UNWIND merg_emails as e
       WITH collect(distinct e) as admin_emails
 
-      MATCH(ppal:GcpPrincipal)-[r:PRIVESC]->(res:Gcp)
+      MATCH(ppal:GcpPrincipal)-[r:PRIVESC]->(res:GcpPrincipal)
       WHERE NOT ppal.email in admin_emails
       RETURN ppal.email, r.reasons, res.name
   
@@ -78,6 +78,22 @@ queries:
     query: | 
       MATCH (org:GcpOrganization)-[r:HAS_ROLE]->(resource)
       RETURN org.name, r.roles, collect(distinct resource.name)
+  
+  - name: Deleted default service accounts with roles
+    query: |
+      MATCH(p:GcpProject)
+      WITH collect(distinct p.projectNumber) as pnumbers
+      MATCH(sas:GcpServiceAccount)-[:HAS_ROLE]-()
+      WHERE NOT EXISTS((sas)-[:PART_OF]-(:GcpProject)) AND any(num in pnumbers WHERE sas.email CONTAINS num)
+      RETURN sas.email
+  
+  - name: External service accounts with permissions
+    query: |
+      MATCH(p:GcpProject)
+      WITH collect(distinct p.projectNumber) as pnumbers
+      MATCH(sas:GcpServiceAccount)-[r:HAS_ROLE]-(rsc)
+      WHERE NOT EXISTS((sas)-[:PART_OF]-(:GcpProject)) AND NOT any(num in pnumbers WHERE sas.email CONTAINS num)
+      RETURN sas.email, r.roles, rsc.name
 
   - name: Ppals that can modify storages with images
     query: |

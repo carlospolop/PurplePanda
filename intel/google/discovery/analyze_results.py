@@ -5,6 +5,7 @@ from typing import List, Tuple
 from intel.google.models.gcp_permission import GcpPermission, GcpRole
 from intel.google.models.gcp_perm_models import GcpPrincipal, GcpResource
 from intel.google.models.gcp_cluster import GcpCluster
+from intel.google.models.gcp_folder import GcpFolder
 from core.db.customogm import CustomOGM
 from intel.google.models.gcp_project import GcpProject
 from intel.google.models.gcp_service_account import GcpServiceAccount
@@ -63,6 +64,8 @@ class AnalyzeResults(GcpDisc):
             
         # Get the principals that could escalate
         for role in roles:
+            if not role == "roles/pubsub.serviceAgent":
+                continue
             ppals_rscs = self._get_principals_with_role(role, only_to_classes, extra_privesc_to, running_in, second_order_relations)
             
             for ppal_rsc in ppals_rscs:
@@ -137,6 +140,11 @@ class AnalyzeResults(GcpDisc):
                             # Check if the final class is allowed 
                             if only_to_classes and not any(f".{class_name}" in str(type(rsc)) for class_name in only_to_classes):
                                 continue
+                            
+                            # These are always allowed to find other ppals, but maybe we don't want these privesc relations
+                            ## comment this to create these relations also
+                            #if type(rsc) in [GcpProject, GcpFolder]:
+                            #    continue
 
                             # Do not privesc to yourself
                             if ppal.__primaryvalue__ == rsc.__primaryvalue__ and\
