@@ -93,4 +93,4 @@ In the **root folder and in each folder inside `intel/`** you will find a **`TOD
 Moreover, if you have **other ideas** that aren't in those TODO files feel free to send a PR.
 
 
-By Polop<sup>(TM)</sup>
+By Carlos Polop<sup>TM</sup>
