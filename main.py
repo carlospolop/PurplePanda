@@ -115,7 +115,7 @@ def main():
     if "concourse" in platforms: ConcourseDiscClient()
     if "circleci" in platforms: CircleCIDiscClient()
 
-    if analyze:
+    if analyze: # When -a is passed as argument
         if "google" in platforms: PurplePandaGoogle().analyze_creds()
         if "github" in platforms: PurplePandaGithub().analyze_creds()
         if "k8s" in platforms: PurplePandaK8s().analyze_creds()
@@ -126,9 +126,9 @@ def main():
         # Cannot connect to database so finish here, (the error messages are shown from core.db.customogm)
         sys.exit(1)
 
-    elif plat_enumerate:
+    elif plat_enumerate: # When -e is passed in argument
         # Launch each SaaS discovery module in its own thread (we cannot use diffrent process or they will figth for the progress bar of "rich")
-        functions = []
+        functions = [] #This will be a list of functions that will be called
         functions2 = []
 
         # Google

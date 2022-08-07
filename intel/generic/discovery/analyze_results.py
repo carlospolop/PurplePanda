@@ -11,10 +11,10 @@ class AnalyzeResults(PurplePanda):
     logger = logging.getLogger(__name__)
     known_ppals_with_role = {}
     task_name = "Generic"
-    
+
     def discover(self) -> None:
         self._disc()
-    
+
 
     def _disc(self) -> None:
         """
@@ -37,8 +37,8 @@ class AnalyzeResults(PurplePanda):
         self._disc_loop([None], self._merge_github_writers_steal_circleci_secrets, __name__.split(".")[-1]+"._merge_github_writers_steal_circleci_secrets")
 
         self._disc_loop([None], self._create_same_emails_rels, __name__.split(".")[-1]+"._create_same_emails_rels")
-        
-    
+
+
     def _get_domain_info(self, dom_obj: PublicDomain):
         """Get info from all the PublicDomains discovered"""
 
@@ -49,22 +49,23 @@ class AnalyzeResults(PurplePanda):
         if is_real:
             for ip in self.get_domain_ips(dom_obj.name):
                 ip_private = self.is_ip_private(ip)
-                
+
                 if not ip_private:
                     dom_obj.is_external = True
-                
+
                 ip_obj = PublicIP(name=ip, is_private=ip_private).save()
                 dom_obj.public_ips.update(ip_obj)
-            
+
             dom_obj.save()
-            
+
 
     def _get_ip_info(self, ip_obj: PublicIP):
         """Get info from all the PublicIps discovered"""
-        
+
         ip_obj.isprivate = self.is_ip_private(ip_obj.name)
         ip_obj.save()
-        self.get_open_ports(ip_obj)
+        self.get_open_ports_nmap(ip_obj)
+        self.get_open_ports_shodan(ip_obj)
 
     def _get_repos_privescs(self, _):
         """
@@ -80,12 +81,12 @@ class AnalyzeResults(PurplePanda):
         query1 += 'MERGE (ppal)-[:PRIVESC {title:"'+title+'", reasons:'+reasons+', summary:"'+summary+'", limitations: ""}]->(sa)\n'
         query1 += 'RETURN ppal'
         graph.evaluate(query1)
-        
+
         reasons = '["Can merge in "+repo.full_name+" which is mirrored by "+mirror.name+" which is used by "+res.name+" which run the SA"]'
         query2 = 'MATCH (ppal)-[r_merge:CAN_MERGE]->(b)<-[r_branch:HAS_BRANCH]-(repo)<-[r_mirror:IS_MIRROR]-(mirror)-[r]-(res)<-[r_run_in:RUN_IN]-(sa)\n'
         query2 += 'MERGE (ppal)-[:PRIVESC {title:"'+title+'", reasons:'+reasons+', summary:"'+summary+'", limitations: ""}]->(sa)'
         graph.evaluate(query2)
-    
+
     def _merge_k8s_sas_with_unknwon_cluster_id(self, _):
         """GCP doesn't know when it create a SA the cluster_id of that SA, therefore, lets try to find the real SA, move the relation and delete the noe without cluster_id"""
 
@@ -95,7 +96,7 @@ class AnalyzeResults(PurplePanda):
         query += 'DETACH DELETE (ksa)'
 
         graph.evaluate(query)
-    
+
     def _merge_concourse_workers_with_pods(self, _):
         """Concourse doesn't know when it create a worker the cluster_id of that pod, therefore, lets try to find the real pod and relate them"""
 
@@ -145,4 +146,3 @@ class AnalyzeResults(PurplePanda):
         query += 'MERGE (user1)-[:HAS_SAME_EMAIL]-(user2)'
 
         graph.evaluate(query)
-
