@@ -10,6 +10,9 @@ RUN apt-get install -y apt-transport-https ca-certificates gnupg curl; \
     curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key --keyring /usr/share/keyrings/cloud.google.gpg add -; \
     apt-get update && apt-get install -y google-cloud-cli
 
+# Install nmap
+RUN apt-get install -y nmap
+
 # Install gitleaks
 RUN mkdir /tmp/gl
 RUN wget https://github.com/zricethezav/gitleaks/releases/download/v8.8.4/gitleaks_8.8.4_linux_x64.tar.gz -P /tmp/gl
