@@ -12,21 +12,20 @@ class AnalyzeResults(PurplePanda):
     known_ppals_with_role = {}
     task_name = "Generic"
 
-    def discover(self) -> None:
-        self._disc()
+    def discover(self,flags) -> None:
+        self._disc(flags)
 
 
-    def _disc(self) -> None:
+    def _disc(self,flags) -> None:
         """
         After getting all the info from all the modules, obtain more information from the found data.
         """
-
         # Get the domain info before the IPs info
         domains: List[PublicDomain] = PublicDomain.get_all()
         self._disc_loop(domains, self._get_domain_info, __name__.split(".")[-1]+"._get_domain_info")
 
         ips: List[PublicIP] = PublicIP.get_all()
-        self._disc_loop(ips, self._get_ip_info, __name__.split(".")[-1]+"._get_ip_info")
+        self._disc_loop(ips, self._get_ip_info, __name__.split(".")[-1]+"._get_ip_info",nmapFlag=flags['nmap'])
 
         self._disc_loop([None], self._get_repos_privescs, __name__.split(".")[-1]+"._get_repos_privescs")
 
@@ -59,12 +58,12 @@ class AnalyzeResults(PurplePanda):
             dom_obj.save()
 
 
-    def _get_ip_info(self, ip_obj: PublicIP):
+    def _get_ip_info(self, ip_obj: PublicIP,nmapFlag):
         """Get info from all the PublicIps discovered"""
-
         ip_obj.isprivate = self.is_ip_private(ip_obj.name)
         ip_obj.save()
-        self.get_open_ports_nmap(ip_obj)
+        if(nmapFlag):
+            self.get_open_ports_nmap(ip_obj)
         self.get_open_ports_shodan(ip_obj)
 
     def _get_repos_privescs(self, _):

@@ -65,7 +65,7 @@ class PurplePanda():
         task_id = self.progress.add_task(self.task_name, task_name=self.task_name, subtask_name=subtask_name, ttotal=len(
             loop_list), total=len(loop_list), start=True)
         for item in loop_list:
-            func(item, **kwargs)
+            func(item, **kwargs) # Here the keyworded arguments are being passed to the function
             self.progress.update(task_id, advance=1)
 
         if not VERBOSE:

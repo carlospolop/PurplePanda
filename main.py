@@ -51,7 +51,7 @@ def main():
     parser.add_argument('-p', '--platforms', type=str, required=True, help=f'Comma-separated list of platforms to analyze/enumerate. Currently available: {currently_available_str}')
     parser.add_argument('-v', '--verbose', action='store_true', default=False, required=False, help=f'Do not remove the progress bar when the task is done')
     parser.add_argument('-d', '--directory', type=str, required=False, help=f'Path to the directory to save an initial analysis of the results in CVS (separator="|") format. If you don\'t indicate any, no analysis will be written to disk')
-
+    parser.add_argument('-n','--nmap',action='store_true', default=False, required=False, help=f'Perform full port scan on the public IP addresses using Nmap')
     parser.add_argument('--github-only-org', action='store_true', default=False, required=False, help=f'Only get information of the specified github orgs in the env var (no personal repos info will be saved)')
     parser.add_argument('--github-only-org-and-org-users', action='store_true', default=False, required=False, help=f'Only get information of the specified github orgs and users repos of the specified orgs (no extra orgs info will be saved)')
     parser.add_argument('--github-all-branches', action='store_true', default=False, required=False, help=f'By default data of only default branch of each repo is gathered, set this to get info from all branches of each repo')
@@ -70,6 +70,7 @@ def main():
     analyze = args.analyze
     plat_enumerate = args.enumerate
     directory = args.directory
+    nmap = args.nmap
 
     if not analyze and not plat_enumerate:
         logger.error(f"Error: Indicate '-a' or '-e'")
@@ -153,7 +154,6 @@ def main():
                     "github_write_as_merge": github_write_as_merge
                 }
             ))
-
         # Kubernetes
         if "k8s" in platforms:
             functions.append((PurplePandaK8s().discover, "kubernetes",
@@ -191,7 +191,8 @@ def main():
         PurplePanda().start_discovery(functions2)
 
         # Perform a combined analysis
-        AnalyzeResults().discover()
+        flags={'nmap':nmap}
+        AnalyzeResults().discover(flags)
 
         # If directory specified write some analysis in CSV files
         if directory:
