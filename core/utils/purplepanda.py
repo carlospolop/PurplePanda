@@ -79,7 +79,7 @@ class PurplePanda():
         if(ip_obj.name):  # Checking if the value is defined or not
             ip_address = ip_obj.name
             nmap = nmap3.NmapScanTechniques()
-            result = nmap.nmap_tcp_scan(ip_address,args='-p-')
+            result = nmap.nmap_tcp_scan(ip_address,args='-p- -T4 -n -Pn')
             for port in result[ip_address]['ports']:
                 port_obj = PublicPort(port=port['portid']).save()
                 ip_obj.ports.update(port_obj)
