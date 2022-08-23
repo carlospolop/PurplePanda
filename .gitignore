@@ -118,3 +118,8 @@ bin/*
 .dccache
 .kube
 .kube/*
+
+# Custom
+.DS_Store
+/*/.DS_Store
+/*/*/.DS_Store
