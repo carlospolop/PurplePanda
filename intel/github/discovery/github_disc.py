@@ -6,7 +6,7 @@ import validators
 from urllib.parse import urlparse
 from shutil import which
 from typing import List, Tuple
-from github import NamedUser, Team, Repository, Organization, Branch, Membership
+from github import NamedUser, Team, Repository, Organization, Branch, Membership, GithubException
 
 from .github_disc_client import GithubDiscClient
 from intel.circleci.discovery.circleci_disc_client import disc_vars_in_txt
@@ -87,8 +87,16 @@ class GithubDisc(GithubDiscClient):
         github_obj = kwargs["github_obj"]
         user_obj:GithubUser = self.save_user(github_user)
         if type(n4j_obj) is GithubOrganization:
-            membership : Membership.Membership = github_user.get_organization_membership(n4j_obj.name)
-            n4j_obj.users.update(user_obj, membership=membership.role)
+            try:
+                membership : Membership.Membership = github_user.get_organization_membership(n4j_obj.name)
+                role = membership.role
+            except GithubException as e:
+                if "You must be a member" in str(e):
+                    role = "unknown"
+                else:
+                    raise e
+
+            n4j_obj.users.update(user_obj, membership=role)
         
         elif type(n4j_obj) is GithubTeam:
             membership : Membership.Membership = github_obj.get_team_membership(user_obj.name)
@@ -210,7 +218,7 @@ class GithubDisc(GithubDiscClient):
 
             if not self.github_only_org:
                 for repo in self.call_github(github_user.get_repos, ret_val=[]):
-                    repo_obj : GithubRepo = self.save_repo(repo, investigate=False)
+                    repo_obj : GithubRepo = self.save_repo(repo, investigate=True)
                     perms = repo.permissions
                     user_obj.perms_repos.update(repo_obj, 
                                             admin=perms.admin,
