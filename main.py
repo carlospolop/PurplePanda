@@ -42,7 +42,7 @@ def main():
     Platforms available: {currently_available_str}.\n
     You need to indicate '-e' or '-a' at least.\n
     Google: The tool will try to get info about all the supported resources and find privesc paths within kubernetes and with other clouds/SaaS\n
-    Gihub: By default, all the organizations and users the tokens belongs to will be analized. If you just want to analyze specified organizations in the tokens, check the '--github-*' params.\n
+    Gihub: By default, all the organizations and users the tokens belongs to will be analyzed. If you just want to analyze specified organizations in the tokens, check the '--github-*' params.\n
     Kubernetes: The tool will try to get info about all the supported resources and find privesc paths within kubernetes and with other clouds/SaaS.\n
     """
     parser = argparse.ArgumentParser(description=help_msg)
@@ -51,7 +51,7 @@ def main():
     parser.add_argument('-p', '--platforms', type=str, required=True, help=f'Comma-separated list of platforms to analyze/enumerate. Currently available: {currently_available_str}')
     parser.add_argument('-v', '--verbose', action='store_true', default=False, required=False, help=f'Do not remove the progress bar when the task is done')
     parser.add_argument('-d', '--directory', type=str, required=False, help=f'Path to the directory to save an initial analysis of the results in CVS (separator="|") format. If you don\'t indicate any, no analysis will be written to disk')
-    
+    parser.add_argument('-n','--nmap',action='store_true', default=False, required=False, help=f'Perform full port scan on the public IP addresses using Nmap')
     parser.add_argument('--github-only-org', action='store_true', default=False, required=False, help=f'Only get information of the specified github orgs in the env var (no personal repos info will be saved)')
     parser.add_argument('--github-only-org-and-org-users', action='store_true', default=False, required=False, help=f'Only get information of the specified github orgs and users repos of the specified orgs (no extra orgs info will be saved)')
     parser.add_argument('--github-all-branches', action='store_true', default=False, required=False, help=f'By default data of only default branch of each repo is gathered, set this to get info from all branches of each repo')
@@ -59,29 +59,30 @@ def main():
     parser.add_argument('--github-get-redundant-info', action='store_true', default=False, required=False, help=f'If the passed credentials arent org admin, activating this may get you more info (and will also take more time)')
     parser.add_argument('--github-get-archived', action='store_true', default=False, required=False, help=f'By default not relations of archived repos are gathered')
     parser.add_argument('--github-write-as-merge', action='store_true', default=False, required=False, help=f'By default if the user doesn\'t have perms to see the branch protection, only codeowners and admins are supposed to be able to merge in the branch (low false possitives rate). With this option you can indicate to treat anyone with write permissions as if he has merge permissions (high false possitives rate potencially).')
-    
+
     parser.add_argument('--k8s-get-secret-values', action='store_true', default=False, required=False, help=f'Get the secret values (if you have access')
-    
+
     parser.add_argument('--gcp-get-secret-values', action='store_true', default=False, required=False, help=f'Get the secret values (if you have access')
     parser.add_argument('--gcp-get-kms', action='store_true', default=False, required=False, help=f'Enumerate KMS (need to check every location on each project), might some hours)')
 
-    args = parser.parse_args()    
+    args = parser.parse_args()
     platforms = args.platforms.lower().split(",")
     analyze = args.analyze
     plat_enumerate = args.enumerate
     directory = args.directory
+    nmap = args.nmap
 
     if not analyze and not plat_enumerate:
         logger.error(f"Error: Indicate '-a' or '-e'")
         parser.print_help()
         sys.exit(1)
-    
+
     if directory:
         if (not os.path.exists(directory) or not os.path.isdir(directory) or not os.access(directory, os.W_OK)):
             logger.error(f"Error: Output directory doesn't exist or isn't a directory or isn't writable")
             parser.print_help()
             sys.exit(1)
-        
+
         directory = f"{directory}/purplepanda_analysis"
         if not os.path.exists(directory):
             os.mkdir(directory)
@@ -95,10 +96,10 @@ def main():
     github_write_as_merge = args.github_write_as_merge
 
     k8s_get_secret_values = args.k8s_get_secret_values
-    
+
     gcp_get_secret_values = args.gcp_get_secret_values
     gcp_get_kms = args.gcp_get_kms
-    
+
     set_verbose(args.verbose)
 
     # Check the user input platforms are well-written
@@ -115,22 +116,22 @@ def main():
     if "concourse" in platforms: ConcourseDiscClient()
     if "circleci" in platforms: CircleCIDiscClient()
 
-    if analyze:
+    if analyze: # When -a is passed as argument
         if "google" in platforms: PurplePandaGoogle().analyze_creds()
         if "github" in platforms: PurplePandaGithub().analyze_creds()
         if "k8s" in platforms: PurplePandaK8s().analyze_creds()
         if "concourse" in platforms: PurplePandaConcourse().analyze_creds()
         if "circleci" in platforms: PurplePandaCircleCI().analyze_creds()
-    
+
     elif not os.getenv("PURPLEPANDA_NEO4J_URL") or not os.getenv("PURPLEPANDA_PWD"):
         # Cannot connect to database so finish here, (the error messages are shown from core.db.customogm)
         sys.exit(1)
 
-    elif plat_enumerate:
+    elif plat_enumerate: # When -e is passed in argument
         # Launch each SaaS discovery module in its own thread (we cannot use diffrent process or they will figth for the progress bar of "rich")
-        functions = []
+        functions = [] #This will be a list of functions that will be called
         functions2 = []
-        
+
         # Google
         if "google" in platforms:
             functions.append((PurplePandaGoogle().discover, "google",
@@ -139,10 +140,10 @@ def main():
                     "gcp_get_kms": gcp_get_kms
                 }
             ))
-        
+
         # Github
         if "github" in platforms:
-            functions.append((PurplePandaGithub().discover, "github", 
+            functions.append((PurplePandaGithub().discover, "github",
                 {
                     "github_only_org": github_only_org,
                     "github_only_org_and_org_users": github_only_org_and_org_users,
@@ -153,7 +154,6 @@ def main():
                     "github_write_as_merge": github_write_as_merge
                 }
             ))
-        
         # Kubernetes
         if "k8s" in platforms:
             functions.append((PurplePandaK8s().discover, "kubernetes",
@@ -161,14 +161,14 @@ def main():
                     "k8s_get_secret_values": k8s_get_secret_values
                 }
             ))
-        
+
         # Concourse
         if "concourse" in platforms:
             functions.append((PurplePandaConcourse().discover, "concourse",
                 {
                 }
             ))
-        
+
         # CircleCI
         if "circleci" in platforms:
             # If github, launch circleci in a second round
@@ -183,15 +183,16 @@ def main():
                     {
                     }
                 ))
-        
+
         # First round of functions
         PurplePanda().start_discovery(functions)
 
         # Second round of functions
         PurplePanda().start_discovery(functions2)
-    
+
         # Perform a combined analysis
-        AnalyzeResults().discover()
+        flags={'nmap':nmap}
+        AnalyzeResults().discover(flags)
 
         # If directory specified write some analysis in CSV files
         if directory:
@@ -201,9 +202,9 @@ def main():
                             "name": plat_name, "directory": directory
                         }
                     ))
-        
+
             PurplePanda().start_discovery(write_csv_functions, writing_analysis=True)
-    
+
         print("Finished!")
 
 
