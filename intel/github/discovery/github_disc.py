@@ -703,6 +703,9 @@ class GithubDisc(GithubDiscClient):
                     if line and "environment:" in line:
                         env_name = line.split("environment:")[1].strip()
                     
+                    if line and "env:" in line:
+                        env_name = line.split("env:")[1].strip()
+                    
                     if line and "self-hosted" in line and "runs-on" in line and line.index("self-hosted") > line.index("runs-on"):
                         self_hosted_runner = True
 
