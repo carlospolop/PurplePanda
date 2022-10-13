@@ -10,6 +10,16 @@ queries:
       MATCH (leak:GithubLeak)-[:PART_OF]->(repo:GithubRepo)
       RETURN leak.name,collect(distinct repo.name)
   
+  - name: Generic leaks
+    query: |
+      MATCH (leak:GithubLeak) WHERE leak.description = "Generic API Key"
+      RETURN leak.name
+  
+  - name: Non-Generic leaks
+    query: |
+      MATCH (leak:GithubLeak) WHERE leak.description <> "Generic API Key"
+      RETURN leak.name
+  
   - name: Secrets each ppal can steal
     query: |
       MATCH (ppal:Github)-[r:CAN_STEAL_SECRET]->(secret:GithubSecret)
@@ -43,6 +53,11 @@ queries:
     query: |
       MATCH(user:GithubUser)-[r1:CAN_MERGE]->(b:GithubBranch)<-[r2:HAS_BRANCH]-(repo:GithubRepo)
       RETURN user.name,collect(distinct repo.name)
+  
+  - name: Repos each user can write
+    query: |
+      MATCH(user:GithubUser)-[r:HAS_PERMS{push:true}]->(repo:GithubRepo)
+      RETURN user.name,collect(distinct repos.name)
   
   - name: Privilege escalations
     query: |
@@ -83,3 +98,15 @@ queries:
       WITH repo, count(u) as num_users
       WHERE num_users > 15
       RETURN repo.name, num_users
+  
+  - name: Unprotected branches
+    query: |
+      match(branch:GithubBranch)
+      WHERE NOT branch.protected OR (branch.require_code_owner_reviews < 2 AND branch.required_approving_review_count < 2)
+      RETURN branch.name
+  
+  - name: Repos with secrets without envs
+    query: |
+      MATCH(repo:GithubRepo)
+      WHERE EXISTS((repo)-[:USES_SECRET]->(:GithubSecret)) AND NOT EXISTS((repo)<-[:PART_OF]-(:GithubEnvironment))
+      RETURN repo.full_name
