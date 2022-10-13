@@ -6,7 +6,7 @@ In this section we are going to explain how to use PurplePanda to **find potenti
 
 Searching for **sensitive information in secrets and leaks** is something all the teams should do.
 
-### Secrets & Leaks
+### Secrets, Leaks & Env vars
 
 *Note that PurplePanda doesn't have the capabilities (yet) to steal the the secrets values automatically because it involves performing writing into the repos, so you can only search by secret name and you will need to steal the secret manually.*
 
@@ -48,6 +48,14 @@ Searching for **sensitive information in secrets and leaks** is something all th
     MATCH(l:GithubLeak)
     WHERE toLower(l.name) CONTAINS toLower($filter) 
     RETURN l</pre>
+  </details>
+
+### Gh - actions env vars
+`Show all the env vars from github actions`
+  <details>
+  <summary>e.g.: <i>Gh - actions env vars</i></summary>
+    <pre>
+    MATCH(action:GithubAction) WHERE action.env_vars <> [] RETURN action</pre>
   </details>
 </details>
 
@@ -239,4 +247,27 @@ Usually Red Teams will **compromise a few set of credentials** and they will be 
     MATCH(u:GithubUser{name:$ppal})-[r1:CAN_MERGE]->(b:GithubBranch)<-[r2:HAS_BRANCH]-(repo:GithubRepo)<-[r3:IS_MIRROR]-(s)
     RETURN u,r1,b,r2,repo,r3,s</pre>
     </details>
+</details>
+
+### Github Actions
+
+<details>
+<summary><b>Show queries to potentially vulnerable github actions</b></summary>
+
+### Gh - actions supporting pull_request_target
+`Show all the github actions supporting pull_request_target`
+  <details>
+  <summary>e.g.: <i>Gh - actions supporting pull_request_target</i></summary>
+    <pre>
+    MATCH(action:GithubAction) WHERE action.has_pull_request_target RETURN action</pre>
+  </details>
+
+### Gh - actions with injection points
+`Show all the github actions with injection points`
+  <details>
+  <summary>e.g.: <i>Gh - actions with injection points</i></summary>
+    <pre>
+    MATCH(action:GithubAction) WHERE action.injection_points <> [] RETURN action</pre>
+  </details>
+</details>
 </details>

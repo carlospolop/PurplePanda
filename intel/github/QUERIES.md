@@ -74,7 +74,7 @@
 
 ---
 
-## Secrets & Leaks
+## Secrets, Leaks & env vars
 
 <details>
 <summary>Details</summary>
@@ -123,6 +123,14 @@
     <pre>
     MATCH(s:GithubSecret {name:$secret})-[r:CAN_STEAL_SECRET]-(u:Github)
     RETURN s,r,u</pre>
+  </details>
+
+### Gh - actions env vars
+`Show all the env vars from github actions`
+  <details>
+  <summary>e.g.: <i>Gh - actions env vars</i></summary>
+    <pre>
+    MATCH(action:GithubAction) WHERE action.env_vars <> [] RETURN action</pre>
   </details>
 </details>
 </details>
@@ -233,6 +241,38 @@
     <pre>
     MATCH (s)-[r1:IS_MIRROR]->(repo:GithubRepo)-[r2:HAS_BRANCH]->(b:GithubBranch)<-[r3:CAN_MERGE]-(ppal:GithubPrincipal)
     RETURN s,r1,repo,r2,b,r3,ppal</pre>
+  </details>
+</details>
+
+---
+
+## Actions
+ 
+<details>
+<summary>Details</summary>
+
+### Gh - actions
+`Show all the github actions`
+  <details>
+  <summary>e.g.: <i>Gh - actions</i></summary>
+    <pre>
+    MATCH(action:GithubAction) RETURN action</pre>
+  </details>
+
+### Gh - actions supporting pull_request_target
+`Show all the github actions supporting pull_request_target`
+  <details>
+  <summary>e.g.: <i>Gh - actions supporting pull_request_target</i></summary>
+    <pre>
+    MATCH(action:GithubAction) WHERE action.has_pull_request_target RETURN action</pre>
+  </details>
+
+### Gh - actions with injection points
+`Show all the github actions with injection points`
+  <details>
+  <summary>e.g.: <i>Gh - actions with injection points</i></summary>
+    <pre>
+    MATCH(action:GithubAction) WHERE action.injection_points <> [] RETURN action</pre>
   </details>
 </details>
 

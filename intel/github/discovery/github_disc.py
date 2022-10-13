@@ -3,6 +3,7 @@ import time
 import subprocess
 import os
 import validators
+import re
 from urllib.parse import urlparse
 from shutil import which
 from typing import List, Tuple
@@ -10,7 +11,7 @@ from github import NamedUser, Team, Repository, Organization, Branch, Membership
 
 from .github_disc_client import GithubDiscClient
 from intel.circleci.discovery.circleci_disc_client import disc_vars_in_txt
-from intel.github.models.github_model import GithubUser, GithubTeam, GithubRepo, GithubBranch, GithubOrganization, GithubSecret, GithubLeak, GithubEnvironment, GithubSelfHostedRunner, GithubWebhook
+from intel.github.models.github_model import GithubAction, GithubUser, GithubTeam, GithubRepo, GithubBranch, GithubOrganization, GithubSecret, GithubLeak, GithubEnvironment, GithubSelfHostedRunner, GithubWebhook
 from intel.circleci.models import CircleCIProject, CircleCIOrganization, CircleCIVar
 from core.models import PublicIP, PublicDomain
 
@@ -41,8 +42,13 @@ class GithubDisc(GithubDiscClient):
         if not self.github_no_leaks and which("gitleaks") is None:
             self.gitleaks_installed = False
             self.logger.error("Gitleaks isn't installed. If you want to search for leaks install https://github.com/zricethezav/gitleaks/releases/latest")
+            exit()
         else:
             self.gitleaks_installed = True
+
+        if not self.github_no_leaks and which("timeout") is None:
+            self.logger.error("timeout isn't installed. You need it to search for leaks, if you are in MacOS you can install it with: brew install coreutils")
+            exit()
         
         self.task_name = "Github"
         
@@ -301,15 +307,29 @@ class GithubDisc(GithubDiscClient):
             repo_obj = REPOS[gid]
         
         else:
+            allow_merge_commit = None
+            allow_rebase_merge = None
+            allow_squash_merge = None
+            delete_branch_on_merge = None
+            subscribers_count = None
+            try:
+                allow_merge_commit = github_repo.allow_merge_commit
+                allow_rebase_merge = github_repo.allow_rebase_merge
+                allow_squash_merge = github_repo.allow_squash_merge
+                delete_branch_on_merge = github_repo.delete_branch_on_merge
+                subscribers_count = github_repo.subscribers_count
+            except Exception:
+                self.logger.warning("Failed to get repo settings for repo %s (potentially because it doesn't exist)", github_repo.full_name)
+            
             repo_obj : GithubRepo = GithubRepo(
                 id = github_repo.id,
-                allow_merge_commit = github_repo.allow_merge_commit,
-                allow_rebase_merge = github_repo.allow_rebase_merge,
-                allow_squash_merge = github_repo.allow_squash_merge,
+                allow_merge_commit = allow_merge_commit,
+                allow_rebase_merge = allow_rebase_merge,
+                allow_squash_merge = allow_squash_merge,
                 archived = github_repo.archived,
                 created_at = github_repo.created_at.strftime("%m-%d-%Y %H:%M:%S") if github_repo.created_at else "",
                 default_branch = github_repo.default_branch,
-                delete_branch_on_merge = github_repo.delete_branch_on_merge,
+                delete_branch_on_merge = delete_branch_on_merge,
                 description = github_repo.description,
                 fork = github_repo.fork,
                 forks_count = github_repo.forks_count,
@@ -326,7 +346,7 @@ class GithubDisc(GithubDiscClient):
                 pushed_at = github_repo.pushed_at.strftime("%m-%d-%Y %H:%M:%S") if github_repo.pushed_at else "",
                 size = github_repo.size,
                 stargazers_count = github_repo.stargazers_count,
-                subscribers_count = github_repo.subscribers_count,
+                subscribers_count = subscribers_count,
                 unkown_codeowners = [],
                 no_codeowners = False,
                 updated_at = github_repo.updated_at.strftime("%m-%d-%Y %H:%M:%S") if github_repo.updated_at else "",
@@ -338,26 +358,15 @@ class GithubDisc(GithubDiscClient):
 
             INV_REPOS.add(gid)
 
+            self.logger.info("Checking repo %s", github_repo.full_name)
             github_secrets = self._get_repo_secrets(github_repo.full_name)
             if github_secrets and github_secrets.get("secrets"):
                 for s in github_secrets.get("secrets"):
                     secret_obj: GithubSecret = GithubSecret(name=s["name"]).save()
                     repo_obj.secrets.update(secret_obj, reason="Declared")
             
-            env_name, github_secrets, self_hosted_runner = self.get_secrets_from_workflows(github_repo)
-            if env_name:
-                env_obj: GithubEnvironment = GithubEnvironment(name=env_name)
+            repo_obj = self.save_workflows(github_repo, repo_obj)
             
-            for s in github_secrets:
-                secret_obj: GithubSecret = GithubSecret(name=s).save()
-                repo_obj.secrets.update(secret_obj, reason="Used")
-                if env_name:
-                    env_obj.secrets.update(secret_obj)
-            
-            if env_name:
-                env_obj.save()
-                repo_obj.environments.update(env_obj)
-
             if github_repo.owner:
                 owner_obj : GithubUser = self.save_user(github_repo.owner, investigate=False)
                 repo_obj.owner.update(owner_obj)
@@ -399,16 +408,6 @@ class GithubDisc(GithubDiscClient):
                                                             status=shrunner["status"]).save()
                 
                 repo_obj.self_hosted_runners.update(shrunner_obj)
-            
-            if self_hosted_runner:
-                shrunner_obj : GithubSelfHostedRunner = GithubSelfHostedRunner(
-                                                            id="Generic",
-                                                            name="Generic",
-                                                            os = "",
-                                                            status="Active").save()
-                
-                repo_obj.self_hosted_runners.update(shrunner_obj)
-
             
             codeowners = self.get_codeowners(github_repo)
             if not codeowners:
@@ -676,7 +675,7 @@ class GithubDisc(GithubDiscClient):
             disc_vars_in_txt(cproj_obj, content)            
 
 
-    def get_secrets_from_workflows(self, github_repo) -> Tuple[str, List[str]]:
+    def save_workflows(self, github_repo, repo_obj:GithubRepo) -> Tuple[str, List[str]]:
         """
         Get the secrets from github actions workflows
         """
@@ -684,35 +683,104 @@ class GithubDisc(GithubDiscClient):
         try:
             github_contents = self.call_github(github_repo.get_contents, ret_val=[], path=".github/workflows")
         except:
-            return ("", [], False)
+            return repo_obj
         
-        secrets = set()
-        env_name = ""
-        self_hosted_runner = False
+        # From https://cloud.hacktricks.xyz/pentesting-ci-cd/github-security#understanding-the-risk-of-script-injections
+        potential_injections_regexes = [
+            r"github\.event\.comment\.body",
+            r"github\.event\.issue\.body",
+            r"github\.event\.issue\.title",
+            r"github\.head_ref",
+            r"github\.pull_request\.",
+            r"github\..*\.authors\.name",
+            r"github\..*\.authors\.email",
+        ]
 
         if github_contents:
             for gh_content in github_contents:
-                content = gh_content.decoded_content.decode("utf-8")
+                potential_injections = set()
+                secrets = set()
+                github_envs = set()
+                self_hosted_runner = False
+                has_pull_request_target = False
+                env_vars = set()
+                in_env_vars = False
 
+                content = gh_content.decoded_content.decode("utf-8")
+                name = gh_content.path.split("/")[-1]
+                full_name = github_repo.full_name + "/" + name
+
+                # Analyze each action workflow
                 for line in content.splitlines():
                     if line and "secrets." in line:
                         secret = line.split("secrets.")[1]
                         secret = secret.split('}}')[0].strip()
                         secrets.add(secret)
                     
+                    # Check if github environment for secrets is used
                     if line and "environment:" in line:
                         env_name = line.split("environment:")[1].strip()
+                        if env_name:
+                            github_envs.add(env_name)
                     
+                    # Check if pull_request_target supported
+                    if line and "pull_request_target" in line:
+                        has_pull_request_target = True
+                    
+                    # Get env vars from the workflow supposing that they have more trailing spaces than "env:"
+                    if line and in_env_vars:
+                        if len(line) - len(line.lstrip(' ')) <= in_env_vars:
+                            in_env_vars = False
+                        else:
+                            env_vars.add(line.strip())
+
                     if line and "env:" in line:
-                        env_name = line.split("env:")[1].strip()
+                        in_env_vars = len(line) - len(line.lstrip(' '))
                     
+                    # Check self hosts runners
                     if line and "self-hosted" in line and "runs-on" in line and line.index("self-hosted") > line.index("runs-on"):
                         self_hosted_runner = True
+                    
+                    # Check potential command injections
+                    for regex in potential_injections_regexes:
+                        if re.search(regex, line):
+                            potential_injections.add(line)
+                
+                # Generate the action object
+                action_obj = GithubAction(
+                    name=name,
+                    full_name=full_name,
+                    injection_points = list(potential_injections),
+                    env_vars = list(env_vars),
+                    has_pull_request_target = has_pull_request_target
+                ).save()
+                repo_obj.actions.update(action_obj)
 
+                # Relate each enrionment with the action and the repo
+                for g_env in github_envs:
+                    env_obj: GithubEnvironment = GithubEnvironment(name=g_env).save()
+                    repo_obj.environments.update(env_obj)
+                    action_obj.environments.update(env_obj)
 
-                return (env_name, list(secrets), self_hosted_runner)
+                # Relate each secret with the action, the repo, and the potential environ
+                for s in secrets:
+                    secret_obj: GithubSecret = GithubSecret(name=s).save()
+                    repo_obj.secrets.update(secret_obj, reason="Used")
+                    action_obj.secrets.update(secret_obj)
+                    if github_envs:
+                        env_obj.secrets.update(secret_obj)
+                
+                if self_hosted_runner:
+                    shrunner_obj : GithubSelfHostedRunner = GithubSelfHostedRunner(
+                                                                id="Generic",
+                                                                name="Generic",
+                                                                os = "",
+                                                                status="Active").save()
+                    
+                    repo_obj.self_hosted_runners.update(shrunner_obj)
+                    action_obj.self_hosted_runners.update(shrunner_obj)
         
-        return ("", [], False)
+        return repo_obj
     
 
     def get_leaks(self, github_repo) -> dict:
@@ -725,7 +793,8 @@ class GithubDisc(GithubDiscClient):
             return []
         
         subprocess.call(["git", "clone", f'https://{self.str_cred}@github.com/{github_repo.full_name}', "/tmp/purplepanda_github"], stdout=open(os.devnull, 'wb'), stderr=open(os.devnull, 'wb'))
-        subprocess.call(["gitleaks", "detect", "-s", "/tmp/purplepanda_github", "--report-format", "json", "--report-path", "/tmp/gitleaks.json"], stdout=open(os.devnull, 'wb'), stderr=open(os.devnull, 'wb'))
+        # Max 5mins, if not finish stop it and continue
+        subprocess.call(["timeout", str(5*60), "gitleaks", "detect", "-s", "/tmp/purplepanda_github", "--report-format", "json", "--report-path", "/tmp/gitleaks.json"], stdout=open(os.devnull, 'wb'), stderr=open(os.devnull, 'wb'))
         subprocess.call(["rm", "-rf", "/tmp/purplepanda_github"], stdout=open(os.devnull, 'wb'), stderr=open(os.devnull, 'wb'))
 
         results = []

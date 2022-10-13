@@ -52,7 +52,7 @@ class GithubUser(GithubPrincipal):
     branch_merge = RelatedTo("GithubBranch", "CAN_MERGE")
     repos_cos = RelatedTo("GithubRepo", "CODE_OWNER")
     secrets = RelatedTo("GithubSecrets", "CAN_STEAL_SECRET")
-    selfhosted_runners = RelatedTo("GithubSelfHostedRunner", "RUNNER")
+    selfhosted_runners = RelatedTo("GithubSelfHostedRunner", "CAN_RUN")
     circleci_secrets = RelatedTo("CircleCISecret", "CAN_STEAL_SECRET") #Created by neo4j query
 
     github = Label(name="Github")
@@ -103,7 +103,9 @@ class GithubSecret(CustomOGM):
 
     repos = RelatedFrom("GithubRepo", "USES_SECRET")
     orgs = RelatedFrom("GithubOrganization", "USES_SECRET")
-    environments = RelatedTo("GithubEnvironment", "PART_OF")
+    environments = RelatedFrom("GithubEnvironment", "USES_SECRET")
+    secrets = RelatedFrom("GithubAction", "USES_SECRET")
+    actions = RelatedTo("GithubAction", "USES_SECRET")
     users = RelatedFrom(GithubUser, "CAN_STEAL_SECRET")
     teams = RelatedFrom(GithubTeam, "CAN_STEAL_SECRET")
 
@@ -119,8 +121,9 @@ class GithubEnvironment(CustomOGM):
 
     name = Property()
 
-    secrets = RelatedFrom(GithubSecret, "USES_SECRET")
+    secrets = RelatedTo(GithubSecret, "USES_SECRET")
     repos = RelatedTo("GithubRepo", "PART_OF")
+    actions = RelatedFrom("GithubAction", "USES_ENVIRONMENT")
 
     github = Label(name="Github")
 
@@ -155,6 +158,7 @@ class GithubSelfHostedRunner(CustomOGM):
     repos = RelatedTo("GithubRepo", "PART_OF")
     users = RelatedFrom(GithubUser, "CAN_RUN")
     teams = RelatedFrom(GithubTeam, "CAN_RUN")
+    actions = RelatedFrom("GithubAction", "RUN_IN")
 
     github = Label(name="Github")
 
@@ -207,11 +211,12 @@ class GithubRepo(CustomOGM):
     secrets = RelatedTo(GithubSecret, "USES_SECRET")
     leaks = RelatedFrom(GithubLeak, "PART_OF")
     environments = RelatedFrom(GithubEnvironment, "PART_OF")
-    self_hosted_runners = RelatedFrom(GithubSelfHostedRunner, "RUNNER")
+    self_hosted_runners = RelatedFrom(GithubSelfHostedRunner, "PART_OF")
     webhooks = RelatedTo("GithubWebhook", "HAS_WEBHOOK")
     gcp_source_repos = RelatedFrom("GcpSourceRepo", "IS_MIRROR")
     gcp_cloudbuild_trigger = RelatedFrom("GcpCloudbuildTrigger", "TRIGEGR")
     circleci_projects = RelatedTo("CircleCIProject", "IN_CIRCLECI")
+    actions = RelatedTo("GithubAction", "PART_OF")
 
 
     github = Label(name="Github")
@@ -324,3 +329,20 @@ class GithubWebhook(CustomOGM):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.github = True
+
+class GithubAction(CustomOGM):
+    __primarylabel__ = "GithubAction"
+    __primarykey__ = "full_name"
+
+    name = Property()
+    full_name = Property()
+    injection_points = Property()
+    env_vars = Property()
+    has_pull_request_target = Property()
+
+    repos = RelatedTo(GithubRepo, "PART_OF")
+    actions = RelatedTo(GithubEnvironment, "USES_ENVIRONMENT")
+    secrets = RelatedTo(GithubSecret, "USES_SECRET")
+    self_hosted_runners = RelatedTo(GithubSelfHostedRunner, "RUN_IN")
+
+    github = Label(name="Github")

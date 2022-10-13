@@ -63,3 +63,23 @@ queries:
     query: |
       MATCH(webhook:GithubWebhook) WHERE webhook.insecure_ssl <> "0"
       RETURN webhook.name, webhook.insecure_ssl
+  
+  - name: Actions supporting pull_request_target
+    query: |
+      MATCH(action:GithubAction) WHERE action.has_pull_request_target RETURN action.full_name
+  
+  - name: Actions with injection_points
+    query: |
+      MATCH(action:GithubAction) WHERE action.injection_points <> [] RETURN action.full_name, action.injection_points
+  
+  - name: Actions with env vars
+    query: |
+      MATCH(action:GithubAction) WHERE action.env_vars <> [] RETURN action.full_name, action.env_vars
+  
+  - name: Too many writers in repo
+    query: |
+      MATCH(repo:GithubRepo)<-[r:HAS_PERMS]-(u:GithubUser)
+      WHERE (r.admin = True OR r.maintain = True OR r.push = True)
+      WITH repo, count(u) as num_users
+      WHERE num_users > 15
+      RETURN repo.name, num_users

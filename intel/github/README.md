@@ -9,6 +9,7 @@ This module allows you to discover the following **Github resources**:
 - Leaks
 - Self hosted runners
 - Privileges
+- Giithub actions (env, injections, pull_request_target)
 
 To **understand how Github security works** and how to bypass branch protections, steal secrets, privesc... **read https://book.hacktricks.xyz/cloud-security/github-security**
 
