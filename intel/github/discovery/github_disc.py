@@ -707,7 +707,7 @@ class GithubDisc(GithubDiscClient):
                 in_env_vars = False
 
                 content = gh_content.decoded_content.decode("utf-8")
-                name = gh_content.path.split("/")[-1]
+                name = gh_content.path
                 full_name = github_repo.full_name + "/" + name
 
                 # Analyze each action workflow
@@ -847,7 +847,6 @@ class GithubDisc(GithubDiscClient):
                 collaborators = github_org.collaborators,
                 company = github_org.company,
                 created_at = github_org.created_at.strftime("%m-%d-%Y %H:%M:%S") if github_org.created_at else "",
-                default_repository_permission = github_org.default_repository_permission,
                 description = github_org.description,
                 disk_usage = github_org.disk_usage,
                 email = github_org.email,
@@ -865,6 +864,15 @@ class GithubDisc(GithubDiscClient):
                 public_gists = github_org.public_gists,
                 public_repos = github_org.public_repos,
                 private_repos = github_org.total_private_repos,
+
+                members_default_repository_permission = github_org.default_repository_permission,
+                members_can_create_public_repositories = github_org.__dict__["_rawData"]["members_can_create_public_repositories"],
+                members_can_create_private_repositories = github_org.__dict__["_rawData"]["members_can_create_private_repositories"],
+                members_can_create_internal_repositories = github_org.__dict__["_rawData"]["members_can_create_internal_repositories"],
+                members_can_create_pages = github_org.__dict__["_rawData"]["members_can_create_pages"],
+                members_can_create_public_pages = github_org.__dict__["_rawData"]["members_can_create_public_pages"],
+                members_can_create_private_pages = github_org.__dict__["_rawData"]["members_can_create_private_pages"],
+                members_can_fork_private_repositories = github_org.__dict__["_rawData"]["members_can_fork_private_repositories"],
                 two_factor_requirement_enabled = github_org.two_factor_requirement_enabled,
             ).save()
             ORGS[gid] = org_obj

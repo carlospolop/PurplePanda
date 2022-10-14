@@ -18,7 +18,7 @@ queries:
   - name: Non-Generic leaks
     query: |
       MATCH (leak:GithubLeak) WHERE leak.description <> "Generic API Key"
-      RETURN leak.name
+      RETURN leak.name, leak.description
   
   - name: Secrets each ppal can steal
     query: |
@@ -81,15 +81,18 @@ queries:
   
   - name: Actions supporting pull_request_target
     query: |
-      MATCH(action:GithubAction) WHERE action.has_pull_request_target RETURN action.full_name
+      MATCH(action:GithubAction) WHERE action.has_pull_request_target
+      RETURN action.full_name
   
   - name: Actions with injection_points
     query: |
-      MATCH(action:GithubAction) WHERE action.injection_points <> [] RETURN action.full_name, action.injection_points
+      MATCH(action:GithubAction) WHERE action.injection_points <> []
+      RETURN action.full_name, action.injection_points
   
   - name: Actions with env vars
     query: |
-      MATCH(action:GithubAction) WHERE action.env_vars <> [] RETURN action.full_name, action.env_vars
+      MATCH(action:GithubAction) WHERE action.env_vars <> []
+      RETURN action.full_name, action.env_vars
   
   - name: Too many writers in repo
     query: |
@@ -103,7 +106,7 @@ queries:
     query: |
       match(branch:GithubBranch)
       WHERE NOT branch.protected OR (branch.require_code_owner_reviews < 2 AND branch.required_approving_review_count < 2)
-      RETURN branch.name
+      RETURN branch.full_name
   
   - name: Repos with secrets without envs
     query: |

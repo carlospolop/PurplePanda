@@ -248,7 +248,6 @@ class GithubOrganization(CustomOGM):
     collaborators = Property()
     company = Property()
     created_at = Property()
-    default_repository_permission = Property()
     description = Property()
     disk_usage = Property()
     email = Property()
@@ -259,14 +258,23 @@ class GithubOrganization(CustomOGM):
     has_repository_projects = Property()
     last_modified = Property()
     location = Property()
-    members_can_create_repositories = Property()
-    owned_private_repos = Property()
     plan = Property()
     private_gists = Property()
     public_gists = Property()
     public_repos = Property()
     private_repos = Property()
-    two_factor_requirement_enabled = Property()
+    owned_private_repos = Property() # This is a number
+    
+    members_default_repository_permission = Property() # Member base permissions, read, write, admin, none
+    members_can_create_repositories = Property() # If members can create repos
+    two_factor_requirement_enabled = Property() # If 2FA is required
+    members_can_create_public_repositories = Property()
+    members_can_create_private_repositories = Property()
+    members_can_create_internal_repositories = Property()
+    members_can_create_pages = Property()
+    members_can_create_public_pages = Property()
+    members_can_create_private_pages = Property()
+    members_can_fork_private_repositories = Property()
 
     teams = RelatedFrom(GithubTeam, "PART_OF")
     users = RelatedFrom(GithubUser, "PART_OF")
