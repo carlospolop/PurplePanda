@@ -106,6 +106,11 @@ queries:
     query: |
       MATCH (ppal:K8sPrincipal)-[:PRIVESC]->(resource:K8s)
       RETURN ppal.name,collect(distinct resource.name)
+  
+  - name: Ppals that can privesc in k8s with reasons
+    query: |
+      MATCH (ppal:K8sPrincipal)-[r:PRIVESC]->(resource:K8s)
+      RETURN ppal.name,collect(distinct r.reasons),collect(distinct resource.name)
 
   - name: Ppals that can privesc to different ns
     query: |
@@ -123,7 +128,7 @@ queries:
       MATCH (ppal:K8sPrincipal)-[:PRIVESC*..2]->(service_account_with_aws:K8sServiceAccount) WHERE service_account_with_aws.iam_amazonaws_role_arn <> ""
       RETURN ppal.name,collect(distinct service_account_with_aws.name),collect(distinct service_account_with_aws.iam_amazonaws_role_arn)
   
-  - name: Pods with Aws permissions
+  - name: Pods with AWS permissions
     query: |
       MATCH (pod:K8sPod) WHERE pod.iam_amazonaws_com_role <> ""
       RETURN pod.name,pod.iam_amazonaws_com_role
