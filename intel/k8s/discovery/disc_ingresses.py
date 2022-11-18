@@ -49,8 +49,9 @@ class DiscIngresses(K8sDisc):
         if ingress.spec.rules:
             for rule in ingress.spec.rules:
                 host = rule.host
-                dom_obj = PublicDomain(name=host).save()
-                ingress_obj.public_domains.update(dom_obj)
+                if host:
+                    dom_obj = PublicDomain(name=host).save()
+                    ingress_obj.public_domains.update(dom_obj)
 
                 for path in ingress.spec.rules[0].http.paths:
                     url_path = path.path
@@ -70,5 +71,17 @@ class DiscIngresses(K8sDisc):
                 
                 secret_obj = K8sSecret(name=info.secret_name).save()
                 ingress_obj.secrets.update(secret_obj, hosts=info.hosts)
+        
+        if ingress.status and ingress.status.load_balancer and ingress.status.load_balancer.ingress:
+            for info in ingress.status.load_balancer.ingress:
+                ip = info.ip
+                if ip:
+                    ip_obj = PublicIP(name=ip).save()
+                    ingress_obj.public_ips.update(ip_obj)
+
+                hostname = info.hostname
+                if hostname:
+                    dom_obj = PublicDomain(name=hostname).save()
+                    ingress_obj.public_domains.update(dom_obj)
         
         ingress_obj.save()

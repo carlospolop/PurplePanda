@@ -90,5 +90,18 @@ class DiscServices(K8sDisc):
             service_obj.public_domains.update(dom_obj)
             service_obj.save()
         
+        if service.status:
+            if service.status.load_balancer:
+                if service.status.load_balancer.ingress:
+                    for ingress in service.status.load_balancer.ingress:
+                        if ingress.ip:
+                            pip_obj = PublicIP(name=ingress.ip).save()
+                            service_obj.public_ips.update(pip_obj)
+                        if ingress.hostname:
+                            dom_obj = PublicDomain(name=ingress.hostname).save()
+                            service_obj.public_domains.update(dom_obj)
+                
+                service_obj.save()
+        
         # Get resources using the service
         self._pod_selector(service_obj, service.spec.selector)

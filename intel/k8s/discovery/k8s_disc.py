@@ -102,16 +102,16 @@ class K8sDisc(K8sDiscClient):
 
         post_start = container.lifecycle.post_start if container.lifecycle else {}
         lifecycle_post_start = {
-            "exec": post_start.exec.command if post_start.exec else "",
-            "tcpSocket": f"{post_start.tcpSocket.host}:{post_start.tcpSocket.port}" if post_start.tcpSocket else "",
-            "httpGet": f"{post_start.httpGet.scheme}://{post_start.httpGet.host}:{post_start.httpGet.port}/{post_start.httpGet.path}" if post_start.httpGet else "",
+            "exec": post_start._exec.command if post_start._exec else "",
+            "tcpSocket": f"{post_start.tcp_socket.host}:{post_start.tcp_socket.port}" if post_start.tcp_socket else "",
+            "httpGet": f"{post_start.http_get.scheme}://{post_start.http_get.host}:{post_start.http_get.port}/{post_start.http_get.path}" if post_start.http_get else "",
         } if post_start else {}
 
         pre_stop = container.lifecycle.pre_stop if container.lifecycle else {}
         lifecycle_pre_stop = {
-            "exec": pre_stop.exec.command if pre_stop.exec else "",
-            "tcpSocket": f"{pre_stop.tcpSocket.host}:{pre_stop.tcpSocket.port}" if pre_stop.tcpSocket else "",
-            "httpGet": f"{pre_stop.httpGet.scheme}://{pre_stop.httpGet.host}:{pre_stop.httpGet.port}/{pre_stop.httpGet.path}" if pre_stop.httpGet else "",
+            "exec": pre_stop._exec.command if pre_stop._exec else "",
+            "tcpSocket": f"{pre_stop.tcp_socket.host}:{pre_stop.tcp_socket.port}" if pre_stop.tcp_socket else "",
+            "httpGet": f"{pre_stop.http_get.scheme}://{pre_stop.http_get.host}:{pre_stop.http_get.port}/{pre_stop.http_get.path}" if pre_stop.http_get else "",
         } if pre_stop else {}
         
         container_obj = K8sContainer(

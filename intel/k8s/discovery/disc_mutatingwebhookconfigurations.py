@@ -28,6 +28,18 @@ class DiscMutatingWebhookConfigurations(K8sDisc):
 
     def _save_mutationwebhookconfig(self, mwc, **kwargs):
         """Given K8s replicationcontroller information, save it"""
+
+        namespace_selector_expresions = []
+        for w in mwc.webhooks:
+            if w.namespace_selector.match_expressions:
+                for e in w.namespace_selector.match_expressions:
+                    match_expr_str = f"Key: {e.key}, Operator: {e.operator}, Values:{e.values}"
+                    namespace_selector_expresions.append(match_expr_str)
+        
+        namespace_selector_labels = []
+        for w in mwc.webhooks:
+            if w.namespace_selector.match_expressions:
+                namespace_selector_labels += json.dumps(w.namespace_selector.match_labels)
         
         mwc_obj = K8sMutatingWebhookConfig(
             name = mwc.metadata.name,
@@ -36,8 +48,8 @@ class DiscMutatingWebhookConfigurations(K8sDisc):
             labels = json.dumps(mwc.metadata.labels),
             annotations = json.dumps(mwc.metadata.annotations) if mwc.metadata.annotations else "",
 
-            namespace_selector_expresions = [json.dumps(w.namespace_selector.match_expressions) for w in mwc.webhooks] if mwc.webhooks else [],
-            namespace_selector_labels = [json.dumps(w.namespace_selector.match_labels) for w in mwc.webhooks] if mwc.webhooks else [],
+            namespace_selector_expresions = namespace_selector_expresions,
+            namespace_selector_labels = namespace_selector_labels,
             #client_config = [json.dumps(w.client_config) for w in mwc.webhooks] if mwc.webhooks else [],
             reinvocation_policy = [w.reinvocation_policy for w in mwc.webhooks] if mwc.webhooks else [],
             failure_policy = [json.dumps(w.failure_policy) for w in mwc.webhooks] if mwc.webhooks else [],
@@ -45,8 +57,8 @@ class DiscMutatingWebhookConfigurations(K8sDisc):
             rules_resources = [json.dumps(r.resources) for w in mwc.webhooks for r in w.rules] if mwc.webhooks else [],
         ).save()
 
-        dom_obj = PublicDomain(name=mwc.metadata.name).save()
-        mwc_obj.public_domains.update(dom_obj)
+        #dom_obj = PublicDomain(name=mwc.metadata.name).save() #They aren't domains always
+        #mwc_obj.public_domains.update(dom_obj)
 
         for w in mwc.webhooks:
             if w.client_config.url:

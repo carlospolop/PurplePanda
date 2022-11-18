@@ -106,6 +106,10 @@ class PurplePandaK8s():
 
             if "authorization" in cred.configuration.api_key and " " in cred.configuration.api_key["authorization"]:
                 jwt_token = cred.configuration.api_key["authorization"].split(" ")[1]
-                PurplePandaPrints.print_dict(jwt.decode(jwt_token, options={"verify_signature": False}))
+                try:
+                    PurplePandaPrints.print_dict(jwt.decode(jwt_token, options={"verify_signature": False}))
+                except:
+                    print("There was an error decoding the JWT token, this is raw token:")
+                    PurplePandaPrints.print_key_val("Token", jwt_token)
             
             PurplePandaPrints.print_separator()
