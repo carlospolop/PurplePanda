@@ -64,8 +64,6 @@ class AnalyzeResults(GcpDisc):
             
         # Get the principals that could escalate
         for role in roles:
-            if not role == "roles/pubsub.serviceAgent":
-                continue
             ppals_rscs = self._get_principals_with_role(role, only_to_classes, extra_privesc_to, running_in, second_order_relations)
             
             for ppal_rsc in ppals_rscs:

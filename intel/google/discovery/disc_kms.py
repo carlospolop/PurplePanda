@@ -18,11 +18,6 @@ class DiscKMS(GcpDisc):
         This module will create the KMS key rings and keys and relate them with the parent project.
         """
 
-        # Checking each location of each project might take a lot of time
-        # so by default this is not executed
-        if not self.gcp_get_kms:
-            return
-
         projects: List[GcpProject] = GcpProject.get_all()
         self._disc_loop(projects, self._disc_keyrings, __name__.split(".")[-1])
     
@@ -32,7 +27,18 @@ class DiscKMS(GcpDisc):
 
         project_name: str = p_obj.name
         http_prep = self.service.projects().locations()#.list(name=project_name)
+
         locations: List[str] = self.execute_http_req(http_prep, "locations", disable_warn=True, list_kwargs={"name": project_name})
+
+        if not locations:
+            return
+
+        # Checking each location of each project might take a lot of time
+        # so by default check only one: "global"
+        if not self.gcp_get_kms:
+            locations = locations[:1]
+            locations[0]["locationId"] = "global"
+        
         for loc in locations:
             parent_fullname: str = loc["name"]
             loc_name: str = loc["locationId"]

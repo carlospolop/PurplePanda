@@ -62,7 +62,7 @@ python3 main.py -p google --gcp-get-secret-values --gcp-get-kms -e
 
 ### Google module params
 - `--gcp-get-secret-values`: Use this param to indicate to PurplePanda to try to get the secret values (*by default no secrets values ara gathered*)
-- `--gcp-get-kms`: Use this param to enumerate also KMS resources (this will take hours probably because you need to test each region in each project)
+- `--gcp-get-kms`: Use this param to enumerate all KMS locations (this will take hours probably, so by default only "global" is checked)
 
 ## Permissions configuration
 If you are part of a **Blue Team or Purple Team**, I would suggest you to launch this module with an **account with at least the following roles over the organization**:

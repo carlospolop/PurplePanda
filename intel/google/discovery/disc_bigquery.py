@@ -23,7 +23,7 @@ class DiscBigquery(GcpDisc):
     def _disc_datasets(self, project: GcpProject):
         """Discover all the datasets of a project"""
         
-        project_id: str = project["id"]
+        project_id: str = project.name.split("/")[-1]
         http_prep = self.service.datasets()#.list(projectId=project_id)
         datasets: List[str] = self.execute_http_req(http_prep, "datasets", list_kwargs={"projectId": project_id})
 
