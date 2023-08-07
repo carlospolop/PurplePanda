@@ -67,9 +67,9 @@ Use credentials for each platform with at least **admin read access to all the r
 PurplePanda is also **designed to be used by Red Teams**. In general, cloud/saas platforms **won't give everyone access to read** the configuration of the platform, that's why PurplePanda supports the **use of several keys for the same platform**, in order to try to enumerate everything with all the keys you compromised and have the most accurate view of the configuration of the platform.
 
 ## Supported platforms
-- **Google Cloud Platform (GCP)**: To understand how GCP security works and how to abuse roles and permissions **read https://book.hacktricks.xyz/cloud-security/gcp-security**
-- **Github**: To understand how Github security works and how to bypass branch protections, steal secrets, privesc... **read https://book.hacktricks.xyz/cloud-security/github-security**
-- **Kubernetes (K8s)**: To understand how Kubernetes RBAC security works and how to abuse roles, privesc to other clouds... **read https://book.hacktricks.xyz/cloud-security/pentesting-kubernetes**
+- **Google Cloud Platform (GCP)**: To understand how GCP security works and how to abuse roles and permissions **read https://cloud.hacktricks.xyz/pentesting-cloud/gcp-security**
+- **Github**: To understand how Github security works and how to bypass branch protections, steal secrets, privesc... **read https://cloud.hacktricks.xyz/pentesting-ci-cd/github-security**
+- **Kubernetes (K8s)**: To understand how Kubernetes RBAC security works and how to abuse roles, privesc to other clouds... **read https://cloud.hacktricks.xyz/pentesting-cloud/kubernetes-security**
 
 
 ## How to use the data
