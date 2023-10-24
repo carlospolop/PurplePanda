@@ -57,7 +57,7 @@ queries:
   - name: Repos each user can write
     query: |
       MATCH(user:GithubUser)-[r:HAS_PERMS{push:true}]->(repo:GithubRepo)
-      RETURN user.name,collect(distinct repos.name)
+      RETURN user.name,collect(distinct repo.name)
   
   - name: Privilege escalations
     query: |

@@ -44,7 +44,7 @@ queries:
         any(path IN pod.host_path WHERE any( regex IN ["/", "/proc.*", "/sys.*", "/dev.*", "/var/run.*", ".*docker.sock", ".*crio.sock", ".*/kubelet.*", ".*/pki.*", "/home/admin.*", "/etc.*", ".*/kubernetes.*", ".*/manifests.*", "/root.*"] WHERE regex =~ replace(path,"\\", "\\\\")))
       RETURN pod.name,collect(distinct ingress.name),collect(distinct svc.name)
 
-- name: Exposed privileged containers
+  - name: Exposed privileged containers
     query: |
       OPTIONAL MATCH(svc1:K8sService)-[:HAS_IP]-(ip:PublicIP)
       OPTIONAL MATCH(svc2:K8sService)-[:HAS_DOMAIN]-(dom:PublicDomain) WHERE dom.is_external = True
