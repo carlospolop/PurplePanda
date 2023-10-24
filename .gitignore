@@ -1,5 +1,6 @@
 # Project ignores
 /outputs
+.env
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

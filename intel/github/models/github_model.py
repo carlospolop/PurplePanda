@@ -349,7 +349,7 @@ class GithubAction(CustomOGM):
     has_pull_request_target = Property()
 
     repos = RelatedTo(GithubRepo, "PART_OF")
-    actions = RelatedTo(GithubEnvironment, "USES_ENVIRONMENT")
+    environments = RelatedTo(GithubEnvironment, "USES_ENVIRONMENT")
     secrets = RelatedTo(GithubSecret, "USES_SECRET")
     self_hosted_runners = RelatedTo(GithubSelfHostedRunner, "RUN_IN")
 

@@ -156,7 +156,7 @@ class AnalyzeResults(GithubDisc):
                         if not known_protections and not self.printed_no_protections_msg:
                             self.printed_no_protections_msg = True
                             if not self.github_write_as_merge:
-                                self.logger.error("I couldn't get branch protections of all or some repos so False Positives and False Negatives can occur. I will try to minimize them...")
+                                self.logger.error("I couldn't get branch protections of all or some repos so False Positives and False Negatives can occur. I will try to minimize them... To treat write as merge permissions use the param '--github-write-as-merge'")
                             else:
                                 self.logger.error("I couldn't get branch protections of all or some repos so False Positives and False Negatives can occur. I will treat all write as merge permission as indicated.")
                                 self._relate_to_merge(branch_obj, write_ppals, reason="User indicated to treat all writes as merge")

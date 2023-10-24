@@ -866,13 +866,13 @@ class GithubDisc(GithubDiscClient):
                 private_repos = github_org.total_private_repos,
 
                 members_default_repository_permission = github_org.default_repository_permission,
-                members_can_create_public_repositories = github_org.__dict__["_rawData"]["members_can_create_public_repositories"],
-                members_can_create_private_repositories = github_org.__dict__["_rawData"]["members_can_create_private_repositories"],
-                members_can_create_internal_repositories = github_org.__dict__["_rawData"]["members_can_create_internal_repositories"],
-                members_can_create_pages = github_org.__dict__["_rawData"]["members_can_create_pages"],
-                members_can_create_public_pages = github_org.__dict__["_rawData"]["members_can_create_public_pages"],
-                members_can_create_private_pages = github_org.__dict__["_rawData"]["members_can_create_private_pages"],
-                members_can_fork_private_repositories = github_org.__dict__["_rawData"]["members_can_fork_private_repositories"],
+                members_can_create_public_repositories = github_org.__dict__["_rawData"].get("members_can_create_public_repositories"),
+                members_can_create_private_repositories = github_org.__dict__["_rawData"].get("members_can_create_private_repositories"),
+                members_can_create_internal_repositories = github_org.__dict__["_rawData"].get("members_can_create_internal_repositories"),
+                members_can_create_pages = github_org.__dict__["_rawData"].get("members_can_create_pages"),
+                members_can_create_public_pages = github_org.__dict__["_rawData"].get("members_can_create_public_pages"),
+                members_can_create_private_pages = github_org.__dict__["_rawData"].get("members_can_create_private_pages"),
+                members_can_fork_private_repositories = github_org.__dict__["_rawData"].get("members_can_fork_private_repositories"),
                 two_factor_requirement_enabled = github_org.two_factor_requirement_enabled,
             ).save()
             ORGS[gid] = org_obj
