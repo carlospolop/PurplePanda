@@ -3,6 +3,7 @@ from py2neo.ogm import Property, Label, RelatedFrom
 from core.db.customogm import CustomOGM
 from intel.google.models.gcp_service_account import GcpServiceAccount
 
+
 class GcpApiKey(CustomOGM):
     __primarylabel__ = "GcpApiKey"
     __primarykey__ = "name"

@@ -3,10 +3,10 @@ from py2neo.ogm import Property, Label, RelatedFrom, RelatedTo
 from intel.google.models.gcp_perm_models import GcpResource, GcpRunningSA
 from intel.google.models.gcp_project import GcpProject
 from intel.google.models.gcp_composer import GcpComposerEnv
-from intel.google.models.gcp_service_account import GcpServiceAccount #Needed
+from intel.google.models.gcp_service_account import GcpServiceAccount  # Needed
 from core.models.models import PublicIP, CloudCluster
 from intel.google.models.gcp_kms import GcpKMSKey
-from intel.k8s.models.k8s_model import K8sNamespace, K8sNode, K8sMutatingWebhookConfig #Needed
+from intel.k8s.models.k8s_model import K8sNamespace, K8sNode, K8sMutatingWebhookConfig  # Needed
 
 
 class GcpCluster(GcpResource, GcpRunningSA, CloudCluster):

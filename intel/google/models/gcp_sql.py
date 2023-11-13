@@ -4,7 +4,7 @@ from intel.google.models.gcp_perm_models import GcpResource
 from intel.google.models.gcp_project import GcpProject
 from intel.google.models.gcp_compute import GcpNetwork
 from intel.google.models.gcp_perm_models import GcpRunningSA
-from intel.google.models.gcp_service_account import GcpServiceAccount # This needs to be imported!
+from intel.google.models.gcp_service_account import GcpServiceAccount  # This needs to be imported!
 
 from core.models import PublicIP
 
@@ -33,6 +33,7 @@ class GcpSqlInstance(GcpResource, GcpRunningSA):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.gcp = True
+
 
 class GcpSqlDB(GcpResource, GcpRunningSA):
     __primarylabel__ = "GcpSqlDB"

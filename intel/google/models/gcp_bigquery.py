@@ -9,8 +9,8 @@ class GcpBqDataset(CustomOGM):
     __primarylabel__ = "GcpBqDataset"
     __primarykey__ = "name"
 
-    name = Property() # project-name:datasetname
-    datasetId = Property() # datasetname
+    name = Property()  # project-name:datasetname
+    datasetId = Property()  # datasetname
     displayName = Property()
     resource_name = Property()
 
@@ -28,9 +28,9 @@ class GcpBqTable(GcpResource):
     __primarylabel__ = "GcpBqTable"
     __primarykey__ = "name"
 
-    name = Property() # project-name:datasetname.table name
-    tableId = Property() # table name
-    type = Property() # 'TABLE'
+    name = Property()  # project-name:datasetname.table name
+    tableId = Property()  # table name
+    type = Property()  # 'TABLE'
     resource_name = Property()
 
     bgdatasets = RelatedTo(GcpBqDataset, "PART_OF")

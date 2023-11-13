@@ -23,7 +23,6 @@ from intel.k8s.discovery.k8s_disc_client import K8sDiscClient
 from intel.concourse.discovery.concourse_disc_client import ConcourseDiscClient
 from intel.circleci.discovery.circleci_disc_client import CircleCIDiscClient
 
-
 logger = logging.getLogger("main")
 logging.getLogger("googleapiclient.http").setLevel(logging.ERROR)
 logging.getLogger("google.auth._default").setLevel(logging.ERROR)
@@ -38,7 +37,7 @@ def main():
     currently_available = PurplePandaConfig().platforms
     currently_available_str = ", ".join(currently_available)
 
-    help_msg=f"""Enumerate different cloud platforms.\n
+    help_msg = f"""Enumerate different cloud platforms.\n
     Platforms available: {currently_available_str}.\n
     You need to indicate '-e' or '-a' at least.\n
     Google: The tool will try to get info about all the supported resources and find privesc paths within kubernetes and with other clouds/SaaS\n
@@ -46,24 +45,40 @@ def main():
     Kubernetes: The tool will try to get info about all the supported resources and find privesc paths within kubernetes and with other clouds/SaaS.\n
     """
     parser = argparse.ArgumentParser(description=help_msg)
-    parser.add_argument('-a', '--analyze', action='store_true', default=False, required=False, help=f'Fast analysis of the indicated (comma-separated) platform credentials.')
-    parser.add_argument('-e', '--enumerate', action='store_true', default=False, required=False, help=f'Enumerate the assets of the indicated (comma-separated) platforms.')
-    parser.add_argument('-p', '--platforms', type=str, required=True, help=f'Comma-separated list of platforms to analyze/enumerate. Currently available: {currently_available_str}')
-    parser.add_argument('-v', '--verbose', action='store_true', default=False, required=False, help=f'Do not remove the progress bar when the task is done')
-    parser.add_argument('-d', '--directory', type=str, required=False, help=f'Path to the directory to save an initial analysis of the results in CVS (separator="|") format. If you don\'t indicate any, no analysis will be written to disk')
-    parser.add_argument('-n','--nmap',action='store_true', default=False, required=False, help=f'Perform full port scan on the public IP addresses using Nmap')
-    parser.add_argument('--github-only-org', action='store_true', default=False, required=False, help=f'Only get information of the specified github orgs in the env var (no personal repos info will be saved)')
-    parser.add_argument('--github-only-org-and-org-users', action='store_true', default=False, required=False, help=f'Only get information of the specified github orgs and users repos of the specified orgs (no extra orgs info will be saved)')
-    parser.add_argument('--github-all-branches', action='store_true', default=False, required=False, help=f'By default data of only default branch of each repo is gathered, set this to get info from all branches of each repo')
-    parser.add_argument('--github-no-leaks', action='store_true', default=False, required=False, help=f'Do not try to find leaks in repos')
-    parser.add_argument('--github-get-redundant-info', action='store_true', default=False, required=False, help=f'If the passed credentials arent org admin, activating this may get you more info (and will also take more time)')
-    parser.add_argument('--github-get-archived', action='store_true', default=False, required=False, help=f'By default not relations of archived repos are gathered')
-    parser.add_argument('--github-write-as-merge', action='store_true', default=False, required=False, help=f'By default if the user doesn\'t have perms to see the branch protection, only codeowners and admins are supposed to be able to merge in the branch (low false possitives rate). With this option you can indicate to treat anyone with write permissions as if he has merge permissions (high false possitives rate potencially).')
+    parser.add_argument('-a', '--analyze', action='store_true', default=False, required=False,
+                        help=f'Fast analysis of the indicated (comma-separated) platform credentials.')
+    parser.add_argument('-e', '--enumerate', action='store_true', default=False, required=False,
+                        help=f'Enumerate the assets of the indicated (comma-separated) platforms.')
+    parser.add_argument('-p', '--platforms', type=str, required=True,
+                        help=f'Comma-separated list of platforms to analyze/enumerate. Currently available: {currently_available_str}')
+    parser.add_argument('-v', '--verbose', action='store_true', default=False, required=False,
+                        help=f'Do not remove the progress bar when the task is done')
+    parser.add_argument('-d', '--directory', type=str, required=False,
+                        help=f'Path to the directory to save an initial analysis of the results in CVS (separator="|") format. If you don\'t indicate any, no analysis will be written to disk')
+    parser.add_argument('-n', '--nmap', action='store_true', default=False, required=False,
+                        help=f'Perform full port scan on the public IP addresses using Nmap')
+    parser.add_argument('--github-only-org', action='store_true', default=False, required=False,
+                        help=f'Only get information of the specified github orgs in the env var (no personal repos info will be saved)')
+    parser.add_argument('--github-only-org-and-org-users', action='store_true', default=False, required=False,
+                        help=f'Only get information of the specified github orgs and users repos of the specified orgs (no extra orgs info will be saved)')
+    parser.add_argument('--github-all-branches', action='store_true', default=False, required=False,
+                        help=f'By default data of only default branch of each repo is gathered, set this to get info from all branches of each repo')
+    parser.add_argument('--github-no-leaks', action='store_true', default=False, required=False,
+                        help=f'Do not try to find leaks in repos')
+    parser.add_argument('--github-get-redundant-info', action='store_true', default=False, required=False,
+                        help=f'If the passed credentials arent org admin, activating this may get you more info (and will also take more time)')
+    parser.add_argument('--github-get-archived', action='store_true', default=False, required=False,
+                        help=f'By default not relations of archived repos are gathered')
+    parser.add_argument('--github-write-as-merge', action='store_true', default=False, required=False,
+                        help=f'By default if the user doesn\'t have perms to see the branch protection, only codeowners and admins are supposed to be able to merge in the branch (low false possitives rate). With this option you can indicate to treat anyone with write permissions as if he has merge permissions (high false possitives rate potencially).')
 
-    parser.add_argument('--k8s-get-secret-values', action='store_true', default=False, required=False, help=f'Get the secret values (if you have access')
+    parser.add_argument('--k8s-get-secret-values', action='store_true', default=False, required=False,
+                        help=f'Get the secret values (if you have access')
 
-    parser.add_argument('--gcp-get-secret-values', action='store_true', default=False, required=False, help=f'Get the secret values (if you have access')
-    parser.add_argument('--gcp-get-kms', action='store_true', default=False, required=False, help=f'Enumerate KMS (need to check every location on each project), might some hours)')
+    parser.add_argument('--gcp-get-secret-values', action='store_true', default=False, required=False,
+                        help=f'Get the secret values (if you have access')
+    parser.add_argument('--gcp-get-kms', action='store_true', default=False, required=False,
+                        help=f'Enumerate KMS (need to check every location on each project), might some hours)')
 
     args = parser.parse_args()
     platforms = args.platforms.lower().split(",")
@@ -116,7 +131,7 @@ def main():
     if "concourse" in platforms: ConcourseDiscClient()
     if "circleci" in platforms: CircleCIDiscClient()
 
-    if analyze: # When -a is passed as argument
+    if analyze:  # When -a is passed as argument
         if "google" in platforms: PurplePandaGoogle().analyze_creds()
         if "github" in platforms: PurplePandaGithub().analyze_creds()
         if "k8s" in platforms: PurplePandaK8s().analyze_creds()
@@ -127,62 +142,63 @@ def main():
         # Cannot connect to database so finish here, (the error messages are shown from core.db.customogm)
         sys.exit(1)
 
-    elif plat_enumerate: # When -e is passed in argument
+    elif plat_enumerate:  # When -e is passed in argument
         # Launch each SaaS discovery module in its own thread (we cannot use diffrent process or they will figth for the progress bar of "rich")
-        functions = [] #This will be a list of functions that will be called
+        functions = []  # This will be a list of functions that will be called
         functions2 = []
 
         # Google
         if "google" in platforms:
             functions.append((PurplePandaGoogle().discover, "google",
-                {
-                    "gcp_get_secret_values": gcp_get_secret_values,
-                    "gcp_get_kms": gcp_get_kms
-                }
-            ))
+                              {
+                                  "gcp_get_secret_values": gcp_get_secret_values,
+                                  "gcp_get_kms": gcp_get_kms
+                              }
+                              ))
 
         # Github
         if "github" in platforms:
             functions.append((PurplePandaGithub().discover, "github",
-                {
-                    "github_only_org": github_only_org,
-                    "github_only_org_and_org_users": github_only_org_and_org_users,
-                    "all_branches": github_all_branches,
-                    "github_no_leaks": github_no_leaks,
-                    "github_get_redundant_info": github_get_redundant_info,
-                    "github_get_archived": github_get_archived,
-                    "github_write_as_merge": github_write_as_merge
-                }
-            ))
+                              {
+                                  "github_only_org": github_only_org,
+                                  "github_only_org_and_org_users": github_only_org_and_org_users,
+                                  "all_branches": github_all_branches,
+                                  "github_no_leaks": github_no_leaks,
+                                  "github_get_redundant_info": github_get_redundant_info,
+                                  "github_get_archived": github_get_archived,
+                                  "github_write_as_merge": github_write_as_merge
+                              }
+                              ))
         # Kubernetes
         if "k8s" in platforms:
             functions.append((PurplePandaK8s().discover, "kubernetes",
-                {
-                    "k8s_get_secret_values": k8s_get_secret_values
-                }
-            ))
+                              {
+                                  "k8s_get_secret_values": k8s_get_secret_values
+                              }
+                              ))
 
         # Concourse
         if "concourse" in platforms:
             functions.append((PurplePandaConcourse().discover, "concourse",
-                {
-                }
-            ))
+                              {
+                              }
+                              ))
 
         # CircleCI
         if "circleci" in platforms:
             # If github, launch circleci in a second round
             if "github" in platforms:
-                logger.warning(f"CircleCI and Github detected. Executing CircleCI in a secound round after github has been executed.")
+                logger.warning(
+                    f"CircleCI and Github detected. Executing CircleCI in a secound round after github has been executed.")
                 functions2.append((PurplePandaCircleCI().discover, "circleci",
-                    {
-                    }
-                ))
+                                   {
+                                   }
+                                   ))
             else:
                 functions.append((PurplePandaCircleCI().discover, "circleci",
-                    {
-                    }
-                ))
+                                  {
+                                  }
+                                  ))
 
         # First round of functions
         PurplePanda().start_discovery(functions)
@@ -191,22 +207,21 @@ def main():
         PurplePanda().start_discovery(functions2)
 
         # Perform a combined analysis
-        flags={'nmap':nmap}
+        flags = {'nmap': nmap}
         AnalyzeResults().discover(flags)
 
         # If directory specified write some analysis in CSV files
         if directory:
             write_csv_functions = []
             for plat_name in currently_available:
-                    write_csv_functions.append((PurplePanda().write_analysis, plat_name, {
-                            "name": plat_name, "directory": directory
-                        }
-                    ))
+                write_csv_functions.append((PurplePanda().write_analysis, plat_name, {
+                    "name": plat_name, "directory": directory
+                }
+                                            ))
 
             PurplePanda().start_discovery(write_csv_functions, writing_analysis=True)
 
         print("Finished!")
-
 
 
 if __name__ == "__main__":

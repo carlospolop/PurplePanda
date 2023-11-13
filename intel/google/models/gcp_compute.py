@@ -2,7 +2,7 @@ from py2neo.ogm import Property, RelatedFrom, RelatedTo, Related, Label
 from intel.google.models.gcp_project import GcpProject
 from intel.google.models.gcp_perm_models import GcpResource, GcpRunningSA
 from intel.google.models.gcp_cluster import GcpCluster
-from intel.google.models.gcp_service_account import GcpServiceAccount # This needs to be imported!
+from intel.google.models.gcp_service_account import GcpServiceAccount  # This needs to be imported!
 from core.db.customogm import CustomOGM
 from core.models.models import PublicIP
 
@@ -29,11 +29,11 @@ class GcpComputeInstance(GcpResource, GcpRunningSA):
     subnetworks = RelatedTo("GcpSubnetwork", "CONNECTED")
     disks = RelatedFrom("GcpComputeDisk", "PART_OF")
     public_ips = RelatedTo(PublicIP, "HAS_IP")
-    clusters = RelatedTo(GcpCluster, "PART_OF") # Relate to cluster and not to nodepool because the name of the nodepools are less prone to be different
+    clusters = RelatedTo(GcpCluster,
+                         "PART_OF")  # Relate to cluster and not to nodepool because the name of the nodepools are less prone to be different
 
     gcp = Label(name="Gcp")
 
-    
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.gcp = True
@@ -57,7 +57,7 @@ class GcpComputeDisk(GcpResource):
     compute_instances = RelatedTo(GcpComputeInstance, "PART_OF")
 
     gcp = Label(name="Gcp")
-    
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.gcp = True
@@ -80,7 +80,7 @@ class GcpNetwork(CustomOGM):
     sqlinstances = RelatedFrom("GcpSqlInstance", "CONNECTED")
 
     gcp = Label(name="Gcp")
-    
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.gcp = True
@@ -107,10 +107,11 @@ class GcpSubnetwork(GcpResource):
     clusters = RelatedFrom(GcpCluster, "CONNECTED")
 
     gcp = Label(name="Gcp")
-    
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.gcp = True
+
 
 class GcpFirewallRule(CustomOGM):
     __primarylabel__ = "GcpFirewallRule"
@@ -131,7 +132,7 @@ class GcpFirewallRule(CustomOGM):
     networks = RelatedTo(GcpNetwork, "PROTECT")
 
     gcp = Label(name="Gcp")
-    
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.gcp = True

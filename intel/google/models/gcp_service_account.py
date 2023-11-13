@@ -5,6 +5,7 @@ from intel.google.models.gcp_project import GcpProject
 from intel.google.models.gcp_organization import GcpOrganization
 from intel.google.models.gcp_group import GcpGroup
 
+
 class GcpServiceAccount(GcpPrincipal, GcpResource):
     __primarylabel__ = "GcpServiceAccount"
     __primarykey__ = "email"
@@ -29,9 +30,8 @@ class GcpServiceAccount(GcpPrincipal, GcpResource):
     def __init__(self, email, *args, **kwargs):
         kwargs["email"] = email
         super().__init__(*args, **kwargs)
-        self.default_sa = any(ie in email for ie in internal_emails)        
+        self.default_sa = any(ie in email for ie in internal_emails)
         self.gcp = True
-
 
 
 # From https://cloud.google.com/iam/docs/service-agents

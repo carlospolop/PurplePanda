@@ -5,6 +5,7 @@ from intel.google.models.gcp_pubsub import GcpPubSubTopic
 from intel.google.models.gcp_service_account import GcpServiceAccount
 from core.models import CodeMirror
 
+
 class GcpSourceRepo(CodeMirror, GcpRunningSA):
     __primarylabel__ = "GcpSourceRepo"
     __primarykey__ = "name"
@@ -22,7 +23,6 @@ class GcpSourceRepo(CodeMirror, GcpRunningSA):
 
     gcp = Label(name="Gcp")
 
-    
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.gcp = True

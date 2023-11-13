@@ -19,6 +19,7 @@ class BitbucketOrganization(CustomOGM):
         super().__init__(*args, **kwargs)
         self.bitbucket = True
 
+
 class BitbucketRepo(CustomOGM):
     __primarylabel__ = "BitbucketRepo"
     __primarykey__ = "full_name"
@@ -35,16 +36,18 @@ class BitbucketRepo(CustomOGM):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.bitbucket = True
-    
+
     @staticmethod
     def get_full_name_from_url(url):
         uparsed = urlparse(url)
-        return uparsed.path[1:].replace(".git", "") if uparsed.path.startswith("/") else uparsed.path.replace(".git", "")
+        return uparsed.path[1:].replace(".git", "") if uparsed.path.startswith("/") else uparsed.path.replace(".git",
+                                                                                                              "")
 
     @staticmethod
     def is_bitbucket_repo_url(url):
         uparsed = urlparse(url)
-        return uparsed.hostname == "bitbucket.org" or uparsed.hostname == "bitbucket.org"
+        return uparsed.hostname in ["bitbucket.org", "bitbucket.org"]
+
 
 class BitbucketBranch(CustomOGM):
     __primarylabel__ = "BitbucketBranch"

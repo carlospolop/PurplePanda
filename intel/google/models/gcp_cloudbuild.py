@@ -18,16 +18,16 @@ class GcpCloudbuildBuild(CustomOGM, GcpRunningSA):
     name = Property()
     id = Property()
     images = Property()
-    logsBucket = Property() # gs://541234567077.cloudbuild-logs.googleusercontent.com
+    logsBucket = Property()  # gs://541234567077.cloudbuild-logs.googleusercontent.com
     tags = Property()
     logUrl = Property()
     status = Property()
-    
-    #bucket source
-    bucket = Property() #Bucket name
-    bucketObject = Property() #Path to object inside the bucket
 
-    #reposource
+    # bucket source
+    bucket = Property()  # Bucket name
+    bucketObject = Property()  # Path to object inside the bucket
+
+    # reposource
     repoName = Property()
     repoDir = Property()
     branchName = Property()
@@ -45,6 +45,7 @@ class GcpCloudbuildBuild(CustomOGM, GcpRunningSA):
         super().__init__(*args, **kwargs)
         self.gcp = True
 
+
 class GcpCloudbuildTrigger(CustomOGM, GcpRunningSA):
     __primarylabel__ = "GcpCloudbuildTrigger"
     __primarykey__ = "id"
@@ -56,7 +57,7 @@ class GcpCloudbuildTrigger(CustomOGM, GcpRunningSA):
     tags = Property()
 
     # If the trigger is a change in a GCP Source Repo, here is defined the specific change
-    triggerRepoProjectId =Property()
+    triggerRepoProjectId = Property()
     triggerRepoName = Property()
     triggerRepoDir = Property()
     triggerBranchName = Property()
@@ -99,7 +100,7 @@ class GcpCloudbuildTrigger(CustomOGM, GcpRunningSA):
     pubsubTopics_trigger = RelatedTo(GcpPubSubTopic, "TRIGGER")
     secrets_trigger = RelatedTo(GcpSecretVersion, "WEBHOOK")
     sourcerepos_trigger = RelatedTo(GcpSourceRepo, "TRIGGER")
-    cloudbuildBuilds = RelatedTo(GcpCloudbuildBuild, "BUILDS")    
+    cloudbuildBuilds = RelatedTo(GcpCloudbuildBuild, "BUILDS")
     github_repos = RelatedTo(GithubRepo, "TRIGGER")
 
     gcp = Label(name="Gcp")

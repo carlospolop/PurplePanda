@@ -7,8 +7,8 @@ from core.db.customogm import CustomOGM
 class GithubPrincipal(CustomOGM):
     __primarylabel__ = "GithubPrincipal"
 
-    #privesc = RelatedTo("External Cloud Resources", "PRIVESC")
-    
+    # privesc = RelatedTo("External Cloud Resources", "PRIVESC")
+
     principal = Label(name="GithubPrincipal")
 
     def __init__(self, *args, **kwargs):
@@ -21,8 +21,8 @@ class GithubUser(GithubPrincipal):
     __primarykey__ = "id"
 
     id = Property()
-    name = Property() #login
-    person_name = Property() #name
+    name = Property()  # login
+    person_name = Property()  # name
     avatar_url = Property()
     bio = Property()
     blog = Property()
@@ -53,7 +53,7 @@ class GithubUser(GithubPrincipal):
     repos_cos = RelatedTo("GithubRepo", "CODE_OWNER")
     secrets = RelatedTo("GithubSecrets", "CAN_STEAL_SECRET")
     selfhosted_runners = RelatedTo("GithubSelfHostedRunner", "CAN_RUN")
-    circleci_secrets = RelatedTo("CircleCISecret", "CAN_STEAL_SECRET") #Created by neo4j query
+    circleci_secrets = RelatedTo("CircleCISecret", "CAN_STEAL_SECRET")  # Created by neo4j query
 
     github = Label(name="Github")
 
@@ -86,13 +86,14 @@ class GithubTeam(GithubPrincipal):
     selfhosted_runners = RelatedTo("GithubSelfHostedRunner", "CAN_RUN")
     branch_merge = RelatedTo("GithubBranch", "CAN_MERGE")
     circleci_contexts = RelatedTo("CircleCIContext", "CAN_ACCESS")
-    circleci_secrets = RelatedTo("CircleCISecret", "CAN_STEAL_SECRET") #Created by neo4j query
+    circleci_secrets = RelatedTo("CircleCISecret", "CAN_STEAL_SECRET")  # Created by neo4j query
 
     github = Label(name="Github")
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.github = True
+
 
 class GithubSecret(CustomOGM):
     __primarylabel__ = "GithubSecret"
@@ -115,6 +116,7 @@ class GithubSecret(CustomOGM):
         super().__init__(*args, **kwargs)
         self.github = True
 
+
 class GithubEnvironment(CustomOGM):
     __primarylabel__ = "GithubEnvironment"
     __primarykey__ = "name"
@@ -131,6 +133,7 @@ class GithubEnvironment(CustomOGM):
         super().__init__(*args, **kwargs)
         self.github = True
 
+
 class GithubLeak(CustomOGM):
     __primarylabel__ = "GithubLeak"
     __primarykey__ = "name"
@@ -145,6 +148,7 @@ class GithubLeak(CustomOGM):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.github = True
+
 
 class GithubSelfHostedRunner(CustomOGM):
     __primarylabel__ = "GithubSelfHostedRunner"
@@ -166,9 +170,10 @@ class GithubSelfHostedRunner(CustomOGM):
         super().__init__(*args, **kwargs)
         self.github = True
 
+
 class GithubRepo(CustomOGM):
     __primarylabel__ = "GithubRepo"
-    __primarykey__ = "full_name" # So we can generate GithubRepos from GCP
+    __primarykey__ = "full_name"  # So we can generate GithubRepos from GCP
 
     id = Property()
     allow_merge_commit = Property()
@@ -218,22 +223,21 @@ class GithubRepo(CustomOGM):
     circleci_projects = RelatedTo("CircleCIProject", "IN_CIRCLECI")
     actions = RelatedTo("GithubAction", "PART_OF")
 
-
     github = Label(name="Github")
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.github = True
-    
+
     @staticmethod
     def get_full_name_from_url(url):
         uparsed = urlparse(url)
         return uparsed.path[1:] if uparsed.path.startswith("/") else uparsed.path
-    
+
     @staticmethod
     def is_github_repo_url(url):
         uparsed = urlparse(url)
-        return uparsed.hostname == "github.com" or uparsed.hostname == "www.github.com"
+        return uparsed.hostname in ["github.com", "www.github.com"]
 
 
 class GithubOrganization(CustomOGM):
@@ -241,7 +245,7 @@ class GithubOrganization(CustomOGM):
     __primarykey__ = "name"
 
     id = Property()
-    name = Property() #login
+    name = Property()  # login
     avatar_url = Property()
     billing_email = Property()
     blog = Property()
@@ -263,11 +267,11 @@ class GithubOrganization(CustomOGM):
     public_gists = Property()
     public_repos = Property()
     private_repos = Property()
-    owned_private_repos = Property() # This is a number
-    
-    members_default_repository_permission = Property() # Member base permissions, read, write, admin, none
-    members_can_create_repositories = Property() # If members can create repos
-    two_factor_requirement_enabled = Property() # If 2FA is required
+    owned_private_repos = Property()  # This is a number
+
+    members_default_repository_permission = Property()  # Member base permissions, read, write, admin, none
+    members_can_create_repositories = Property()  # If members can create repos
+    two_factor_requirement_enabled = Property()  # If 2FA is required
     members_can_create_public_repositories = Property()
     members_can_create_private_repositories = Property()
     members_can_create_internal_repositories = Property()
@@ -287,6 +291,7 @@ class GithubOrganization(CustomOGM):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.github = True
+
 
 class GithubBranch(CustomOGM):
     __primarylabel__ = "GithubBranch"
@@ -311,7 +316,7 @@ class GithubBranch(CustomOGM):
     users_dimiss = RelatedFrom(GithubUser, "CAN_DISMISS")
     users_push = RelatedFrom(GithubUser, "CAN_PUSH")
     teams_dimisss = RelatedFrom(GithubTeam, "CAN_DISMISS")
-    teams_push  = RelatedFrom(GithubTeam, "CAN_PUSH")
+    teams_push = RelatedFrom(GithubTeam, "CAN_PUSH")
     users_merge = RelatedFrom(GithubUser, "CAN_MERGE")
     teamss_merge = RelatedFrom(GithubTeam, "CAN_MERGE")
 
@@ -320,6 +325,7 @@ class GithubBranch(CustomOGM):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.github = True
+
 
 class GithubWebhook(CustomOGM):
     __primarylabel__ = "GithubWebhook"
@@ -337,6 +343,7 @@ class GithubWebhook(CustomOGM):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.github = True
+
 
 class GithubAction(CustomOGM):
     __primarylabel__ = "GithubAction"

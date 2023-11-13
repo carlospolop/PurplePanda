@@ -20,12 +20,13 @@ class CircleCIOrganization(CustomOGM):
 
     def __init__(self, name, *args, **kwargs):
         if name.lower().startswith("gh/"):
-            kwargs["name"] = "github/" + name[3:]
+            kwargs["name"] = f"github/{name[3:]}"
         else:
             kwargs["name"] = name
         super().__init__(*args, **kwargs)
 
         self.circleci = True
+
 
 class CircleCIContext(CustomOGM):
     __primarylabel__ = "CircleCIContext"
@@ -36,13 +37,15 @@ class CircleCIContext(CustomOGM):
 
     orgs = RelatedTo(CircleCIOrganization, "PART_OF")
     secrets = RelatedTo("CircleCISecret", "HAS_SECRET")
-    teams = RelatedFrom(GithubTeam, "CAN_ACCESS") # TODO: The CircleCI API doesn't give the teams that has access to the context, it would be nice to have that info
+    teams = RelatedFrom(GithubTeam,
+                        "CAN_ACCESS")  # TODO: The CircleCI API doesn't give the teams that has access to the context, it would be nice to have that info
 
     circleci = Label(name="CircleCI")
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.circleci = True
+
 
 class CircleCISecret(CustomOGM):
     __primarylabel__ = "CircleCISecret"
@@ -62,6 +65,7 @@ class CircleCISecret(CustomOGM):
         super().__init__(*args, **kwargs)
         self.circleci = True
 
+
 class CircleCIVar(CustomOGM):
     __primarylabel__ = "CircleCIVar"
     __primarykey__ = "name"
@@ -76,6 +80,7 @@ class CircleCIVar(CustomOGM):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.circleci = True
+
 
 class CircleCIProject(CustomOGM):
     __primarylabel__ = "CircleCIProject"
@@ -104,7 +109,7 @@ class CircleCIProject(CustomOGM):
 
     vcs_type = Property()
     vcs_url = Property()
-    
+
     aws = Property()
     default_branch = Property()
     flowdock_api_token = Property()
@@ -125,4 +130,3 @@ class CircleCIProject(CustomOGM):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.circleci = True
-

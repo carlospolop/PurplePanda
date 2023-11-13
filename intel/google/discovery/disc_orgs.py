@@ -9,7 +9,7 @@ class DiscOrgs(GcpDisc):
     resource = 'cloudresourcemanager'
     version = 'v1'
     logger = logging.getLogger(__name__)
-    
+
     def _disc(self) -> None:
         """
         Discover each organization the account has access to.
@@ -23,10 +23,9 @@ class DiscOrgs(GcpDisc):
         organizations = self.execute_http_req(prep_http, "organizations")
         self._disc_loop(organizations, self._disc_orgs, __name__.split(".")[-1])
 
-
     def _disc_orgs(self, o):
         """Discover each organization and its related workspace"""
-        
+
         domain = o.get("displayName", "")
         o_obj: GcpOrganization = GcpOrganization(
             name=o["name"],

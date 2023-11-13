@@ -12,19 +12,19 @@ from intel.github.discovery.analyze_results import AnalyzeResults
 class PurplePandaGithub():
     def discover(self, **kwargs):
         config = kwargs.get("config", "")
-        gdc : GithubDiscClient = GithubDiscClient(config=config)
+        gdc: GithubDiscClient = GithubDiscClient(config=config)
         initial_funcs = []
         cred = ""
         for cred in gdc.creds:
             initial_funcs.append(
                 DiscoverSaas(
-                    initial_funcs = [
+                    initial_funcs=[
                         GithubDisc(cred["cred"], cred["org_name"], cred["str_cred"], **kwargs).discover
                     ],
-                    parallel_funcs = []
+                    parallel_funcs=[]
                 ).do_discovery
             )
-        
+
         # In Github just launch an analysis at the end of all the creds
         if cred:
             DiscoverSaas(
@@ -33,9 +33,8 @@ class PurplePandaGithub():
                 final_funcs=[AnalyzeResults(cred["cred"], cred["org_name"], cred["str_cred"], **kwargs).discover]
             ).do_discovery()
 
-
     def analyze_creds(self):
-        gdc : GithubDiscClient = GithubDiscClient()
+        gdc: GithubDiscClient = GithubDiscClient()
         for cred in gdc.creds:
             PurplePandaPrints.print_title("Github")
             PurplePandaPrints.print_key_val("Configured organization", cred.get('org_name'))
@@ -53,7 +52,8 @@ class PurplePandaGithub():
             for org in gdc.call_github(user.get_orgs):
                 PurplePandaPrints.print_key_val("  Organization", f"{org.name} ({org.login})")
                 if org.description: PurplePandaPrints.print_key_val("  Description", org.description)
-                if org.total_private_repos: PurplePandaPrints.print_key_val("  Total Private Repos", org.total_private_repos)
+                if org.total_private_repos: PurplePandaPrints.print_key_val("  Total Private Repos",
+                                                                            org.total_private_repos)
                 print("")
-            
+
             PurplePandaPrints.print_separator()

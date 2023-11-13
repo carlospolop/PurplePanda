@@ -5,20 +5,20 @@ from typing import List
 from intel.k8s.discovery.k8s_disc import K8sDisc
 from intel.k8s.models.k8s_model import K8sNamespace, K8sDeployment
 
+
 class DiscDeployments(K8sDisc):
     logger = logging.getLogger(__name__)
-    
+
     def _disc(self) -> None:
         """
         Discover all the deployments of each namespace, relate it with the namespaces and the running containers.
         """
 
         if not self.reload_api(): return
-        namespaces:List[K8sNamespace] = K8sNamespace.get_all_by_kwargs(f'_.name =~ "{str(self.cluster_id)}-.*"')
+        namespaces: List[K8sNamespace] = K8sNamespace.get_all_by_kwargs(f'_.name =~ "{str(self.cluster_id)}-.*"')
         self._disc_loop(namespaces, self._disc_deployments, __name__.split(".")[-1])
 
-    
-    def _disc_deployments(self, ns_obj:K8sNamespace, **kwargs):
+    def _disc_deployments(self, ns_obj: K8sNamespace, **kwargs):
         """Discover all the deployments of a namespace"""
 
         client_cred = client.AppsV1Api(self.cred)
@@ -26,12 +26,12 @@ class DiscDeployments(K8sDisc):
         if not deployments or not deployments.items:
             return
 
-        self._disc_loop(deployments.items, self._save_deployment, __name__.split(".")[-1]+f"-{ns_obj.ns_name}", **{"orig": ns_obj})
-  
+        self._disc_loop(deployments.items, self._save_deployment, __name__.split(".")[-1] + f"-{ns_obj.ns_name}",
+                        **{"orig": ns_obj})
 
     def _save_deployment(self, dp, **kwargs):
         """Given K8s deployment information, save it"""
-        
+
         orig = kwargs["orig"]
         if type(orig) is K8sNamespace:
             ns_obj = orig
@@ -39,16 +39,16 @@ class DiscDeployments(K8sDisc):
             ns_name = dp.metadata.namespace
             ns_obj = self._save_ns_by_name(ns_name)
         ns_name = ns_obj.name
-        
-        dp_obj = K8sDeployment(
-            name = f"{ns_name}:{dp.metadata.name}",
-            generate_name = dp.metadata.generate_name,
-            self_link = dp.metadata.self_link,
-            uid = dp.metadata.uid,
-            labels = json.dumps(dp.metadata.labels),
-            annotations = json.dumps(dp.metadata.annotations) if dp.metadata.annotations else "",
 
-            status_ready_replicas = dp.status.ready_replicas,
+        dp_obj = K8sDeployment(
+            name=f"{ns_name}:{dp.metadata.name}",
+            generate_name=dp.metadata.generate_name,
+            self_link=dp.metadata.self_link,
+            uid=dp.metadata.uid,
+            labels=json.dumps(dp.metadata.labels),
+            annotations=json.dumps(dp.metadata.annotations) if dp.metadata.annotations else "",
+
+            status_ready_replicas=dp.status.ready_replicas,
         ).save()
         dp_obj.namespaces.update(ns_obj)
         dp_obj.save()

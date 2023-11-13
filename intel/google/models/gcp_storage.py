@@ -4,6 +4,7 @@ from intel.google.models.gcp_perm_models import GcpResource
 from intel.google.models.gcp_service_account import GcpServiceAccount
 from core.models.models import StoresContainerImage
 
+
 class GcpStorage(StoresContainerImage, GcpResource):
     __primarylabel__ = "GcpStorage"
     __primarykey__ = "name"
@@ -26,7 +27,6 @@ class GcpStorage(StoresContainerImage, GcpResource):
 
     gcp = Label(name="Gcp")
 
-    
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.gcp = True
@@ -48,7 +48,7 @@ class GcpFile(StoresContainerImage, GcpResource):
     storages = RelatedTo(GcpStorage, "PART_OF")
 
     gcp = Label(name="Gcp")
-    
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.gcp = True

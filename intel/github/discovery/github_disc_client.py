@@ -13,7 +13,6 @@ from core.utils.purplepanda_config import PurplePandaConfig
 from functools import wraps
 from core.utils.purplepanda import PurplePanda
 
-
 """
 Example yaml:
 
@@ -36,26 +35,26 @@ class GithubDiscClient(PurplePanda):
     def __init__(self, get_creds=True, config=""):
         super().__init__()
         panop = PurplePandaConfig()
-        
+
         if config:
             self.env_var_content = config
         else:
             self.env_var = panop.get_env_var("github")
             self.env_var_content = os.getenv(self.env_var)
             assert bool(self.env_var_content), "Github env variable not configured"
-        
-        self.github_config : dict = yaml.safe_load(b64decode(self.env_var_content))
+
+        self.github_config: dict = yaml.safe_load(b64decode(self.env_var_content))
         assert bool(self.github_config.get("github", None)), "Github env variable isn't a correct yaml"
 
         if get_creds:
-            self.creds : dict = self._github_creds()
-    
+            self.creds: dict = self._github_creds()
+
     def _github_creds(self) -> dict:
         """
         Parse github env variable and extract all the github credentials
         """
 
-        creds : dict = []
+        creds: dict = []
 
         for entry in self.github_config["github"]:
             url = entry.get("url")
@@ -63,34 +62,34 @@ class GithubDiscClient(PurplePanda):
             if entry.get("token"):
                 kwargs = {"login_or_token": entry.get("token")}
                 str_cred = entry.get("token")
-            
+
             elif entry.get("username") and entry.get("password"):
                 kwargs = {"login_or_token": entry.get("username"), "password": entry.get("password")}
                 str_cred = entry.get("username") + ":" + entry.get("password")
-            
+
             else:
                 assert False, f"Github entry doesn't contain token or usernaame+password: {entry}"
-            
+
             if url: kwargs["base_url"] = url
 
             cred = Github(**kwargs)
-            
+
             if org_name:
                 try:
                     self.call_github(cred.get_organization, ret_val=None, login=org_name)
 
                 except Exception as e:
-                    raise ValueError(f"The creds doesn't have access to the organization {org_name}. Correct the name of the org or remove it. Error: {e}")
+                    raise ValueError(
+                        f"The creds doesn't have access to the organization {org_name}. Correct the name of the org or remove it. Error: {e}"
+                    ) from e
 
-            
             creds.append({
                 "cred": cred,
                 "org_name": org_name,
                 "str_cred": str_cred
             })
-        
-        return creds
 
+        return creds
 
     def call_github(self, f, *args, **kwargs):
         """
@@ -111,7 +110,7 @@ class GithubDiscClient(PurplePanda):
                 ret = f(*args, **kwargs)
             except TypeError:
                 error = True
-            
+
             # Use error var and not put the second call to f in the except to not have hundreds of nested exceptions 
             if error:
                 ret = f(self, *args, **kwargs)
@@ -120,7 +119,7 @@ class GithubDiscClient(PurplePanda):
             if type(ret) is github.PaginatedList.PaginatedList:
                 ret = list(ret)
 
-            if not error: # Then github API was accessed
+            if not error:  # Then github API was accessed
                 end = time.time()
                 func_name = f.__func__.__name__ if hasattr(f, "__func__") else f.__name__
                 self.logger.debug(f"Github API access to {func_name} took: {int(end - start)}")
@@ -133,7 +132,7 @@ class GithubDiscClient(PurplePanda):
             return self.call_github(f, *args, **kwargs)
 
         except GithubException as e:
-            if not any(s in str(e) for s in ["404", "403"]):
+            if all(s not in str(e) for s in ["404", "403"]):
                 self.logger.error(f"Github error: {e}")
 
             return ret_val
@@ -142,7 +141,7 @@ class GithubDiscClient(PurplePanda):
             self.logger.error(f"Github timeout, retrying in 10s. Error: {e}")
             time.sleep(10)
             return self.call_github(f, *args, **kwargs)
-        
+
         except requests.exceptions.ConnectionError as e:
             self.logger.error(f"Github connection error, retrying in 10s. Error: {e}")
             time.sleep(10)
@@ -173,4 +172,5 @@ class GithubDiscClient(PurplePanda):
                 return wrapped(self, *args, **kwargs)
 
             return r
+
         return wrapped

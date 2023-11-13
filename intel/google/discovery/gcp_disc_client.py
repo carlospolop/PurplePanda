@@ -21,10 +21,8 @@ from intel.google.models.gcp_workload_identity_pool import GcpWorkloadIdentityPo
 from core.utils.purplepanda_config import PurplePandaConfig
 from core.utils.purplepanda import PurplePanda
 
-
 # This needs to be global to be used as a cache for discovery different modules
 KNOWN_ROLES = set()
-
 
 """
 Example yaml:
@@ -42,8 +40,8 @@ service_account_id is optional, provide the same of the service account to imper
 scopes is optional, provide a list of scopes if you whish
 """
 
-class GcpDiscClient(PurplePanda):
 
+class GcpDiscClient(PurplePanda):
     logger = logging.getLogger(__name__)
 
     def __init__(self, get_creds=True, config="") -> None:
@@ -58,62 +56,61 @@ class GcpDiscClient(PurplePanda):
             self.env_var_content = os.getenv(self.env_var)
             msg = f"Google env variable '{self.env_var}' not configured"
             assert bool(self.env_var_content), msg
-        
-        self.google_config : dict = yaml.safe_load(b64decode(self.env_var_content))
+
+        self.google_config: dict = yaml.safe_load(b64decode(self.env_var_content))
         assert bool(self.google_config.get("google", None)), "Google env variable isn't a correct yaml"
 
         if get_creds:
             self.creds = self._google_creds()
-        
-    
+
     def _google_creds(self):
         """
         Parse google env variable and extract all the github credentials
         """
 
-        creds : dict = []
+        creds: dict = []
 
         for entry in self.google_config["google"]:
 
             # Indicate path to credentials via environment variable
             file_path = entry.get("file_path")
-            
+
             # If this doesn;t work check using the function load_credentials_from_file()
             if file_path:
                 os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = file_path
             elif os.environ.get("GOOGLE_APPLICATION_CREDENTIALS"):
                 del os.environ["GOOGLE_APPLICATION_CREDENTIALS"]
-            
-            #file_path = file_path if file_path else os.environ["HOME"]+"/.config/gcloud/application_default_credentials.json"
-            #self._remove_quota(file_path)
+
+            # file_path = file_path if file_path else os.environ["HOME"]+"/.config/gcloud/application_default_credentials.json"
+            # self._remove_quota(file_path)
 
             scopes = entry.get("scopes", ["https://www.googleapis.com/auth/appengine.admin",
-                                    "https://www.googleapis.com/auth/accounts.reauth",
-                                    "https://www.googleapis.com/auth/userinfo.email",
-                                    "openid",
-                                    "https://www.googleapis.com/auth/cloud-platform",
-                                    "https://www.googleapis.com/auth/compute"])
-            
+                                          "https://www.googleapis.com/auth/accounts.reauth",
+                                          "https://www.googleapis.com/auth/userinfo.email",
+                                          "openid",
+                                          "https://www.googleapis.com/auth/cloud-platform",
+                                          "https://www.googleapis.com/auth/compute"])
+
             quota_project_id = entry.get("quota_project_id", "")
-            
-            kwargs = { "scopes": scopes }
+
+            kwargs = {"scopes": scopes}
             if quota_project_id:
                 kwargs["quota_project_id"] = quota_project_id
 
-            cred, _= default(scopes=scopes, default_scopes=scopes)
+            cred, _ = default(scopes=scopes, default_scopes=scopes)
 
             if entry.get("service_account_id"):
                 cred = impersonated_credentials.Credentials(source_credentials=cred,
-                                                                target_principal=entry.get("service_account_id"),
-                                                                target_scopes=scopes)
+                                                            target_principal=entry.get("service_account_id"),
+                                                            target_scopes=scopes)
 
             creds.append({
                 "cred": cred,
                 "quota_project_id": quota_project_id
             })
-        
+
         return creds
-    
+
     '''def _remove_quota(self, filepath):
         """Remove quota_project_id from the config file to access more data"""
 
@@ -126,11 +123,12 @@ class GcpDiscClient(PurplePanda):
                 with open(filepath, 'w') as f:
                     json.dump(config, f)'''
 
-
-    def execute_http_req(self, prep_http: Union[googleapiclient.discovery.Resource, googleapiclient.http.HttpRequest], extract_field:Optional[str], 
-        disable_warn=False, ret_err=False, cont=0, list_kwargs={}, headers={}, status_dis="") -> Union[list, str, dict]:
+    def execute_http_req(self, prep_http: Union[googleapiclient.discovery.Resource, googleapiclient.http.HttpRequest],
+                         extract_field: Optional[str],
+                         disable_warn=False, ret_err=False, cont=0, list_kwargs={}, headers={}, status_dis="") -> Union[
+        list, str, dict]:
         """Access Google API sending the prepared http request"""
-        
+
         try:
             ret_values = []
             start = time.time()
@@ -141,38 +139,39 @@ class GcpDiscClient(PurplePanda):
                 final_prep_http: HttpRequest = prep_http
 
             while final_prep_http is not None:
-                for k,v in headers.items():
+                for k, v in headers.items():
                     final_prep_http.headers[k] = v
-                
+
                 resp: dict = final_prep_http.execute(num_retries=3)
 
                 if len(resp) == 0 and not disable_warn:
                     self.logger.debug(f"The http request {final_prep_http.uri}, returned an empty object.")
-                
+
                 if extract_field and not extract_field in resp and not disable_warn:
-                    self.logger.debug(f"The http request {final_prep_http.uri}, didn't return the expected field '{extract_field}'. It returned the keys {resp.keys()}")
-                
+                    self.logger.debug(
+                        f"The http request {final_prep_http.uri}, didn't return the expected field '{extract_field}'. It returned the keys {resp.keys()}")
+
                 if extract_field:
                     ret_values += resp.get(extract_field, [])
                 else:
                     ret_values = resp
-                
+
                 if hasattr(prep_http, "list_next"):
                     final_prep_http = prep_http.list_next(final_prep_http, resp)
                 else:
                     if "nextPageToken" in resp:
-                        if "pageToken=" in final_prep_http.uri: #If a page token in URI, remove it before adding the new one
+                        if "pageToken=" in final_prep_http.uri:  # If a page token in URI, remove it before adding the new one
                             final_prep_http.uri = re.sub(r'&pageToken=[^&]+', '', prep_http.uri)
-                        
+
                         final_prep_http.uri = final_prep_http.uri + "&pageToken=" + resp["nextPageToken"]
-                    
+
                     else:
                         final_prep_http = None
-            
+
             end = time.time()
             self.logger.debug(f"GCP API access took: {int(end - start)}")
             return ret_values
-        
+
         except googleapiclient.discovery.HttpError as e:
             str_errors = ["or it is disabled", "recommend configuring the billing", "or a custom role"]
             if "403" in str(e) and any(msg in str(e) for msg in str_errors):
@@ -182,8 +181,10 @@ class GcpDiscClient(PurplePanda):
                         prep_http._http.credentials._quota_project_id = ""
                     else:
                         prep_http.http.credentials._quota_project_id = ""
-                    
-                    return self.execute_http_req(prep_http, extract_field=extract_field, disable_warn=disable_warn, ret_err=ret_err, cont=cont+1, list_kwargs=list_kwargs, status_dis="empty")
+
+                    return self.execute_http_req(prep_http, extract_field=extract_field, disable_warn=disable_warn,
+                                                 ret_err=ret_err, cont=cont + 1, list_kwargs=list_kwargs,
+                                                 status_dis="empty")
 
                 # If not first time, try with the objetive project as _quota_project_id
                 elif "/projects/" in final_prep_http.uri and status_dis != "terminate":
@@ -194,28 +195,34 @@ class GcpDiscClient(PurplePanda):
                     else:
                         prep_http.http.credentials._quota_project_id = project_name
 
-                    return self.execute_http_req(prep_http, extract_field=extract_field, disable_warn=disable_warn, ret_err=ret_err, cont=cont+1, list_kwargs=list_kwargs, headers=headers, status_dis="terminate")
-            
-            if not disable_warn and not "The caller does not have permission" in str(e) and not "403" in str(e) and not "has not been used in project" in str(e):
+                    return self.execute_http_req(prep_http, extract_field=extract_field, disable_warn=disable_warn,
+                                                 ret_err=ret_err, cont=cont + 1, list_kwargs=list_kwargs,
+                                                 headers=headers, status_dis="terminate")
+
+            if not disable_warn and not "The caller does not have permission" in str(e) and not "403" in str(
+                    e) and not "has not been used in project" in str(e):
                 self.logger.warning(f"HttpError occurred in {final_prep_http.uri}. Details: %r", e)
-            
+
             if "Invalid value for field" in str(e):
                 self.logger.error(f"Invalid value for field in {final_prep_http.uri}. Details: {e}")
-            
+
             if ret_err:
                 return str(e)
-            
-            return []            
-        
+
+            return []
+
         except Exception as e:
             if cont > 3:
-                self.logger.error(f"More than 3 timeouts occurred in {final_prep_http.uri}. Returning empty list. Details: %r.", e)
+                self.logger.error(
+                    f"More than 3 timeouts occurred in {final_prep_http.uri}. Returning empty list. Details: %r.", e)
                 return []
-                
-            self.logger.warning(f"Timeout occurred in {final_prep_http.uri}. Details: %r. Sleeping 10s and rerunning", e)
+
+            self.logger.warning(f"Timeout occurred in {final_prep_http.uri}. Details: %r. Sleeping 10s and rerunning",
+                                e)
             sleep(10)
-            return self.execute_http_req(prep_http, extract_field=extract_field, disable_warn=disable_warn, ret_err=ret_err, cont=cont+1, list_kwargs=list_kwargs)
-    
+            return self.execute_http_req(prep_http, extract_field=extract_field, disable_warn=disable_warn,
+                                         ret_err=ret_err, cont=cont + 1, list_kwargs=list_kwargs)
+
     def get_iam_policy(self, obj, resource_service, resource_name, **kwargs) -> None:
         """
         Get the IAM policy of a resource and automatically create
@@ -233,7 +240,7 @@ class GcpDiscClient(PurplePanda):
                 prep_http = resource_service.getIamPolicy(resource=resource_name, **kwargs)
 
         # Make user v3 is used to not get "_withcond_" permissions: https://cloud.google.com/iam/docs/troubleshooting-withcond
-        #prep_http.uri = prep_http.uri.replace(".com/v1/", ".com/v3/")
+        # prep_http.uri = prep_http.uri.replace(".com/v1/", ".com/v3/")
         # Even if you do this you will find "_withcond_" permissions and you won't find some permissions, like permissions to allUsers for cloud functions
         bindings: List[str] = self.execute_http_req(prep_http, "bindings", disable_warn=True)
 
@@ -241,84 +248,85 @@ class GcpDiscClient(PurplePanda):
         for binding in bindings:
             role_name = binding["role"]
             if "_withcond_" in role_name:
-                role_name = role_name.split("_withcond_")[0] #Weird case, don't know why the name is incorrect from GCP API
-            
+                role_name = role_name.split("_withcond_")[
+                    0]  # Weird case, don't know why the name is incorrect from GCP API
+
             self._get_role_perms(role_name, obj)
             for member in binding["members"]:
                 if member.startswith("serviceAccount:"):
                     sa_email = member.replace("serviceAccount:", "")
                     # At this point SAs are unknown yet
                     m_obj: GcpServiceAccount = GcpServiceAccount(
-                        email = sa_email,
-                        fullName = f"{obj.name}/{member.replace(':','/')}"
+                        email=sa_email,
+                        fullName=f"{obj.name}/{member.replace(':', '/')}"
                     ).save()
                     m_objs = [m_obj]
 
                 elif member.startswith("user:"):
                     u_email = member.replace("user:", "")
                     m_obj: GcpUserAccount = GcpUserAccount(
-                        email = u_email
+                        email=u_email
                     ).save()
                     m_objs = [m_obj]
-                
+
                 elif member.startswith("group:"):
                     g_email = member.replace("group:", "")
                     m_obj: GcpGroup = GcpGroup(
-                        email = g_email
+                        email=g_email
                     ).save()
                     m_objs = [m_obj]
-                
+
                 elif member.startswith("domain:"):
                     o_domain = member.replace("domain:", "")
                     m_obj: GcpOrganization = GcpOrganization(
-                        domain = o_domain
+                        domain=o_domain
                     ).save()
                     m_objs = [m_obj]
-                
+
                 elif member == "allUsers":
                     m_obj: GcpUserAccount = GcpUserAccount(
-                        name = member,
-                        email = member + "@gcp.com"
+                        name=member,
+                        email=member + "@gcp.com"
                     ).save()
                     m_objs = [m_obj]
-                
+
                 elif member == "allAuthenticatedUsers":
                     m_obj: GcpUserAccount = GcpUserAccount(
-                        name = member,
-                        email = member + "@gcp.com"
+                        name=member,
+                        email=member + "@gcp.com"
                     ).save()
                     m_objs = [m_obj]
-                
+
                 elif member.startswith("projectViewer:"):
-                    p_obj = GcpProject.get_by_name("projects/"+member.split(":")[1], or_create=True)
+                    p_obj = GcpProject.get_by_name("projects/" + member.split(":")[1], or_create=True)
                     p_obj.basic_roles.update(obj, member=member)
                     p_obj.save()
                     m_objs = p_obj.get_basic_viewers()
-                
+
                 elif member.startswith("projectEditor:"):
-                    p_obj = GcpProject.get_by_name("projects/"+member.split(":")[1], or_create=True)
+                    p_obj = GcpProject.get_by_name("projects/" + member.split(":")[1], or_create=True)
                     p_obj.basic_roles.update(obj, member=member)
                     p_obj.save()
                     m_objs = p_obj.get_basic_editors()
-                
+
                 elif member.startswith("projectOwner:"):
-                    p_obj: GcpProject = GcpProject.get_by_name("projects/"+member.split(":")[1], or_create=True)
+                    p_obj: GcpProject = GcpProject.get_by_name("projects/" + member.split(":")[1], or_create=True)
                     p_obj.basic_roles.update(obj, member=member)
                     p_obj.save()
                     m_objs = p_obj.get_basic_owners()
-                
+
                 elif member.startswith("principal:") or member.startswith("principalSet:"):
                     name = member.replace("principal:", "").replace("principalSet:", "")
                     m_obj: GcpWorkloadIdentityPool = GcpWorkloadIdentityPool(name=name).save()
                     m_objs = [m_obj]
-                
+
                 elif member.startswith("deleted:"):
                     continue
-                
+
                 else:
                     self.logger.error(f"Uknown entity type: {member}")
                     continue
-                
+
                 for m_obj in m_objs:
                     if not m_obj.__primaryvalue__ in accs_to_roles:
                         accs_to_roles[m_obj.__primaryvalue__] = {
@@ -327,21 +335,21 @@ class GcpDiscClient(PurplePanda):
                         }
                     else:
                         accs_to_roles[m_obj.__primaryvalue__]["roles"].append(role_name)
-        
-        for k,v in accs_to_roles.items():
+
+        for k, v in accs_to_roles.items():
             roles = v["roles"]
             m_obj = v["object"]
             m_obj.has_perm.update(obj, roles=roles)
             m_obj.save()
-        
-    def _get_role_perms(self, role_name: str, parent_obj, create_parent_rel = False):
+
+    def _get_role_perms(self, role_name: str, parent_obj, create_parent_rel=False):
         """Gets a role permissions"""
 
         global KNOWN_ROLES
 
         if role_name in KNOWN_ROLES:
             return
-        
+
         # Do not check more than once every role
         KNOWN_ROLES.add(role_name)
 
@@ -349,20 +357,20 @@ class GcpDiscClient(PurplePanda):
 
         if role_name.startswith("organizations/"):
             prep_http = iam_v1_svc.organizations().roles().get(name=role_name)
-        
+
         elif role_name.startswith("projects/"):
             prep_http = iam_v1_svc.projects().roles().get(name=role_name)
-        
+
         elif role_name.startswith("roles/"):
             try:
                 prep_http = iam_v1_svc.roles().get(name=role_name)
             except TypeError as e:
                 self.logger.error(f"Error getting the role {role_name} : {e}")
                 return
-        
+
         else:
             self.logger.error(f"Roles {role_name} with unexpected parent")
-            
+
         resp: dict = self.execute_http_req(prep_http, None)
 
         if not resp:
@@ -397,18 +405,19 @@ class GcpDisc(GcpDiscClient):
     logger = logging.getLogger(__name__)
 
     def __init__(self, cred, **kwargs) -> None:
-        super().__init__(get_creds=False) #Do not get the creds as here we already have them
+        super().__init__(get_creds=False)  # Do not get the creds as here we already have them
         if kwargs.get("resource"): self.resource = kwargs.get("resource")
         if kwargs.get("version"): self.version = kwargs.get("version")
         self.gcp_get_secret_values = kwargs.get("gcp_get_secret_values", False)
         self.gcp_get_kms = kwargs.get("gcp_get_kms", False)
         self.cred = cred
-        self.service = googleapiclient.discovery.build(self.resource, self.version, credentials=cred, cache_discovery=False)
+        self.service = googleapiclient.discovery.build(self.resource, self.version, credentials=cred,
+                                                       cache_discovery=False)
         self.task_name = "Google"
-    
+
     def get_other_svc(self, resource: str, version: str):
         return googleapiclient.discovery.build(resource, version, credentials=self.cred, cache_discovery=False)
-    
+
     def _get_save_sa_info_from_email(self, sa_obj: GcpServiceAccount) -> GcpServiceAccount:
         """
         Given a service account with an emial try to find for information about it
@@ -426,5 +435,5 @@ class GcpDisc(GcpDiscClient):
             proj_obj = GcpProject(name=f"projects/{sa_info['projectId']}").save()
             sa_obj.projects.update(proj_obj)
             sa_obj.save()
-        
+
         return sa_obj

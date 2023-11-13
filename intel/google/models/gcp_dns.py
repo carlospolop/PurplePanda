@@ -28,6 +28,7 @@ class GcpManagedZone(GcpResource):
         super().__init__(*args, **kwargs)
         self.gcp = True
 
+
 class GcpResourceRecord(GcpResource):
     __primarylabel__ = "GcpResourceRecord"
     __primarykey__ = "name"
