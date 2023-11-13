@@ -30,68 +30,66 @@ The url and org_slug is optional, the token isn't
 
 KNOWN_PROJECTS = set()
 
+
 class CircleCIDiscClient(PurplePanda):
     logger = logging.getLogger(__name__)
 
     def __init__(self, get_creds=True):
         super().__init__()
         panop = PurplePandaConfig()
-        
+
         self.env_var = panop.get_env_var("circleci")
         self.env_var_content = os.getenv(self.env_var)
         assert bool(self.env_var_content), "CircleCI env variable not configured"
-        
-        self.circleci_config : dict = yaml.safe_load(b64decode(self.env_var_content))
+
+        self.circleci_config: dict = yaml.safe_load(b64decode(self.env_var_content))
         assert bool(self.circleci_config.get("circleci", None)), "CircleCI env variable isn't a correct yaml"
 
         if get_creds:
-            self.creds : dict = self._circleci_creds()
-    
+            self.creds: dict = self._circleci_creds()
+
     def _circleci_creds(self) -> dict:
         """
         Parse circleci env variable and extract all the circleci credentials
         """
 
-        creds : dict = []
+        creds: dict = []
 
         for entry in self.circleci_config["circleci"]:
-            
+
             if entry.get("token"):
                 token = entry["token"]
             else:
                 assert False, f"CircleCI entry doesn't contain a token: {entry}"
-            
-            if entry.get("url"):
-                url = entry["url"]
-            else:
-                url = CIRCLE_API_URL
-            
+
+            url = entry["url"] if entry.get("url") else CIRCLE_API_URL
             org_slug = entry.get("org_slug", "")
-            if org_slug and not "/" in org_slug:
+            if org_slug and "/" not in org_slug:
                 self.logger.error(f"Org slug is incorrect: {org_slug}. Add 'github/' or 'bitbucket/' at the begginig")
                 continue
-            
+
             if org_slug and not org_slug.startswith("github/") and not org_slug.startswith("bitbucket/"):
                 self.logger.error(f"Org slug is incorrect: {org_slug}. Must start with 'github/' or 'bitbucket/'")
                 continue
 
             projects = entry.get("projects", [])
-            
+
             cred = Api(token=token, url=CIRCLE_API_URL)
-            
+
             try:
                 slugs = set(org_slug) if org_slug else set()
                 for p in cred.get_projects():
-                    slugs.add(p["vcs_type"] + "/" + p["username"]) #This would be something like "github/org_name"
+                    slugs.add(p["vcs_type"] + "/" + p["username"])  # This would be something like "github/org_name"
 
                 creds.append({
                     "cred": cred,
                     "slugs": slugs,
                     "projects": projects
                 })
-            
-            except:
-                self.logger.error(f"The token {token} in url {url} isn't valid. If you are sure this is a CircleCI token, it might be a project token (which isn't supported).")
+
+            except Exception:
+                self.logger.error(
+                    f"The token {token} in url {url} isn't valid. If you are sure this is a CircleCI token, it might be a project token (which isn't supported).")
 
         return creds
 
@@ -105,78 +103,88 @@ class CircleCIDisc(CircleCIDiscClient):
         self.orgs = orgs
         self.projects = projects
         self.task_name = "circleci"
-    
 
-    def call_circleci_api(self, f, ret_val=[], show_404=True, *args, **kwargs):
+    def call_circleci_api(self, f, ret_val=None, show_404=True, *args, **kwargs):
         """Call the circleci api from one site to manage errors"""
-        
+
+        if ret_val is None:
+            ret_val = []
         try:
             return f(*args, **kwargs)
-        
+
         except requests.exceptions.HTTPError as e:
             if "404" in str(e) and show_404:
                 self.logger.warning(f"CircleCI not found: {e}")
-        
+
         except Exception as e:
             self.logger.error(f"Councourse error: {e}")
-        
-        return ret_val
 
+        return ret_val
 
     def _disc_project(self, project_slug: str, org: str) -> CircleCIProject:
         """Given a project slug get the project info"""
 
         if project_slug in KNOWN_PROJECTS:
             return
-        
+
         # Only request proj info to the api for the same project 1 time
         proj_info = self.call_circleci_api(self.cred.get_project_settings, [],
-            show_404=True, username=org.split("/")[-1], project=project_slug.split("/")[-1])
+                                           show_404=True, username=org.split("/")[-1],
+                                           project=project_slug.split("/")[-1])
         KNOWN_PROJECTS.add(project_slug)
 
         # If not has_usable_key and (not branches or only workflows are "latest_workflows") then not a real project, so don't save it
         if not proj_info or (not proj_info["has_usable_key"] and (not proj_info["branches"] or \
-            all(len(proj_info["branches"][branch]["latest_workflows"]) == 0 or (len(proj_info["branches"][branch]["latest_workflows"]) == 1 and "Build%20Error" in proj_info["branches"][branch]["latest_workflows"].keys()) for branch in proj_info["branches"]))):
+                                                                  all(len(proj_info["branches"][branch][
+                                                                              "latest_workflows"]) == 0 or (len(
+                                                                      proj_info["branches"][branch][
+                                                                          "latest_workflows"]) == 1 and "Build%20Error" in
+                                                                                                            proj_info[
+                                                                                                                "branches"][
+                                                                                                                branch][
+                                                                                                                "latest_workflows"].keys())
+                                                                      for branch in proj_info["branches"]))):
             return
-        
+
         # get the date of the latest workflow
-        latest_workflow = max(parser.parse(info["created_at"]) for _,branch in proj_info["branches"].items() if branch["latest_workflows"] for _,info in branch["latest_workflows"].items())
+        latest_workflow = max(parser.parse(info["created_at"]) for _, branch in proj_info["branches"].items() if
+                              branch["latest_workflows"] for _, info in branch["latest_workflows"].items())
         # If latest workflow less than 3 months, it'a still active
         is_active = latest_workflow.replace(tzinfo=None) > (datetime.now() - relativedelta(months=3))
 
         proj_obj = CircleCIProject(
-            name = project_slug,
-            is_active = is_active,
-            irc_server = proj_info.get("irc_server", ""),
-            irc_keyword = proj_info.get("irc_keyword", ""),
-            irc_password = proj_info.get("irc_password", ""),
-            irc_username = proj_info.get("irc_username", ""),
-            irc_notify_prefs = proj_info.get("irc_notify_prefs", ""),
+            name=project_slug,
+            is_active=is_active,
+            irc_server=proj_info.get("irc_server", ""),
+            irc_keyword=proj_info.get("irc_keyword", ""),
+            irc_password=proj_info.get("irc_password", ""),
+            irc_username=proj_info.get("irc_username", ""),
+            irc_notify_prefs=proj_info.get("irc_notify_prefs", ""),
 
-            slack_integration_channel = proj_info.get("slack_integration_channel", ""),
-            slack_integration_team_id = proj_info.get("slack_integration_team_id", ""),
-            slack_integration_team = proj_info.get("slack_integration_team", ""),
-            slack_integration_notify_prefs = proj_info.get("slack_integration_notify_prefs", ""),
-            slack_integration_webhook_url = proj_info.get("slack_integration_webhook_url", ""),
-            slack_subdomain = proj_info.get("slack_subdomain", ""),
-            slack_notify_prefs = proj_info.get("slack_notify_prefs", ""),
-            slack_channel_override = proj_info.get("slack_channel_override", ""),
-            slack_api_token = proj_info.get("slack_api_token", ""),
-            slack_channel = proj_info.get("slack_channel", ""),
-            slack_integration_channel_id = proj_info.get("slack_integration_channel_id", ""),
-            slack_integration_access_token = proj_info.get("slack_integration_access_token", ""),
+            slack_integration_channel=proj_info.get("slack_integration_channel", ""),
+            slack_integration_team_id=proj_info.get("slack_integration_team_id", ""),
+            slack_integration_team=proj_info.get("slack_integration_team", ""),
+            slack_integration_notify_prefs=proj_info.get("slack_integration_notify_prefs", ""),
+            slack_integration_webhook_url=proj_info.get("slack_integration_webhook_url", ""),
+            slack_subdomain=proj_info.get("slack_subdomain", ""),
+            slack_notify_prefs=proj_info.get("slack_notify_prefs", ""),
+            slack_channel_override=proj_info.get("slack_channel_override", ""),
+            slack_api_token=proj_info.get("slack_api_token", ""),
+            slack_channel=proj_info.get("slack_channel", ""),
+            slack_integration_channel_id=proj_info.get("slack_integration_channel_id", ""),
+            slack_integration_access_token=proj_info.get("slack_integration_access_token", ""),
 
-            vcs_type = proj_info.get("vcs-type", ""),
-            vcs_url = proj_info.get("vcs_url", ""),
-            
-            aws = json.dumps(proj_info.get("aws", "")),
-            default_branch = proj_info.get("default_branch", ""),
-            flowdock_api_token = proj_info.get("flowdock_api_token", ""),
-            has_usable_key = proj_info.get("has_usable_key", False),
-            oss = proj_info.get("oss", False),
-            jira = json.dumps(proj_info.get("jira", "")),
-            ssh_keys = json.dumps(proj_info.get("ssh_keys", "")),
-            feature_flags = json.dumps(proj_info.get("feature_flags", ""))
+            vcs_type=proj_info.get("vcs-type", ""),
+            vcs_url=proj_info.get("vcs_url", ""),
+
+            aws=json.dumps(proj_info.get("aws", "")),
+            default_branch=proj_info.get("default_branch", ""),
+            flowdock_api_token=proj_info.get("flowdock_api_token", ""),
+            has_usable_key=proj_info.get("has_usable_key", False),
+            oss=proj_info.get("oss", False),
+            jira=json.dumps(proj_info.get("jira", "")),
+            ssh_keys=json.dumps(proj_info.get("ssh_keys", "")),
+            feature_flags=json.dumps(proj_info.get("feature_flags", ""))
         ).save()
         org_obj = CircleCIOrganization(name=org).save()
         proj_obj.orgs.update(org_obj)
@@ -185,63 +193,65 @@ class CircleCIDisc(CircleCIDiscClient):
             repo_full_name = "/".join(project_slug.split("/")[1:])
             ghrepo_obj = GithubRepo(
                 full_name=repo_full_name,
-                name = repo_full_name.split("/")[-1]
-                ).save()
+                name=repo_full_name.split("/")[-1]
+            ).save()
             proj_obj.gh_repos.update(ghrepo_obj)
             proj_obj.save()
-        
+
         elif proj_info["vcs-type"].lower() == "bitbucket":
             repo_full_name = "/".join(project_slug.split("/")[1:])
             bkrepo_obj = BitbucketRepo(
                 full_name=repo_full_name,
-                name = repo_full_name.split("/")[-1]
-                ).save()
+                name=repo_full_name.split("/")[-1]
+            ).save()
             proj_obj.bk_repos.update(bkrepo_obj)
             proj_obj.save()
-        
+
         else:
-            self.logger.error(f"I don't know if {proj_info.get('vcs-type')} is github or bitbucket, please create an issue in purplepana's github with this info")
-        
+            self.logger.error(
+                f"I don't know if {proj_info.get('vcs-type')} is github or bitbucket, please create an issue in purplepana's github with this info")
+
         self._disc_proj_secrets(proj_obj, org)
 
         # Get some pipelines vars related to the project
         branches = set(list(proj_info["branches"].keys())[:5])
         branches.add(proj_info["default_branch"])
         for branch in branches:
-            if branch in  proj_info["branches"] and proj_info["branches"][branch]["latest_workflows"]:
+            if branch in proj_info["branches"] and proj_info["branches"][branch]["latest_workflows"]:
                 for workflow in list(proj_info["branches"][branch]["latest_workflows"].keys())[:2]:
-                    workflow_info = self.call_circleci_api(self.cred.get_workflow, 
-                        workflow_id=proj_info["branches"][branch]["latest_workflows"][workflow]["id"], show_404=False) #It won't exist in most cases
-                    
-                    if workflow_info:
+                    if workflow_info := self.call_circleci_api(
+                            self.cred.get_workflow,
+                            workflow_id=proj_info["branches"][branch][
+                                "latest_workflows"
+                            ][workflow]["id"],
+                            show_404=False,
+                    ):
                         self._disc_vars_in_pipe(workflow_info["pipeline_id"], proj_obj)
-
 
     def _disc_proj_secrets(self, proj_obj: CircleCIProject, org: str) -> CircleCIProject:
         """Given a project get the project secrets"""
 
-        proj_env_vars = self.call_circleci_api(self.cred.list_envvars, [], show_404=True, 
-            username=org.split("/")[-1], project=proj_obj.name.split("/")[-1])
+        proj_env_vars = self.call_circleci_api(self.cred.list_envvars, [], show_404=True,
+                                               username=org.split("/")[-1], project=proj_obj.name.split("/")[-1])
 
         for env_var in proj_env_vars:
             secret_obj = CircleCISecret(
-                name = env_var["name"],
-                value = env_var["value"],
+                name=env_var["name"],
+                value=env_var["value"],
             ).save()
             proj_obj.secrets.update(secret_obj)
-        
+
         proj_obj.save()
 
-        
     def _disc_vars_in_pipe(self, pipe_id, proj_obj: CircleCIProject):
         """Given a pipeline discover the variables in the configuration"""
 
-        config = self.call_circleci_api(self.cred.get_pipeline_config, [], show_404=True, pipeline_id=pipe_id)
-
-        if not config:
+        if config := self.call_circleci_api(
+                self.cred.get_pipeline_config, [], show_404=True, pipeline_id=pipe_id
+        ):
+            disc_vars_in_txt(proj_obj, config["source"], pipe_id)
+        else:
             return
-        
-        disc_vars_in_txt(proj_obj, config["source"], pipe_id)
 
 
 def disc_vars_in_txt(proj_obj: CircleCIProject, text_yaml: str, pipe_id=".circleci/config.yml"):
@@ -253,35 +263,32 @@ def disc_vars_in_txt(proj_obj: CircleCIProject, text_yaml: str, pipe_id=".circle
         name = env_var.split("=")[0]
         val = "=".join(env_var.split("=")[1:])
         env_vars[name] = val
-    
+
     try:
         env_declared_vars = _search_environment(yaml.safe_load(text_yaml))
-        env_vars.update(_search_environment(env_declared_vars))
+        env_vars |= _search_environment(env_declared_vars)
     except yaml.parser.ParserError:
         pass
     except yaml.scanner.ScannerError:
         pass
-    
-    for k,v in env_vars.items():
+
+    for k, v in env_vars.items():
         var_obj = CircleCIVar(
-            name = k,
-            value = v
+            name=k,
+            value=v
         ).save()
         proj_obj.vars.update(var_obj, pipeline_id=pipe_id)
-    
+
     proj_obj.save()
-    
+
 
 def _search_environment(config_dic) -> dict:
     if type(config_dic) is not dict:
         return {}
-    
-    envs = dict()
-    if "environment" in config_dic:
-        envs = config_dic["environment"]
 
+    envs = config_dic["environment"] if "environment" in config_dic else dict()
     for v in config_dic.values():
         if type(v) is dict:
             envs.update(_search_environment(v))
-    
+
     return envs

@@ -29,49 +29,49 @@ class PurplePandaK8s():
         config = kwargs.get("config", "")
         if config:
             del kwargs["config"]
-        
-        k8sdc : K8sDiscClient = K8sDiscClient(config=config)
+
+        k8sdc: K8sDiscClient = K8sDiscClient(config=config)
         initial_funcs = []
         for cred in k8sdc.creds:
             kwargs["cluster_id"] = kwargs.get("cluster_id", "")
-            kwargs["cluster_id"] = cred.get("cluster_id", "") if not kwargs["cluster_id"] else kwargs["cluster_id"]
-            kwargs["cluster_id"] = str(random.randint(0,9999)) if not kwargs["cluster_id"] else kwargs["cluster_id"]
+            kwargs["cluster_id"] = kwargs["cluster_id"] or cred.get("cluster_id", "")
+            kwargs["cluster_id"] = kwargs["cluster_id"] or str(random.randint(0, 9999))
 
             initial_funcs.append(
                 DiscoverSaas(
-                    initial_funcs = [
+                    initial_funcs=[
                         DiscNamespaces(cred["cred"], cred["config"], **kwargs).discover,
                         DiscNodes(cred["cred"], cred["config"], **kwargs).discover,
                         DiscMutatingWebhookConfigurations(cred["cred"], cred["config"], **kwargs).discover,
                         DiscServiceAccounts(cred["cred"], cred["config"], **kwargs).discover,
                         DiscPods(cred["cred"], cred["config"], **kwargs).discover,
-                        
+
                     ],
-                    parallel_funcs = [
+                    parallel_funcs=[
                         [
-                           DiscSecrets(cred["cred"], cred["config"], **kwargs).discover,
+                            DiscSecrets(cred["cred"], cred["config"], **kwargs).discover,
                         ],
                         [
-                           DiscDeployments(cred["cred"], cred["config"], **kwargs).discover,
+                            DiscDeployments(cred["cred"], cred["config"], **kwargs).discover,
                         ],
                         [
-                           DiscJobs(cred["cred"], cred["config"], **kwargs).discover,
+                            DiscJobs(cred["cred"], cred["config"], **kwargs).discover,
                         ],
                         [
-                           DiscCronjobs(cred["cred"], cred["config"], **kwargs).discover,
+                            DiscCronjobs(cred["cred"], cred["config"], **kwargs).discover,
                         ],
                         [
-                           DiscDaemonsets(cred["cred"], cred["config"], **kwargs).discover,
+                            DiscDaemonsets(cred["cred"], cred["config"], **kwargs).discover,
                         ],
                         [
-                           DiscReplicaSets(cred["cred"], cred["config"], **kwargs).discover,
+                            DiscReplicaSets(cred["cred"], cred["config"], **kwargs).discover,
                         ],
                         [
-                           DiscReplicationControllers(cred["cred"], cred["config"], **kwargs).discover,
+                            DiscReplicationControllers(cred["cred"], cred["config"], **kwargs).discover,
                         ],
                         [
-                           DiscCurrentPerms(cred["cred"], cred["config"], **kwargs).discover, 
-                           DiscRoles(cred["cred"], cred["config"], **kwargs).discover
+                            DiscCurrentPerms(cred["cred"], cred["config"], **kwargs).discover,
+                            DiscRoles(cred["cred"], cred["config"], **kwargs).discover
                         ]
                     ],
                     # In K8s launch an analysis per cred
@@ -82,34 +82,34 @@ class PurplePandaK8s():
                     ]
                 ).do_discovery
             )
-        
-       
+
         DiscoverSaas(
             initial_funcs=initial_funcs,
             parallel_funcs=[],
             final_funcs=[]
         ).do_discovery()
-    
+
     def analyze_creds(self):
-        k8sdc : K8sDiscClient = K8sDiscClient()
+        k8sdc: K8sDiscClient = K8sDiscClient()
         for cred in k8sdc.creds:
             PurplePandaPrints.print_title("Kubernetes (K8s)")
             cred = cred["cred"]
             PurplePandaPrints.print_key_val("Host", cred.configuration.host)
-            
+
             if cred.configuration.username:
                 PurplePandaPrints.print_key_val("Username", cred.configuration.username)
-            
-            description = cred.configuration.get_host_settings()[0].get("description")
-            if description:
+
+            if description := cred.configuration.get_host_settings()[0].get(
+                "description"
+            ):
                 PurplePandaPrints.print_key_val("Description", description)
 
             if "authorization" in cred.configuration.api_key and " " in cred.configuration.api_key["authorization"]:
                 jwt_token = cred.configuration.api_key["authorization"].split(" ")[1]
                 try:
                     PurplePandaPrints.print_dict(jwt.decode(jwt_token, options={"verify_signature": False}))
-                except:
+                except Exception:
                     print("There was an error decoding the JWT token, this is raw token:")
                     PurplePandaPrints.print_key_val("Token", jwt_token)
-            
+
             PurplePandaPrints.print_separator()

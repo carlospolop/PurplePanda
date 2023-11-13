@@ -5,7 +5,7 @@ from intel.circleci.models import CircleCIOrganization, CircleCIContext, CircleC
 
 class DiscContexts(CircleCIDisc):
     logger = logging.getLogger(__name__)
-    
+
     def _disc(self) -> None:
         """
         Discover all the contexts of each organization
@@ -13,7 +13,6 @@ class DiscContexts(CircleCIDisc):
 
         self._disc_loop(self.orgs, self._disc_contexts, __name__.split(".")[-1])
 
-    
     def _disc_contexts(self, org, **kwargs):
         """Discover each context"""
 
@@ -21,7 +20,7 @@ class DiscContexts(CircleCIDisc):
 
         if not contexts:
             return
-        
+
         org_obj = CircleCIOrganization(name=org).save()
 
         # TODO: The CircleCI API doesn't give the teams that has access to the context, it would be nice to have that info
@@ -30,7 +29,6 @@ class DiscContexts(CircleCIDisc):
             ctxt_obj.orgs.update(org_obj)
             ctxt_obj.save()
             self._disc_context_secrets(ctxt_obj)
-
 
     def _disc_context_secrets(self, ctxt_obj: CircleCIContext):
         """Discover each context secret"""

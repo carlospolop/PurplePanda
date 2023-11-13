@@ -10,7 +10,7 @@ class DiscFolders(GcpDisc):
     resource = 'cloudresourcemanager'
     version = 'v2'
     logger = logging.getLogger(__name__)
-    
+
     def _disc(self) -> None:
         """
         Discover all the folders accesible by the active account.
@@ -22,28 +22,27 @@ class DiscFolders(GcpDisc):
         folders: List[str] = self.execute_http_req(prep_http, "folders")
         self._disc_loop(folders, self._disc_subnetworks, __name__.split(".")[-1])
 
-
     def _disc_subnetworks(self, f):
         """Discover each folder of the organization"""
-        
+
         f_obj: GcpFolder = GcpFolder(
             name=f["name"],
             displayName=f.get("displayName", ""),
             lifecycleState=f.get("lifecycleState", "")
         ).save()
-    
+
         parent: str = f["parent"]
         if parent.startswith("folders/"):
             f2: GcpFolder = GcpFolder(name=parent).save()
             f2.folders.update(f_obj)
             f2.save()
-        
+
         elif parent.startswith("organizations/"):
             o: GcpOrganization = GcpOrganization.get_by_name(name=parent)
             o.folders.update(f_obj)
             o.save()
-        
+
         else:
             self.logger.error(f"Folder {f['name']} with unexpected parent type {f['parent']}")
-        
+
         self.get_iam_policy(f_obj, self.service.folders(), f_obj.name)

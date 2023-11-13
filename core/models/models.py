@@ -28,6 +28,7 @@ class PublicIP(CustomOGM):
     concourse_workers = RelatedFrom("ConcurseWorker", "HAS_IP")
     gh_webhooks = RelatedFrom(GithubWebhook, "HAS_IP")
 
+
 class PublicPort(CustomOGM):
     __primarylabel__ = "PublicPort"
     __primarykey__ = "port"
@@ -35,6 +36,7 @@ class PublicPort(CustomOGM):
     port = Property()
 
     public_ips = RelatedFrom(PublicIP, "HAS_PORT")
+
 
 class PublicDomain(CustomOGM):
     __primarylabel__ = "PublicDomain"
@@ -54,6 +56,7 @@ class PublicDomain(CustomOGM):
     k8s_mutatingwebhookconfigs = RelatedFrom("K8sMutatingWebhookConfig", "HAS_DOMAIN")
     concourse_workers = RelatedFrom("ConcourseWorker", "HAS_DOMAIN")
     gh_webhooks = RelatedFrom(GithubWebhook, "HAS_DOMAIN")
+
 
 class RepoPpalPrivesc(CustomOGM):
     __primarylabel__ = "RepoPpalPrivesc"
@@ -88,17 +91,23 @@ class ContainerImage(CustomOGM):
 
     def save(self, *args, **kwargs):
         ret = super().save(*args, **kwargs)
-        
-        if "gcr.io/" in self.name and not "k8s.gcr.io/" in self.name and not "gke.gcr.io/" in self.name:
+
+        if (
+            "gcr.io/" in self.name
+            and "k8s.gcr.io/" not in self.name
+            and "gke.gcr.io/" not in self.name
+        ):
             from intel.google.models import GcpStorage
-            zone_subdomain = self.name.split(".gcr.io/")[0] + "." if ".gcr.io/" in self.name else "" # Get "eu." in "eu.gcr.io/..."
+            zone_subdomain = self.name.split(".gcr.io/")[
+                                 0] + "." if ".gcr.io/" in self.name else ""  # Get "eu." in "eu.gcr.io/..."
             project_name = self.name.split("gcr.io/")[1].split("/")[0]
             bucket_name = f"{zone_subdomain}artifacts.{project_name}.appspot.com"
             storage_obj = GcpStorage(name=bucket_name, contains_images=True).save()
             self.image_containers.update(storage_obj)
             return super().save(*args, **kwargs)
-        
+
         return ret
+
 
 class StoresContainerImage(CustomOGM):
     __primarylabel__ = "StoresContainerImage"
@@ -110,6 +119,7 @@ class StoresContainerImage(CustomOGM):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.label = True
+
 
 class RunsContainerImage(CustomOGM):
     __primarylabel__ = "RunsContainerImage"

@@ -33,12 +33,12 @@ class PurplePandaGoogle():
 
     def discover(self, **kwargs):
         config = kwargs.get("config", "")
-        gdc : GcpDiscClient = GcpDiscClient(config=config)
+        gdc: GcpDiscClient = GcpDiscClient(config=config)
         initial_funcs = []
         for cred in gdc.creds:
             initial_funcs.append(
                 DiscoverSaas(
-                    initial_funcs = [
+                    initial_funcs=[
                         DiscOrgs(cred=cred["cred"], **kwargs).discover,
                         DiscFolders(cred=cred["cred"], **kwargs).discover,
                         DiscProjects(cred=cred["cred"], **kwargs).discover,
@@ -47,13 +47,13 @@ class PurplePandaGoogle():
                         DiscServiceAccounts(cred=cred["cred"], **kwargs).discover,
                         DiscGroupsUsers(cred=cred["cred"], **kwargs).discover,
                         DiscStorage(cred=cred["cred"], **kwargs).discover,
-                        DiscComputeSubnetworks(cred=cred["cred"], **kwargs).discover, #Needed by DiscClusters
+                        DiscComputeSubnetworks(cred=cred["cred"], **kwargs).discover,  # Needed by DiscClusters
                         DiscClusters(cred=cred["cred"], **kwargs).discover,
                         DiscSecrets(cred=cred["cred"], **kwargs).discover
                     ],
 
-                    parallel_funcs = [
-                        [DiscKMS(cred=cred["cred"], **kwargs).discover],    
+                    parallel_funcs=[
+                        [DiscKMS(cred=cred["cred"], **kwargs).discover],
                         [DiscComposer(cred=cred["cred"], **kwargs).discover],
                         [DiscBigquery(cred=cred["cred"], **kwargs).discover],
                         [
@@ -68,41 +68,41 @@ class PurplePandaGoogle():
                         [DiscDns(cred=cred["cred"], **kwargs).discover],
                         [DiscSql(cred=cred["cred"], **kwargs).discover]
                     ],
-                    final_funcs=[DiscServiceAccounts(cred=cred["cred"], **kwargs).discover] #Re-discover and re-relate possible missing SAs with projects
+                    final_funcs=[DiscServiceAccounts(cred=cred["cred"], **kwargs).discover]
+                    # Re-discover and re-relate possible missing SAs with projects
                 ).do_discovery
             )
-        
+
         # In GCP just launch an analysis at the end of all the creds
         DiscoverSaas(
             initial_funcs=initial_funcs,
             parallel_funcs=[],
             final_funcs=[AnalyzeResults(cred="").discover]
         ).do_discovery()
-    
+
     def analyze_creds(self):
-        gdc : GcpDiscClient = GcpDiscClient()
+        gdc: GcpDiscClient = GcpDiscClient()
         for cred in gdc.creds:
             PurplePandaPrints.print_title("Google")
             cmd = ["gcloud", "config", "list"]
             if hasattr(cred["cred"], "service_account_email"):
                 cmd.append(f"--impersonate-service-account={cred['cred'].service_account_email}")
-            
+
             (output, err) = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()
             for line in output.splitlines():
                 line = line.decode("utf-8")
                 if "=" in line:
-                    PurplePandaPrints.print_key_val(line.split("=")[0].strip(),line.split("=")[1].strip())
+                    PurplePandaPrints.print_key_val(line.split("=")[0].strip(), line.split("=")[1].strip())
                 else:
                     print(line)
 
             gd = GcpDisc(cred["cred"], resource="cloudresourcemanager", version="v1")
             prep_http = gd.service.organizations().search(body={})
-            organizations = gd.execute_http_req(prep_http, "organizations")
-            if organizations:
+            if organizations := gd.execute_http_req(prep_http, "organizations"):
                 PurplePandaPrints.print_title2("Organizations")
                 for o in organizations:
                     PurplePandaPrints.print_key_val("  Organization", f"{o['displayName']} ({o['name']})")
                     PurplePandaPrints.print_key_val("  Workspace Owner ID", o['owner']['directoryCustomerId'])
                     print("")
-            
+
             PurplePandaPrints.print_separator()

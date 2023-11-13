@@ -20,6 +20,7 @@ class GcpSecret(GcpResource):
         super().__init__(*args, **kwargs)
         self.gcp = True
 
+
 class GcpSecretVersion(GcpResource):
     __primarylabel__ = "GcpSecretVersion"
     __primarykey__ = "name"

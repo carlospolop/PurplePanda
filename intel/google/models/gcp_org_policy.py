@@ -17,7 +17,6 @@ class GcpOrgPolicy(GcpResource):
     suggestedValues = Property()
     inheritFromParent = Property()
 
-
     organizations = RelatedFrom("GcpOrganization", "HAS_POLICY")
     folders = RelatedFrom("GcpFolder", "HAS_POLICY")
     projects = RelatedFrom("GcpProject", "HAS_POLICY")

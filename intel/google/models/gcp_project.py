@@ -30,12 +30,7 @@ class GcpProject(GcpResource):
     gcp = Label(name="Gcp")
 
     def __init__(self, name, *args, **kwargs):
-        if not name.startswith("projects/"):
-            kwargs["name"] = f"projects/{name}"
-        else:
-            kwargs["name"] = name
-
+        kwargs["name"] = name if name.startswith("projects/") else f"projects/{name}"
         super().__init__(*args, **kwargs)
 
         self.gcp = True
-

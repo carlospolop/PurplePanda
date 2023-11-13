@@ -1,3 +1,4 @@
+import contextlib
 import shodan
 import os
 import logging
@@ -34,7 +35,6 @@ PROGRESS = Progress(
     SpinnerColumn()
 )
 
-
 POOL = ThreadPoolExecutor(max_workers=20)
 
 VERBOSE = False
@@ -62,24 +62,25 @@ class PurplePanda():
         """Given a list to iterate though and the function to call with each item of the list, go through it createing a prograss bar"""
 
         start = time.time()
-        task_id = self.progress.add_task(self.task_name, task_name=self.task_name, subtask_name=subtask_name, ttotal=len(
-            loop_list), total=len(loop_list), start=True)
+        task_id = self.progress.add_task(self.task_name, task_name=self.task_name, subtask_name=subtask_name,
+                                         ttotal=len(
+                                             loop_list), total=len(loop_list), start=True)
         for item in loop_list:
-            func(item, **kwargs) # Here the keyworded arguments are being passed to the function
+            func(item, **kwargs)  # Here the keyworded arguments are being passed to the function
             self.progress.update(task_id, advance=1)
 
         if not VERBOSE:
             self.progress.update(task_id, visible=False)
 
         end = time.time()
-        self.progress.log(f"{subtask_name} took {int(end-start)}s")
+        self.progress.log(f"{subtask_name} took {int(end - start)}s")
 
     def get_open_ports_nmap(self, ip_obj: PublicIP) -> None:
         '''Finding open ports of public IP addresses using Nmap'''
-        if(ip_obj.name):  # Checking if the value is defined or not
+        if (ip_obj.name):  # Checking if the value is defined or not
             ip_address = ip_obj.name
             nmap = nmap3.NmapScanTechniques()
-            result = nmap.nmap_tcp_scan(ip_address,args='-p- -T4 -n -Pn')
+            result = nmap.nmap_tcp_scan(ip_address, args='-p- -T4 -n -Pn')
             for port in result[ip_address]['ports']:
                 port_obj = PublicPort(port=port['portid']).save()
                 ip_obj.ports.update(port_obj)
@@ -97,9 +98,7 @@ class PurplePanda():
             host_info = shodan_api.host(ip_address)
 
         except shodan.APIError as e:
-            if "No information available" in str(e):
-                pass
-            else:
+            if "No information available" not in str(e):
                 self.logger.error(
                     f"Error with shodan accessing host {ip_address}: {e}")
             return
@@ -119,20 +118,14 @@ class PurplePanda():
 
         ips = set()
 
-        try:
+        with contextlib.suppress(Exception):
             answers = dns.resolver.resolve(domain, 'A')
             for ip in answers:
                 ips.add(str(ip))
-        except:
-            pass
-
-        try:
+        with contextlib.suppress(Exception):
             answers = dns.resolver.resolve(domain, 'AAAA')
             for ip in answers:
                 ips.add(str(ip))
-        except:
-            pass
-
         return ips
 
     def is_ip_private(self, ip_addr):
@@ -143,8 +136,8 @@ class PurplePanda():
     def write_analysis(self, **kwargs):
         """After everything was found, create CSVs with some interesting data"""
 
-        name = kwargs["name"]
         directory = kwargs["directory"]
+        name = kwargs["name"]
         self.task_name = f"{name}_csvs"
 
         directory = f"{directory}/{name}"
@@ -152,8 +145,7 @@ class PurplePanda():
             os.mkdir(directory)
 
         current_path = os.path.dirname(os.path.realpath(__file__))
-        csv_queries_path = current_path + \
-            f"/../../intel/{name}/info/csv_queries.yaml"
+        csv_queries_path = f"{current_path}/../../intel/{name}/info/csv_queries.yaml"
 
         with open(csv_queries_path, "r") as f:
             queries = yaml.safe_load(f)["queries"]
@@ -171,11 +163,11 @@ class PurplePanda():
         query = q_info["query"]
         res = graph.query(query)
         res_table: Table = res.to_table()
-        with open(directory+"/"+q_name+".csv", "w") as f:
+        with open(f"{directory}/{q_name}.csv", "w") as f:
             res_table.write_separated_values(
                 separator="|", file=f, header=True)
 
-    def tool_exists(selt, tool_name) -> bool:
+    def tool_exists(self, tool_name) -> bool:
         """Check if a tool exists"""
         return which(tool_name) is not None
 

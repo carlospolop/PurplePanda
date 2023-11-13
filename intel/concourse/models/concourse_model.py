@@ -8,7 +8,7 @@ class ConcoursePrincipal(CustomOGM):
     __primarylabel__ = "ConcoursePrincipal"
 
     teams = RelatedTo("ConcourseTeam", "HAS_ROLE")
-    
+
     principal = Label(name="ConcoursePrincipal")
 
     def __init__(self, *args, **kwargs):
@@ -29,6 +29,7 @@ class ConcourseUser(ConcoursePrincipal):
         super().__init__(*args, **kwargs)
         self.concourse = True
 
+
 class ConcourseGroup(ConcoursePrincipal):
     __primarylabel__ = "ConcourseGroup"
     __primarykey__ = "name"
@@ -40,6 +41,7 @@ class ConcourseGroup(ConcoursePrincipal):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.concourse = True
+
 
 class ConcourseTeam(ConcoursePrincipal):
     __primarylabel__ = "ConcourseTeam"
@@ -57,6 +59,7 @@ class ConcourseTeam(ConcoursePrincipal):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.concourse = True
+
 
 class ConcourseWorker(CustomOGM):
     __primarylabel__ = "ConcourseWorker"
@@ -86,6 +89,7 @@ class ConcourseWorker(CustomOGM):
         super().__init__(*args, **kwargs)
         self.concourse = True
 
+
 class ConcourseResource(RunsContainerImage, CodeMirror):
     __primarylabel__ = "ConcourseResource"
     __primarykey__ = "name"
@@ -106,6 +110,7 @@ class ConcourseResource(RunsContainerImage, CodeMirror):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.concourse = True
+
 
 class ConcoursePipeline(CustomOGM):
     __primarylabel__ = "ConcoursePipeline"
@@ -130,6 +135,7 @@ class ConcoursePipeline(CustomOGM):
         super().__init__(*args, **kwargs)
         self.concourse = True
 
+
 class ConcoursePipelineGroup(CustomOGM):
     __primarylabel__ = "ConcoursePipelineGroup"
     __primarykey__ = "name"
@@ -145,6 +151,7 @@ class ConcoursePipelineGroup(CustomOGM):
         super().__init__(*args, **kwargs)
         self.concourse = True
 
+
 class ConcourseSecret(CustomOGM):
     __primarylabel__ = "ConcourseSecret"
     __primarykey__ = "name"
@@ -158,6 +165,7 @@ class ConcourseSecret(CustomOGM):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.concourse = True
+
 
 class ConcourseJob(CustomOGM):
     __primarylabel__ = "ConcourseJob"
@@ -173,6 +181,7 @@ class ConcourseJob(CustomOGM):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.concourse = True
+
 
 class ConcoursePlan(RunsContainerImage):
     __primarylabel__ = "ConcoursePlan"

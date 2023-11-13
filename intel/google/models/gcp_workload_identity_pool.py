@@ -2,6 +2,7 @@ from py2neo.ogm import Property, Label
 
 from intel.google.models.gcp_perm_models import GcpPrincipal
 
+
 class GcpWorkloadIdentityPool(GcpPrincipal):
     __primarylabel__ = "GcpWorkloadIdentityPool"
     __primarykey__ = "name"

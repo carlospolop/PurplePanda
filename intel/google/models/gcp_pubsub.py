@@ -14,10 +14,11 @@ class GcpPubSubTopic(GcpResource):
     cloudbuildTriggers = RelatedFrom("GcpCloudbuildTrigger", "TRIGGER")
 
     gcp = Label(name="Gcp")
-    
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.gcp = True
+
 
 class GcpPubSubSubscription(GcpResource):
     __primarylabel__ = "GcpPubSubTopic"
@@ -31,10 +32,11 @@ class GcpPubSubSubscription(GcpResource):
     cloudbuildTriggers = RelatedFrom("GcpCloudbuildTrigger", "TRIGGER")
 
     gcp = Label(name="Gcp")
-    
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.gcp = True
+
 
 class GcpPubSubSchema(GcpResource):
     __primarylabel__ = "GcpPubSubSchema"
@@ -46,7 +48,7 @@ class GcpPubSubSchema(GcpResource):
     projects = RelatedTo(GcpProject, "PART_OF")
 
     gcp = Label(name="Gcp")
-    
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.gcp = True

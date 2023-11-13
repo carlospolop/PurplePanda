@@ -26,7 +26,6 @@ class GcpCloudRunSvc(GcpResource, GcpRunningSA):
 
     gcp = Label(name="Gcp")
 
-    
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.gcp = True

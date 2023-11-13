@@ -17,11 +17,7 @@ class GcpWorkspace(CustomOGM):
     gcp = Label(name="Gcp")
 
     def __init__(self, name, *args, **kwargs):
-        if not name.startswith("customers/"):
-            kwargs["name"] = f"customers/{name}"
-        else:
-            kwargs["name"] = name
-
+        kwargs["name"] = name if name.startswith("customers/") else f"customers/{name}"
         super().__init__(*args, **kwargs)
 
         self.gcp = True

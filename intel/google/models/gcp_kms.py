@@ -13,7 +13,7 @@ class GcpKMSKeyRing(GcpResource):
     kmskeys = RelatedFrom("GcpKMSKey", "PART_OF")
 
     gcp = Label(name="Gcp")
-    
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.gcp = True
@@ -32,7 +32,7 @@ class GcpKMSKey(GcpResource):
     composers = RelatedFrom("GcpComposerEnv", "USES")
 
     gcp = Label(name="Gcp")
-    
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.gcp = True
@@ -56,8 +56,7 @@ class GcpKMSKeyVersion(GcpResource):
     keys = RelatedTo(GcpKMSKey, "PART_OF")
 
     gcp = Label(name="Gcp")
-    
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.gcp = True
-

@@ -10,31 +10,33 @@ from intel.circleci.discovery.disc_projects import DiscProjects
 
 class PurplePandaCircleCI():
     def discover(self, **kwargs):
-        cdc : CircleCIDiscClient = CircleCIDiscClient()
+        cdc: CircleCIDiscClient = CircleCIDiscClient()
         initial_funcs = []
         cred = ""
-        for cred in cdc.creds:
-            initial_funcs.append(
-                DiscoverSaas(
-                    initial_funcs = [
-                        #DiscOrgs(cred["cred"], cred["slugs"], cred["projects"], **kwargs).discover,
-                        #DiscContexts(cred["cred"], cred["slugs"], cred["projects"], **kwargs).discover,
-                        DiscProjects(cred["cred"], cred["slugs"], cred["projects"], **kwargs).discover,
-                        DiscPipelines(cred["cred"], cred["slugs"], cred["projects"], **kwargs).discover,
-                    ],
-                    parallel_funcs = []
-                ).do_discovery
-            )
-        
+        initial_funcs.extend(
+            DiscoverSaas(
+                initial_funcs=[
+                    # DiscOrgs(cred["cred"], cred["slugs"], cred["projects"], **kwargs).discover,
+                    # DiscContexts(cred["cred"], cred["slugs"], cred["projects"], **kwargs).discover,
+                    DiscProjects(
+                        cred["cred"], cred["slugs"], cred["projects"], **kwargs
+                    ).discover,
+                    DiscPipelines(
+                        cred["cred"], cred["slugs"], cred["projects"], **kwargs
+                    ).discover,
+                ],
+                parallel_funcs=[],
+            ).do_discovery
+            for cred in cdc.creds
+        )
         DiscoverSaas(
             initial_funcs=initial_funcs,
             parallel_funcs=[],
             final_funcs=[]
         ).do_discovery()
 
-
     def analyze_creds(self):
-        gdc : CircleCIDiscClient = CircleCIDiscClient()
+        gdc: CircleCIDiscClient = CircleCIDiscClient()
         for cred in gdc.creds:
             cred = cred["cred"]
             PurplePandaPrints.print_title("CircleCI")
@@ -58,12 +60,12 @@ class PurplePandaCircleCI():
             print("")
 
             PurplePandaPrints.print_title2("Projects Followed")
-            for url_proj,_ in projects_info.items():
+            for url_proj, _ in projects_info.items():
                 PurplePandaPrints.print_val(f"  {url_proj}")
             print("")
-            
-            for name,vals in identities_info.items():
+
+            for name, vals in identities_info.items():
                 PurplePandaPrints.print_title2(name)
                 PurplePandaPrints.print_dict(vals)
-            
+
             PurplePandaPrints.print_separator()

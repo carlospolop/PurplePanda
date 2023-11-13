@@ -5,6 +5,7 @@ from intel.google.models.gcp_service_account import GcpServiceAccount
 from intel.google.models.gcp_perm_models import GcpRunningSA
 from core.models.models import PublicIP, PublicDomain, CloudCluster, RunsContainerImage
 
+
 # In K8s objects primary keys must be "name"
 
 class K8sBasicModel(CustomOGM):
@@ -15,7 +16,7 @@ class K8sBasicModel(CustomOGM):
     labels = Property()
     status = Property()
     annotations = Property()
-    
+
     k8s = Label(name="K8s")
 
     def __init__(self, *args, **kwargs):
@@ -24,7 +25,6 @@ class K8sBasicModel(CustomOGM):
 
 
 class K8sBasicModelNS(K8sBasicModel):
-
     namespaces = RelatedTo("K8sNamespace", "PART_OF")
 
     def __init__(self, *args, **kwargs):
@@ -59,7 +59,7 @@ class K8sNamespace(K8sPodTemplate):
     __primarylabel__ = "K8sNamespace"
     __primarykey__ = "name"
 
-    ns_name = Property() # Namespace name without identifier
+    ns_name = Property()  # Namespace name without identifier
     iam_amazonaws_com_permitted = Property()
     iam_amazonaws_com_allowed_roles = Property()
     cluster_name = Property()
@@ -85,7 +85,7 @@ class K8sNode(K8sBasicModel):
     role = Property()
     instance_type = Property()
     zone = Property()
-    
+
     addresses = Property()
     addresses_type = Property()
 
@@ -114,13 +114,13 @@ class K8sContainer(RunsContainerImage, K8sBasicModel):
     args = Property()
     args = Property()
     working_dir = Property()
-    image = Property() #eu.gcr.io/<project_name>/<name>:<tag>
+    image = Property()  # eu.gcr.io/<project_name>/<name>:<tag>
     image_pull_policy = Property()
     lifecycle_post_start = Property()
     lifecycle_pre_stop = Property()
     exist_limit_resources = Property()
     potential_escape_to_node = Property()
-    
+
     sc_allowPrivilegeEscalation = Property()
     sc_capabilities_drop = Property()
     sc_capabilities_add = Property()
@@ -530,7 +530,7 @@ class K8sIngress(K8sBasicModelNS):
 class K8sMutatingWebhookConfig(K8sBasicModelNS):
     __primarylabel__ = "K8sMutatingWebhookConfig"
     __primarykey__ = "name"
-    
+
     name = Property()
     self_link = Property()
     uid = Property()
@@ -539,7 +539,7 @@ class K8sMutatingWebhookConfig(K8sBasicModelNS):
 
     namespace_selector_expresions = Property()
     namespace_selector_labels = Property()
-    #client_config = Property()
+    # client_config = Property()
     reinvocation_policy = Property()
     failure_policy = Property()
     rules_operations = Property()
