@@ -53,6 +53,15 @@ class DiscProjects(GcpDisc):
             elif parent["type"] == "organization":
                 name=f"organizations/{parent['id']}"
                 o: GcpOrganization = GcpOrganization.get_by_name(name=name)
+                
+                # In case we couldn't initially enumerate the organization name and we found it now
+                if not o:
+                    o: GcpOrganization = GcpOrganization(
+                        name=parent,
+                        domain="unknown",
+                        lifecycleState=o.get("lifecycleState", "")
+                    ).save()
+                
                 o.projects.update(p_obj)
                 o.save()
             

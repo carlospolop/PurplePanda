@@ -40,6 +40,15 @@ class DiscFolders(GcpDisc):
         
         elif parent.startswith("organizations/"):
             o: GcpOrganization = GcpOrganization.get_by_name(name=parent)
+            
+            # In case we couldn't initially enumerate the organization name and we found it now
+            if not o:
+                o: GcpOrganization = GcpOrganization(
+                    name=parent,
+                    domain="unknown",
+                    lifecycleState=o.get("lifecycleState", "")
+                ).save()
+            
             o.folders.update(f_obj)
             o.save()
         
