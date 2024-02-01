@@ -58,7 +58,8 @@ class DiscProjects(GcpDisc):
                 if not o:
                     o: GcpOrganization = GcpOrganization(
                         name=parent,
-                        domain="unknown"
+                        domain="unknown",
+                        lifecycleState=""
                     ).save()
                 
                 o.projects.update(p_obj)
