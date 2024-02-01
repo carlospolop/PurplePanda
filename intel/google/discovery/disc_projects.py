@@ -51,13 +51,13 @@ class DiscProjects(GcpDisc):
                 f.save()
             
             elif parent["type"] == "organization":
-                name=f"organizations/{parent['id']}"
-                o: GcpOrganization = GcpOrganization.get_by_name(name=name)
+                name_org=f"organizations/{parent['id']}"
+                o: GcpOrganization = GcpOrganization.get_by_name(name=name_org)
                 
                 # In case we couldn't initially enumerate the organization name and we found it now
                 if not o:
                     o: GcpOrganization = GcpOrganization(
-                        name=parent,
+                        name=name_org,
                         domain="unknown",
                         lifecycleState=""
                     ).save()
