@@ -45,8 +45,7 @@ class DiscFolders(GcpDisc):
             if not o:
                 o: GcpOrganization = GcpOrganization(
                     name=parent,
-                    domain="unknown",
-                    lifecycleState=o.get("lifecycleState", "")
+                    domain="unknown"
                 ).save()
             
             o.folders.update(f_obj)
