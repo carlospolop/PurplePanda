@@ -25,7 +25,7 @@ class DiscNamespaces(K8sDisc):
         ns_obj = K8sNamespace(
             name = f"{self.cluster_id}-{ns.metadata.name}",
             ns_name = ns.metadata.name,
-            cluster_name = ns.metadata.cluster_name,
+            cluster_name = getattr(ns.metadata, 'cluster_name', ""),
             generate_name = ns.metadata.generate_name,
             self_link = ns.metadata.self_link,
             labels = json.dumps(ns.metadata.labels),

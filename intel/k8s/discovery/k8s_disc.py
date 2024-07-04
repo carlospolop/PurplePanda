@@ -134,7 +134,7 @@ class K8sDisc(K8sDiscClient):
             sc_runAsGroup = sc.run_as_group if hasattr(sc, "run_as_group") else "",
             sc_runAsNonRoot = sc.run_as_non_root if hasattr(sc, "run_as_non_root") else False,
             sc_runAsUser = sc.run_as_user if hasattr(sc, "run_as_user") else "",
-            sc_seLinuxOptions = json.dumps(sc.se_linux_options) if hasattr(sc, "se_linux_options") else None,
+            sc_seLinuxOptions = str(sc.se_linux_options) if hasattr(sc, "se_linux_options") else None,
             sc_seccompProfile = f"{sc.seccomp_profile.localhost_profile}-{sc.seccomp_profile.type}" if hasattr(sc, "seccomp_profile") and hasattr(sc.seccomp_profile, "seccomp_profile") and sc.seccomp_profile.localhost_profile else None,
             sc_windowsOptions = json.dumps(sc.windows_options) if hasattr(sc, "windows_options") else None,
         ).save()

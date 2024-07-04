@@ -21,7 +21,7 @@ class DiscCronjobs(K8sDisc):
     def _disc_cronjobs(self, ns_obj:K8sNamespace, **kwargs):
         """Discover all the cronjobs of a namespace"""
 
-        client_cred = client.BatchV1beta1Api(self.cred)
+        client_cred = client.BatchV1Api(self.cred)
         cronjobs = self.call_k8s_api(f=client_cred.list_namespaced_cron_job, namespace=ns_obj.ns_name)
         if not cronjobs or not cronjobs.items:
             return
