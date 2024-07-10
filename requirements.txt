@@ -13,3 +13,4 @@ validators
 concoursepy
 pycircleci
 python3-nmap
+zipp>=3.19.1 # not directly required, pinned by Snyk to avoid a vulnerability
