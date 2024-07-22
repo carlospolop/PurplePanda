@@ -353,6 +353,17 @@ Moreover, a privilege escalation can grant a principal **more privileges over ot
   </details>
 </details>
 
+### Other Hardening checks
+
+#### K8s - get assets in default ns
+`Show assets inside the default namespace`
+  <details>
+  <summary>e.g.: <i>K8s - get assets in default ns</i></summary>
+    <pre>
+    match(a:K8sNamespace{ns_name:"default"})<-[r:PART_OF]-(b) return a,r,b</pre>
+  </details>
+</details>
+
 ---
 
 ## Red Teams
