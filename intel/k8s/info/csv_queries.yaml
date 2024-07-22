@@ -209,3 +209,8 @@ queries:
       MATCH(container:K8sContainer)
       WHERE container.sc_seccompProfile = ""
       RETURN container.name
+
+  - name: Get assets in default ns
+    query: |
+      MATCH(a:K8sNamespace{ns_name:"default"})<-[r:PART_OF]-(b)
+      RETURN b.name
