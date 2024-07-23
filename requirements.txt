@@ -13,3 +13,4 @@ validators
 concoursepy
 pycircleci
 python3-nmap
+urllib3>=2.2.2 # not directly required, pinned by Snyk to avoid a vulnerability
