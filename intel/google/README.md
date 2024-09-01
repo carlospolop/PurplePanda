@@ -24,6 +24,12 @@ To **understand how GCP security works** and how to abuse roles and permissions 
 
 
 ## How to start
+For this modeule you need to install the following extrac GCP dependency:
+
+```bash
+gcloud components install gke-gcloud-auth-plugin
+```
+
 After installing PurplePanda you need to **export the `GOOGLE_DISCOVERY` env** variable with a yaml encoded in **base64** with the information of the account to use.
 There are the attribute the config env var supports:
 ```yaml

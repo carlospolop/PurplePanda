@@ -1,7 +1,9 @@
 import argparse
 import logging
 import os
+import subprocess
 import sys
+from time import sleep
 from rich.logging import RichHandler
 from rich import print
 
@@ -134,6 +136,13 @@ def main():
 
         # Google
         if "google" in platforms:
+            # Run 'gcloud components list | grep gke-gcloud-auth-plugin | grep -i "Not Installed"' and if something recommend to install it
+
+            output = subprocess.check_output("gcloud components list 2>/dev/null | grep gke-gcloud-auth-plugin | grep -i 'Not Installed'", shell=True, text=True)
+            if "gke-gcloud-auth-plugin" in output:
+                logger.error(f"Please cancel this execution and install the 'gke-gcloud-auth-plugin' to get more information about the GKE clusters. You can install it with 'gcloud components install gke-gcloud-auth-plugin'")
+                sleep(5)
+
             functions.append((PurplePandaGoogle().discover, "google",
                 {
                     "gcp_get_secret_values": gcp_get_secret_values,
