@@ -270,8 +270,14 @@ class GcpDiscClient(PurplePanda):
                 
                 elif member.startswith("domain:"):
                     o_domain = member.replace("domain:", "")
+                    if "apps.googleusercontent.com" in o_domain: # Temp fix for domains like '<ORG-ID>-<RANDOM_STRING>.apps.googleusercontent.com.', lets see if it works!
+                        o_name = "organizations/" + o_domain.split("-")[0]
+                    else:
+                        o_name = "organizations/" + o_domain
+                    o_domain = member.replace("domain:", "")
                     m_obj: GcpOrganization = GcpOrganization(
-                        domain = o_domain
+                        domain = o_domain,
+                        name = o_name
                     ).save()
                     m_objs = [m_obj]
                 
