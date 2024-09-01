@@ -23,6 +23,7 @@ class PublicIP(CustomOGM):
     gcp_resourcerecords = RelatedFrom("GcpResourceRecord", "HAS_IP")
     gcp_sqlinstances = RelatedFrom("GcpSqlInstance", "HAS_IP")
     k8s_service = RelatedFrom("K8sService", "HAS_IP")
+    k8s_ingress = RelatedFrom("K8sIngress", "HAS_IP")
     public_domains = RelatedFrom("PublicDomain", "HAS_IP")
     k8s_mutatingwebhookconfigs = RelatedFrom("K8sMutatingWebhookConfig", "HAS_IP")
     concourse_workers = RelatedFrom("ConcurseWorker", "HAS_IP")
