@@ -101,10 +101,11 @@ class DiscComputeInstances(GcpDisc):
                         natIps = [elem["natIP"] for elem in accessConfigs if "natIP" in elem]
                         natIps += [elem["externalIpv6"] for elem in accessConfigs if "externalIpv6" in elem and not elem["externalIpv6"] in natIps]
 
-                        subnet_obj: GcpSubnetwork = GcpSubnetwork(
-                            name = "projects/" + nic["subnetwork"].split("projects/")[1],
-                            selfLink = nic["subnetwork"]
-                        ).save()
+                        if nic.get("subnetwork"):
+                            subnet_obj: GcpSubnetwork = GcpSubnetwork(
+                                name = "projects/" + nic["subnetwork"].split("projects/")[1],
+                                selfLink = nic["subnetwork"]
+                            ).save()
 
                         accessConfigsv6 = nic.get("accessConfigs", [])
                         natIpsv6 = [elem["natIP"] for elem in accessConfigsv6 if "natIP" in elem]
