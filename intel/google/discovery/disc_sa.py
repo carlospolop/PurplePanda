@@ -53,7 +53,7 @@ class DiscServiceAccounts(GcpDisc):
                     name=key["name"],
                     validAfterTime=key["validAfterTime"],
                     validBeforeTime=key["validBeforeTime"],
-                    keyAlgorithm=key["keyAlgorithm"],
+                    keyAlgorithm=key.get("keyAlgorithm", ""),
                     keyOrigin=key["keyOrigin"],
                     keyType=key["keyType"],
                 )

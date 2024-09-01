@@ -520,6 +520,7 @@ class K8sIngress(K8sBasicModelNS):
     public_domains = RelatedTo(PublicDomain, "HAS_DOMAIN")
     services = RelatedTo(K8sService, "TO_SERVICE")
     secrets = RelatedTo("K8sSecret", "USE_SECRET")
+    public_ips = RelatedTo(PublicIP, "HAS_IP")
 
     k8s = Label(name="K8s")
 
