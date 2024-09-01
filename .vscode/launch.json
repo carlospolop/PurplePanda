@@ -10,8 +10,8 @@
             "request": "launch",
             "program": "main.py",
             "console": "integratedTerminal",
-            "args": ["-e", "--platforms", "github", "--github-only-org", "-d", "/tmp"],
-            "justMyCode": false
+            "args": ["-e", "--platforms", "k8s", "-d", "/tmp"],
+            "justMyCode": true
         }
     ]
 }
