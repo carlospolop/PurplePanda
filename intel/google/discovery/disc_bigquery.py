@@ -40,14 +40,17 @@ class DiscBigquery(GcpDisc):
             ds_obj.projects.update(p_obj, zone=ds.get("location", ""))
             ds_obj.save()
 
-            self._disc_tables(ds_obj, project_id)
+            self._disc_tables(ds_obj, project_id, ds.get("location", ""))
     
     
-    def _disc_tables(self, ds_obj: GcpBqDataset, project_id):
+    def _disc_tables(self, ds_obj: GcpBqDataset, project_id, location):
         """Discover all the tables of a dataset"""
 
         http_prep = self.service.tables()#.list(datasetId=ds_obj.datasetId, projectId=project_id)
         tables: List[str] = self.execute_http_req(http_prep, "tables", disable_warn=True, list_kwargs={"datasetId": ds_obj.datasetId, "projectId": project_id})
+        
+        if tables:
+            p_obj: GcpProject = GcpProject(name=f"projects/{project_id}").save()
 
         for table in tables:
             table_obj: GcpBqTable = GcpBqTable(
@@ -56,6 +59,7 @@ class DiscBigquery(GcpDisc):
                 resource_name = f"{ds_obj.resource_name}/tables/{table['tableReference']['tableId']}",
                 type = table.get("type", "")
             ).save()
+            ds_obj.projects.update(p_obj, zone=location)
             ds_obj.bgtables.update(table_obj)
 
             self.get_iam_policy(table_obj, self.service.tables(), table_obj.resource_name)
