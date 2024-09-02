@@ -59,8 +59,9 @@ class DiscBigquery(GcpDisc):
                 resource_name = f"{ds_obj.resource_name}/tables/{table['tableReference']['tableId']}",
                 type = table.get("type", "")
             ).save()
-            ds_obj.projects.update(p_obj, zone=location)
+            table_obj.projects.update(p_obj, zone=location)
             ds_obj.bgtables.update(table_obj)
+            table_obj.save()
 
             self.get_iam_policy(table_obj, self.service.tables(), table_obj.resource_name)
             #TODO: call self._get_rowAccessPolicies(table_obj, ds_obj.datasetId, project_id)
