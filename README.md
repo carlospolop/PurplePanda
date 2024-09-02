@@ -23,6 +23,8 @@ source bin/activate
 python3 -m pip install -r requirements.txt
 export PURPLEPANDA_NEO4J_URL="bolt://neo4j@localhost:7687"
 export PURPLEPANDA_PWD="s3cr3tpassword"
+# Install this if you are going to use GCP
+gcloud components install gke-gcloud-auth-plugin
 python3 main.py -h # Get help
 python3 main.py -e -p google,github,k8s --github-only-org --k8s-get-secret-values --gcp-get-secret-values # Enumerate google, github and k8s
 ```
