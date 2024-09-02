@@ -10,7 +10,7 @@
             "request": "launch",
             "program": "main.py",
             "console": "integratedTerminal",
-            "args": ["-e", "--platforms", "k8s", "-d", "/tmp"],
+            "args": ["-e", "--platforms", "google", "-d", "/tmp"],
             "justMyCode": true
         }
     ]

@@ -44,6 +44,8 @@ class DiscSql(GcpDisc):
             inst_obj.save()
 
             for ip in i["ipAddresses"]:
+                if not ip["ipAddress"]:
+                    _ = 1
                 ip_obj = PublicIP(ip=ip["ipAddress"]).save()
                 inst_obj.public_ips.update(ip_obj)
                 inst_obj.save()
