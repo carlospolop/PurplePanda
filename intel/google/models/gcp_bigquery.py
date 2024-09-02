@@ -34,6 +34,7 @@ class GcpBqTable(GcpResource):
     resource_name = Property()
 
     bgdatasets = RelatedTo(GcpBqDataset, "PART_OF")
+    projects = RelatedTo(GcpProject, "PART_OF")
 
     gcp = Label(name="Gcp")
 
