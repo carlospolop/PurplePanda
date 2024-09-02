@@ -36,7 +36,7 @@ docker build --tag=purplepanda .
 ## CHange -h for the params you want to run purplepanda with
 docker run -t \
     -e PURPLEPANDA_NEO4J_URL="bolt://neo4j@host.docker.internal:7687" \
-    -e PURPLEPANDA_PWD="s3cr3t" \
+    -e PURPLEPANDA_PWD="s3cr3tpassword" \
     -e GOOGLE_DISCOVERY=... \
     -e GITHUB_DISCOVERY=... \
     -e K8S_DISCOVERY=... \
