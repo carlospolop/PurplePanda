@@ -238,107 +238,113 @@ class GcpDiscClient(PurplePanda):
         bindings: List[str] = self.execute_http_req(prep_http, "bindings", disable_warn=True)
 
         accs_to_roles: dict = {}
-        for binding in bindings:
-            role_name = binding["role"]
-            if "_withcond_" in role_name:
-                role_name = role_name.split("_withcond_")[0] #Weird case, don't know why the name is incorrect from GCP API
-            
-            self._get_role_perms(role_name, obj)
-            for member in binding["members"]:
-                if member.startswith("serviceAccount:"):
-                    sa_email = member.replace("serviceAccount:", "")
-                    # At this point SAs are unknown yet
-                    m_obj: GcpServiceAccount = GcpServiceAccount(
-                        email = sa_email,
-                        fullName = f"{obj.name}/{member.replace(':','/')}"
-                    ).save()
-                    m_objs = [m_obj]
-
-                elif member.startswith("user:"):
-                    u_email = member.replace("user:", "")
-                    m_obj: GcpUserAccount = GcpUserAccount(
-                        email = u_email
-                    ).save()
-                    m_objs = [m_obj]
-                
-                elif member.startswith("group:"):
-                    g_email = member.replace("group:", "")
-                    m_obj: GcpGroup = GcpGroup(
-                        email = g_email
-                    ).save()
-                    m_objs = [m_obj]
-                
-                elif member.startswith("domain:"):
-                    o_domain = member.replace("domain:", "")
-                    if "apps.googleusercontent.com" in o_domain: # Temp fix for domains like '<ORG-ID>-<RANDOM_STRING>.apps.googleusercontent.com.', lets see if it works!
-                        o_name = "organizations/" + o_domain.split("-")[0]
-                    else:
-                        o_name = "organizations/" + o_domain
-                    o_domain = member.replace("domain:", "")
-                    m_obj: GcpOrganization = GcpOrganization(
-                        domain = o_domain,
-                        name = o_name
-                    ).save()
-                    m_objs = [m_obj]
-                
-                elif member == "allUsers":
-                    m_obj: GcpUserAccount = GcpUserAccount(
-                        name = member,
-                        email = member + "@gcp.com"
-                    ).save()
-                    m_objs = [m_obj]
-                
-                elif member == "allAuthenticatedUsers":
-                    m_obj: GcpUserAccount = GcpUserAccount(
-                        name = member,
-                        email = member + "@gcp.com"
-                    ).save()
-                    m_objs = [m_obj]
-                
-                elif member.startswith("projectViewer:"):
-                    p_obj = GcpProject.get_by_name("projects/"+member.split(":")[1], or_create=True)
-                    p_obj.basic_roles.update(obj, member=member)
-                    p_obj.save()
-                    m_objs = p_obj.get_basic_viewers()
-                
-                elif member.startswith("projectEditor:"):
-                    p_obj = GcpProject.get_by_name("projects/"+member.split(":")[1], or_create=True)
-                    p_obj.basic_roles.update(obj, member=member)
-                    p_obj.save()
-                    m_objs = p_obj.get_basic_editors()
-                
-                elif member.startswith("projectOwner:"):
-                    p_obj: GcpProject = GcpProject.get_by_name("projects/"+member.split(":")[1], or_create=True)
-                    p_obj.basic_roles.update(obj, member=member)
-                    p_obj.save()
-                    m_objs = p_obj.get_basic_owners()
-                
-                elif member.startswith("principal:") or member.startswith("principalSet:"):
-                    name = member.replace("principal:", "").replace("principalSet:", "")
-                    m_obj: GcpWorkloadIdentityPool = GcpWorkloadIdentityPool(name=name).save()
-                    m_objs = [m_obj]
-                
-                elif member.startswith("deleted:"):
-                    continue
-                
-                else:
-                    self.logger.error(f"Uknown entity type: {member}")
-                    continue
-                
-                for m_obj in m_objs:
-                    if not m_obj.__primaryvalue__ in accs_to_roles:
-                        accs_to_roles[m_obj.__primaryvalue__] = {
-                            "roles": [role_name],
-                            "object": m_obj
-                        }
-                    else:
-                        accs_to_roles[m_obj.__primaryvalue__]["roles"].append(role_name)
-        
+        kwargs = {"accs_to_roles": accs_to_roles, "obj": obj}
+        self._disc_loop(bindings, self.save_iams, "Checking IAM permissions", **kwargs)
         for k,v in accs_to_roles.items():
             roles = v["roles"]
             m_obj = v["object"]
             m_obj.has_perm.update(obj, roles=roles)
             m_obj.save()
+
+        
+
+    def save_iams(self, binding, **kwargs) -> None:
+        accs_to_roles = kwargs.get("accs_to_roles")
+        obj = kwargs.get("obj")
+        role_name = binding["role"]
+        if "_withcond_" in role_name:
+            role_name = role_name.split("_withcond_")[0] #Weird case, don't know why the name is incorrect from GCP API
+        
+        self._get_role_perms(role_name, obj)
+        for member in binding["members"]:
+            if member.startswith("serviceAccount:"):
+                sa_email = member.replace("serviceAccount:", "")
+                # At this point SAs are unknown yet
+                m_obj: GcpServiceAccount = GcpServiceAccount(
+                    email = sa_email,
+                    fullName = f"{obj.name}/{member.replace(':','/')}"
+                ).save()
+                m_objs = [m_obj]
+
+            elif member.startswith("user:"):
+                u_email = member.replace("user:", "")
+                m_obj: GcpUserAccount = GcpUserAccount(
+                    email = u_email
+                ).save()
+                m_objs = [m_obj]
+            
+            elif member.startswith("group:"):
+                g_email = member.replace("group:", "")
+                m_obj: GcpGroup = GcpGroup(
+                    email = g_email
+                ).save()
+                m_objs = [m_obj]
+            
+            elif member.startswith("domain:"):
+                o_domain = member.replace("domain:", "")
+                if "apps.googleusercontent.com" in o_domain: # Temp fix for domains like '<ORG-ID>-<RANDOM_STRING>.apps.googleusercontent.com.', lets see if it works!
+                    o_name = "organizations/" + o_domain.split("-")[0]
+                else:
+                    o_name = "organizations/" + o_domain
+                o_domain = member.replace("domain:", "")
+                m_obj: GcpOrganization = GcpOrganization(
+                    domain = o_domain,
+                    name = o_name
+                ).save()
+                m_objs = [m_obj]
+            
+            elif member == "allUsers":
+                m_obj: GcpUserAccount = GcpUserAccount(
+                    name = member,
+                    email = member + "@gcp.com"
+                ).save()
+                m_objs = [m_obj]
+            
+            elif member == "allAuthenticatedUsers":
+                m_obj: GcpUserAccount = GcpUserAccount(
+                    name = member,
+                    email = member + "@gcp.com"
+                ).save()
+                m_objs = [m_obj]
+            
+            elif member.startswith("projectViewer:"):
+                p_obj = GcpProject.get_by_name("projects/"+member.split(":")[1], or_create=True)
+                p_obj.basic_roles.update(obj, member=member)
+                p_obj.save()
+                m_objs = p_obj.get_basic_viewers()
+            
+            elif member.startswith("projectEditor:"):
+                p_obj = GcpProject.get_by_name("projects/"+member.split(":")[1], or_create=True)
+                p_obj.basic_roles.update(obj, member=member)
+                p_obj.save()
+                m_objs = p_obj.get_basic_editors()
+            
+            elif member.startswith("projectOwner:"):
+                p_obj: GcpProject = GcpProject.get_by_name("projects/"+member.split(":")[1], or_create=True)
+                p_obj.basic_roles.update(obj, member=member)
+                p_obj.save()
+                m_objs = p_obj.get_basic_owners()
+            
+            elif member.startswith("principal:") or member.startswith("principalSet:"):
+                name = member.replace("principal:", "").replace("principalSet:", "")
+                m_obj: GcpWorkloadIdentityPool = GcpWorkloadIdentityPool(name=name).save()
+                m_objs = [m_obj]
+            
+            elif member.startswith("deleted:"):
+                continue
+            
+            else:
+                self.logger.error(f"Uknown entity type: {member}")
+                continue
+            
+            for m_obj in m_objs:
+                if not m_obj.__primaryvalue__ in accs_to_roles:
+                    accs_to_roles[m_obj.__primaryvalue__] = {
+                        "roles": [role_name],
+                        "object": m_obj
+                    }
+                else:
+                    accs_to_roles[m_obj.__primaryvalue__]["roles"].append(role_name)
         
     def _get_role_perms(self, role_name: str, parent_obj, create_parent_rel = False):
         """Gets a role permissions"""

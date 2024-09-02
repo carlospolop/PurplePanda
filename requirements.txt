@@ -13,3 +13,4 @@ validators
 concoursepy
 pycircleci
 python3-nmap
+setuptools

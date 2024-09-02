@@ -138,10 +138,17 @@ def main():
         if "google" in platforms:
             # Run 'gcloud components list | grep gke-gcloud-auth-plugin | grep -i "Not Installed"' and if something recommend to install it
 
-            output = subprocess.check_output("gcloud components list 2>/dev/null | grep gke-gcloud-auth-plugin | grep -i 'Not Installed'", shell=True, text=True)
-            if "gke-gcloud-auth-plugin" in output:
-                logger.error(f"Please cancel this execution and install the 'gke-gcloud-auth-plugin' to get more information about the GKE clusters. You can install it with 'gcloud components install gke-gcloud-auth-plugin'")
-                sleep(5)
+            try:
+                output = subprocess.check_output("gcloud components list 2>/dev/null | grep gke-gcloud-auth-plugin | grep -i 'Not Installed'", shell=True, text=True)
+                if "gke-gcloud-auth-plugin" in output:
+                    logger.error(f"Please cancel this execution and install the 'gke-gcloud-auth-plugin' to get more information about the GKE clusters. You can install it with 'gcloud components install gke-gcloud-auth-plugin'")
+                    sleep(5)
+            
+            except subprocess.CalledProcessError as e:
+                if "non-zero exit status 1" in str(e):
+                    pass
+                else:
+                    logger.error(f"Error while checking if 'gke-gcloud-auth-plugin' is installed: {e}")
 
             functions.append((PurplePandaGoogle().discover, "google",
                 {
