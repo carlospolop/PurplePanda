@@ -136,7 +136,8 @@ class K8sDisc(K8sDiscClient):
             sc_runAsUser = sc.run_as_user if hasattr(sc, "run_as_user") else "",
             sc_seLinuxOptions = str(sc.se_linux_options) if hasattr(sc, "se_linux_options") else None,
             sc_seccompProfile = f"{sc.seccomp_profile.localhost_profile}-{sc.seccomp_profile.type}" if hasattr(sc, "seccomp_profile") and hasattr(sc.seccomp_profile, "seccomp_profile") and sc.seccomp_profile.localhost_profile else None,
-            sc_windowsOptions = json.dumps(sc.windows_options) if hasattr(sc, "windows_options") else None,
+            sc_windowsOptions = str(sc.windows_options) if hasattr(sc, "windows_options") else None,
+            sc_windowsOptions_local_vars = str(sc.windows_options.local_vars_configuration.__dict__) if hasattr(sc, "windows_options") and hasattr(sc.windows_options, "local_vars_configuration") else None,
         ).save()
 
         if container.image:

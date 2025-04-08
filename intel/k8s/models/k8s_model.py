@@ -133,6 +133,7 @@ class K8sContainer(RunsContainerImage, K8sBasicModel):
     sc_seLinuxOptions = Property()
     sc_seccompProfile = Property()
     sc_windowsOptions = Property()
+    sc_windowsOptions_local_vars = Property()
 
     volumes = RelatedFrom("K8sVol", "MOUNTED")
     secrets = RelatedTo("K8sSecret", "USE_SECRET")
