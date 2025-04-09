@@ -119,6 +119,7 @@ class K8sContainer(RunsContainerImage, K8sBasicModel):
     lifecycle_post_start = Property()
     lifecycle_pre_stop = Property()
     exist_limit_resources = Property()
+    limits = Property()
     potential_escape_to_node = Property()
     
     sc_allowPrivilegeEscalation = Property()

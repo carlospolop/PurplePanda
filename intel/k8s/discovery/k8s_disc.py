@@ -100,6 +100,9 @@ class K8sDisc(K8sDiscClient):
 
         sc = container.security_context
 
+        if container.resources.limits:
+            _ = 1
+
         post_start = container.lifecycle.post_start if container.lifecycle else {}
         lifecycle_post_start = {
             "exec": post_start._exec.command if post_start._exec else "",
@@ -124,6 +127,7 @@ class K8sDisc(K8sDiscClient):
             lifecycle_pre_stop = json.dumps(lifecycle_pre_stop) if lifecycle_pre_stop else "",
             name = container.name,
             exist_limit_resources = bool(container.resources.limits),
+            limits = str(container.resources.limits),
             
             sc_allowPrivilegeEscalation = not sc.allow_privilege_escalation is False if hasattr(sc, "allow_privilege_escalation") else True,
             sc_capabilities_drop = sc.capabilities.drop if hasattr(sc, "capabilities") and hasattr(sc.capabilities, "drop") else [],

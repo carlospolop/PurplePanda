@@ -214,3 +214,9 @@ queries:
     query: |
       MATCH(a:K8sNamespace{ns_name:"default"})<-[r:PART_OF]-(b)
       RETURN b.name
+  
+  - name: Containers without limits
+    query: |
+      MATCH(container:K8sContainer)
+      WHERE container.exist_limit_resources = False
+      RETURN container.name
