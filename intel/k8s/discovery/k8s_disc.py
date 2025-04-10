@@ -100,9 +100,6 @@ class K8sDisc(K8sDiscClient):
 
         sc = container.security_context
 
-        if container.resources.limits:
-            _ = 1
-
         post_start = container.lifecycle.post_start if container.lifecycle else {}
         lifecycle_post_start = {
             "exec": post_start._exec.command if post_start._exec else "",
