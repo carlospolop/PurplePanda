@@ -213,7 +213,7 @@ queries:
   - name: Get assets in default ns
     query: |
       MATCH(a:K8sNamespace{ns_name:"default"})<-[r:PART_OF]-(b)
-      RETURN b.name
+      RETURN b.name, labels(b)[size(labels(b))-1]
   
   - name: Containers without limits
     query: |
