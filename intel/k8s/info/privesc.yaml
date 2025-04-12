@@ -136,6 +136,25 @@ privesc:
     class_name: K8sPod
     privesc_to_cloud: False
   
+  # Configmap
+  - title: Configmap manipulation
+    summary: "It's possible to manipulaet configmaps thanks to the verb 'patch' in the resource 'configmap'. You could abuse different configmaps to escalate privileges. For more info: https://book.hacktricks.xyz/cloud-security/pentesting-kubernetes/hardening-roles-clusterroles"
+    relation: PRIVESC
+    verbs: ["patch"]
+    resources: ["configmaps"]
+    privesc_to: "Running SA"
+    class_name: K8sPod
+    privesc_to_cloud: True
+  
+  - title: Configmap manipulation
+    summary: "It's possible to manipulaet configmaps thanks to the verb '*' in the resource 'configmap'. You could abuse different configmaps to escalate privileges. For more info: https://book.hacktricks.xyz/cloud-security/pentesting-kubernetes/hardening-roles-clusterroles"
+    relation: PRIVESC
+    verbs: ["*"]
+    resources: ["configmaps"]
+    privesc_to: "Running SA"
+    class_name: K8sPod
+    privesc_to_cloud: True
+  
   # MutatingWebhookConfiguration
   ## PurplePanda still doesn't support to indicate interesting permissions that aren't privesc
   #- title: Create MutatingWebhookConfiguration
