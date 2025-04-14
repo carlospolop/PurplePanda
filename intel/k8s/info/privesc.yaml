@@ -137,20 +137,24 @@ privesc:
     privesc_to_cloud: False
   
   # Configmap
+  # TODO specify the resourcce name "aws-auth" and "coredns" as this permission over other configmaps might not be relevant
   - title: Configmap manipulation
-    summary: "It's possible to manipulaet configmaps thanks to the verb 'patch' in the resource 'configmap'. You could abuse different configmaps to escalate privileges. For more info: https://book.hacktricks.xyz/cloud-security/pentesting-kubernetes/hardening-roles-clusterroles"
+    summary: "It's possible to manipulate configmaps thanks to the verb 'patch' in the resource 'configmaps'. You could abuse different configmaps to escalate privileges. For more info: https://book.hacktricks.xyz/cloud-security/pentesting-kubernetes/hardening-roles-clusterroles"
     relation: PRIVESC
     verbs: ["patch"]
     resources: ["configmaps"]
+    resource_names: ["aws-auth", "coredns"]
     privesc_to: "Running SA"
     class_name: K8sPod
     privesc_to_cloud: True
   
+  # TODO specify the resourcce name "aws-auth" and "coredns" as this permission over other configmaps might not be relevant
   - title: Configmap manipulation
-    summary: "It's possible to manipulaet configmaps thanks to the verb '*' in the resource 'configmap'. You could abuse different configmaps to escalate privileges. For more info: https://book.hacktricks.xyz/cloud-security/pentesting-kubernetes/hardening-roles-clusterroles"
+    summary: "It's possible to manipulate configmaps thanks to the verb '*' in the resource 'configmaps'. You could abuse different configmaps to escalate privileges. For more info: https://book.hacktricks.xyz/cloud-security/pentesting-kubernetes/hardening-roles-clusterroles"
     relation: PRIVESC
     verbs: ["*"]
     resources: ["configmaps"]
+    resource_names: ["aws-auth", "coredns"]
     privesc_to: "Running SA"
     class_name: K8sPod
     privesc_to_cloud: True

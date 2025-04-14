@@ -159,6 +159,7 @@ class AnalyzeResults(K8sDisc):
 
         verbs = privesc_tech["verbs"]
         resources = privesc_tech["resources"]
+        resource_names_req = privesc_tech.get("resource_names", [])
         privesc_to = privesc_tech.get("privesc_to", "")
         privesc_to_cloud = privesc_tech.get("privesc_to_cloud", False)
         class_name = privesc_tech.get("class_name", "")
@@ -172,6 +173,7 @@ class AnalyzeResults(K8sDisc):
             apiGroups = rel["api_groups"]
             role_name = rel["role_name"]
             bind_name = rel["bind_name"]
+            resource_names = rel["resource_names"]
 
             # Resource name can be like "pods" or "namespace_name:pods", so we get the "-1" splitting by ":"
             affected_resource_name = res_obj.name.split(":")[-1].lower()
@@ -183,6 +185,11 @@ class AnalyzeResults(K8sDisc):
             # Check the ppal has all the required verbs permissions
             if not "*" in rel_verbs and not all(v in rel_verbs for v in verbs):
                 continue
+
+            if resource_names and resource_names_req:
+                # Check if the resource name is affected
+                if not any(res_name_req.lower() in res_name.lower() for res_name in resource_names for res_name_req in resource_names_req):
+                    continue
             
             for _, ppal_obj in self._get_privesc_to_objs(privesc_to, privesc_to_cloud, class_name, res_obj.name).items():
 

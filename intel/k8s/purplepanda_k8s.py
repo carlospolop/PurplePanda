@@ -21,6 +21,7 @@ from intel.k8s.discovery.disc_serviceaccounts import DiscServiceAccounts
 from intel.k8s.discovery.disc_services import DiscServices
 from intel.k8s.discovery.disc_ingresses import DiscIngresses
 from intel.k8s.discovery.disc_mutatingwebhookconfigurations import DiscMutatingWebhookConfigurations
+from intel.k8s.discovery.disc_configmaps import DiscConfigMaps
 from intel.k8s.discovery.analyze_results import AnalyzeResults
 
 
@@ -68,6 +69,9 @@ class PurplePandaK8s():
                         ],
                         [
                            DiscReplicationControllers(cred["cred"], cred["config"], **kwargs).discover,
+                        ],
+                        [
+                            DiscConfigMaps(cred["cred"], cred["config"], **kwargs).discover,
                         ],
                         [
                            DiscCurrentPerms(cred["cred"], cred["config"], **kwargs).discover, 

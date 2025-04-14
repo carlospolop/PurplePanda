@@ -13,7 +13,7 @@ class DiscRoles(K8sDisc):
         Discover all the clusterroles, clusterrolesbinding, and roles and rolebindings of each namespace
         """
 
-        if not self.reload_api(): return       
+        if not self.reload_api(): return    
 
         # Discover all the roles
         namespaces:List[K8sNamespace] = K8sNamespace.get_all_by_kwargs(f'_.name =~ "{str(self.cluster_id)}-.*"')
@@ -53,12 +53,12 @@ class DiscRoles(K8sDisc):
             if rule.resources:
                 for res in rule.resources:
                     res_obj = K8sResource(name=res).save()
-                    cr_obj.resources.update(res_obj, verbs=rule.verbs, apiGroups=rule.api_groups, ns_name=None)
+                    cr_obj.resources.update(res_obj, verbs=rule.verbs, apiGroups=rule.api_groups, resource_names=rule.resource_names, ns_name=None)
             
             if rule.non_resource_ur_ls:
                 for res in rule.non_resource_ur_ls:
                     res_obj = K8sResource(name=res).save()
-                    cr_obj.resources.update(res_obj, verbs=rule.verbs, apiGroups=rule.api_groups, ns_name=None)
+                    cr_obj.resources.update(res_obj, verbs=rule.verbs, apiGroups=rule.api_groups, resource_names=rule.resource_names, ns_name=None)
         
         cr_obj.save()
 
@@ -90,12 +90,12 @@ class DiscRoles(K8sDisc):
                 if rule.resources:
                     for res in rule.resources:
                         res_obj = K8sResource(name=f"{ns_obj.name}:{res}").save()
-                        r_obj.resources.update(res_obj, verbs=rule.verbs, apiGroups=rule.api_groups)
+                        r_obj.resources.update(res_obj, verbs=rule.verbs, apiGroups=rule.api_groups, resource_names=rule.resource_names)
                 
                 if rule.non_resource_ur_ls:
                     for res in rule.non_resource_ur_ls:
                         res_obj = K8sResource(name=f"{ns_obj.name}:{res}").save()
-                        r_obj.resources.update(res_obj, verbs=rule.verbs, apiGroups=rule.api_groups)
+                        r_obj.resources.update(res_obj, verbs=rule.verbs, apiGroups=rule.api_groups, resource_names=rule.resource_names)
             
             r_obj.namespaces.update(ns_obj)
             r_obj.save()
@@ -144,6 +144,7 @@ class DiscRoles(K8sDisc):
         for res, rel in role_obj.resources._related_objects:
             verbs = rel["verbs"]
             apiGroups = rel["api_groups"]
+            resource_names = rel["resource_names"]
 
             # If RoleBinding with a ClusterRole, get the resource from the namespace and not the generic one
             ## Note that a RoleBinding can use a ClusterRole, but a ClusterRoleBinding cannot use a Role
@@ -177,15 +178,15 @@ class DiscRoles(K8sDisc):
                         sa_obj.save()
                     
                     #TODO: A different binding may have given the sa/user/group permissions over the res_obj already and we are just saving the last one. Myabe that should be an "add" instead of an "update"
-                    res_obj.serviceaccounts.update(sa_obj, role_name=role_name, bind_name=bind_name, kind_bind=kind_bind, verbs=verbs, apiGroups=apiGroups)
+                    res_obj.serviceaccounts.update(sa_obj, role_name=role_name, bind_name=bind_name, kind_bind=kind_bind, verbs=verbs, apiGroups=apiGroups, resource_names=resource_names)
 
                 elif kind == "User":
                     user_obj = K8sUser(name=f"{self.cluster_id}-{name}", potential_escape_to_node=False).save()
-                    res_obj.users.update(user_obj, role_name=role_name, bind_name=bind_name, kind_bind=kind_bind, verbs=verbs, apiGroups=apiGroups)
+                    res_obj.users.update(user_obj, role_name=role_name, bind_name=bind_name, kind_bind=kind_bind, verbs=verbs, apiGroups=apiGroups, resource_names=resource_names)
 
                 elif kind == "Group":
                     group_obj = K8sGroup(name=f"{self.cluster_id}-{name}", potential_escape_to_node=False).save()
-                    res_obj.groups.update(group_obj, role_name=role_name, bind_name=bind_name, kind_bind=kind_bind, verbs=verbs, apiGroups=apiGroups)
+                    res_obj.groups.update(group_obj, role_name=role_name, bind_name=bind_name, kind_bind=kind_bind, verbs=verbs, apiGroups=apiGroups, resource_names=resource_names)
                 
                 else:
                     self.logger.error(f"Unkown kind of subject {kind} with name {name}")

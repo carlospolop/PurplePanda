@@ -11,6 +11,16 @@ queries:
       MATCH(env_variable:K8sEnvVar)-[env_value:USE_ENV_VAR]-(c:K8sContainer)
       WHERE not env_value.value =~ '^secret:'
       RETURN env_variable.name,collect(distinct env_value.value)
+  
+  - name: Unusual configmaps
+    query: |
+      MATCH (configmap:K8sConfigMap)
+      WHERE NOT (
+        configmap.name =~ '.*root-ca\\.crt$' OR 
+        configmap.name =~ '.*:datadog.*' OR 
+        configmap.name =~ '.*(:amazon-vpc-cni|:aws-auth|:coredns|:extension-apiserver-authentication|:kube-apiserver-legacy-service-account-token-tracking|:kube-proxy|:kube-proxy-config|:nodeagent-extra-confd)$'
+      )
+      RETURN configmap.name, configmap.data
 
   - name: Exposed services, pods and sas
     query: |

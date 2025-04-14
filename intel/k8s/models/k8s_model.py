@@ -73,6 +73,7 @@ class K8sNamespace(K8sPodTemplate):
     services = RelatedFrom("K8sService", "PART_OF")
     ingresses = RelatedFrom("K8sIngress", "PART_OF")
     cloudclusters = RelatedTo(CloudCluster, "HAS_NAMESPACE")
+    configmaps = RelatedFrom("K8sConfigMap", "PART_OF")
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -249,6 +250,20 @@ class K8sSecret(K8sBasicModelNS):
     serviceaccounts = RelatedFrom("K8sServiceAccount", "CONTAINS_TOKEN")
     ingresses = RelatedFrom("K8sIngress", "USE_SECRET")
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+class K8sConfigMap(K8sBasicModelNS):
+    __primarylabel__ = "K8sConfigMap"
+    __primarykey__ = "name"
+    
+    data = Property()
+    
+    volumes = RelatedFrom(K8sVol, "USE_CONFIGMAP")
+    envvars = RelatedFrom("K8sEnvVar", "USE_CONFIGMAP")
+    pods = RelatedFrom("K8sPod", "USE_CONFIGMAP")
+    containers = RelatedFrom("K8sContainer", "USE_CONFIGMAP")
+    
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
